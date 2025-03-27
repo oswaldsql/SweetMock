@@ -398,6 +398,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 .idea/
-/.NCrunch_MiniMock/StoredText
+/.NCrunch_SweetMock/StoredText
 *.ncrunchsolution
 *.ncrunchproject
