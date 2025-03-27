@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using SweetMock.Utils;
 
-internal class BackstopBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
+internal class BackstopBuilder : IBaseClassBuilder
 {
     public bool TryBuildBase(MockDetails details, CodeBuilder result, ISymbol[] symbols)
     {
@@ -13,12 +13,6 @@ internal class BackstopBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
             result.Add($"// {symbol} was not handled");
         }
 
-        return true;
-    }
-
-    public bool TryBuildLoggingExtension(MockDetails details, CodeBuilder result, ISymbol[] symbols)
-    {
-        result.Add($"// {symbols.First()} was not handled {symbols.Length}");
         return true;
     }
 }

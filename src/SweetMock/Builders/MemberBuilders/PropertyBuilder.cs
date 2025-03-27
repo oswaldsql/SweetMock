@@ -8,7 +8,7 @@ using Utils;
 /// <summary>
 ///     Represents a builder for properties, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class PropertyBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
+internal class PropertyBuilder : IBaseClassBuilder
 {
     public bool TryBuildBase(MockDetails details, CodeBuilder result, ISymbol[] symbols)
     {
@@ -38,18 +38,7 @@ internal class PropertyBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
 
         return null;
     }
-    
-    public bool TryBuildLoggingExtension(MockDetails details, CodeBuilder result, ISymbol[] symbols)
-    {
-        var handled = IsHandled(symbols);
-        if (handled.HasValue)
-        {
-            return handled.Value;
-        }
 
-        return false;
-    }
-    
     /// <summary>
     ///     Builds helper methods for the property.
     /// </summary>
@@ -127,27 +116,26 @@ internal class PropertyBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
     {
         var name = symbols.First().Name;
 
-        builder.Add($"#region Property : {name}").Indent();
+        using (builder.Region($"#region Property : {name}"))
+        {
+            var index = 0;
+            foreach (var symbol in symbols)
+                if (symbol.IsStatic)
+                {
+                    builder.Add($"// Ignoring Static property {symbol}.");
+                }
+                else if (symbol is { IsAbstract: false, IsVirtual: false })
+                {
+                    builder.Add($"// Ignoring property {symbol}.");
+                }
+                else
+                {
+                    index++;
+                    BuildProperty(builder, symbol, index, details);
+                }
 
-        var index = 0;
-        foreach (var symbol in symbols)
-            if (symbol.IsStatic)
-            {
-                builder.Add($"// Ignoring Static property {symbol}.");
-            }
-            else if (symbol is { IsAbstract: false, IsVirtual: false })
-            {
-                builder.Add($"// Ignoring property {symbol}.");
-            }
-            else
-            {
-                index++;
-                BuildProperty(builder, symbol, index, details);
-            }
-
-        builder.Unindent().Add("#endregion");
-
-        return index > 0;
+            return index > 0;
+        }
     }
 
     /// <summary>
@@ -189,7 +177,7 @@ internal class PropertyBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
         builder.Unindent().Add("}").Add();
 
         builder.Add($$"""
-                      private {{type.TrimEnd('?')}}? _{{internalName}};
+                      //private {{type.TrimEnd('?')}}? _{{internalName}};
                       private System.Func<{{type}}> _{{internalName}}_get { get; set; } = () => {{symbol.BuildNotMockedException()}}
                       private System.Action<{{type}}> _{{internalName}}_set { get; set; } = s => {{symbol.BuildNotMockedException()}}
 

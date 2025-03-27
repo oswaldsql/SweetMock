@@ -9,7 +9,7 @@ using Utils;
 /// <summary>
 ///     Represents a builder for indexers, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class IndexBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
+internal class IndexBuilder : IBaseClassBuilder
 {
     public bool TryBuildBase(MockDetails details, CodeBuilder result, ISymbol[] symbols)
     {
@@ -61,10 +61,6 @@ internal class IndexBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
 //                break;
 //        }
 //    }
-    public bool TryBuildLoggingExtension(MockDetails details, CodeBuilder result, ISymbol[] symbols)
-    {
-        return false;
-    }
 
     /// <summary>
     ///     Builds the indexers and adds them to the code builder.
@@ -77,18 +73,16 @@ internal class IndexBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
         var symbols = indexerSymbols as IPropertySymbol[] ?? indexerSymbols.ToArray();
         var indexType = symbols.First().Parameters[0].Type.ToString();
 
-        builder.Add($"#region Indexer : this[{indexType}]").Add().Indent();
-
-        var indexerCount = 0;
-        foreach (var symbol in symbols)
+        using (builder.Region($"Index : this[{indexType}]"))
         {
-            indexerCount++;
-            BuildIndex(builder, symbol, indexerCount);
+            var indexerCount = 0;
+            foreach (var symbol in symbols)
+            {
+                indexerCount++;
+                BuildIndex(builder, symbol, indexerCount);
+            }
+            return indexerCount > 0;
         }
-
-        builder.Add().Unindent().Add("#endregion");
-
-        return indexerCount > 0;
     }
 
     /// <summary>
@@ -167,7 +161,5 @@ internal class IndexBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
         }
 
         builder.Add("}");
-
-//        helpers.AddRange(BuildHelpers(symbol, indexerCount));
     }
 }

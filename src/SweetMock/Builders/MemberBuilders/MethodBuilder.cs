@@ -9,7 +9,7 @@ using Utils;
 /// <summary>
 ///     Represents a builder for methods, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class MethodBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
+internal class MethodBuilder : IBaseClassBuilder
 {
     public bool TryBuildBase(MockDetails details, CodeBuilder result, ISymbol[] symbols)
     {
@@ -19,11 +19,6 @@ internal class MethodBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
 
         var methodSymbols = symbols.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
         return BuildMethods(result, methodSymbols, details);
-    }
-
-    public bool TryBuildLoggingExtension(MockDetails details, CodeBuilder result, ISymbol[] symbols)
-    {
-        return false;
     }
 
     /// <summary>
@@ -38,16 +33,15 @@ internal class MethodBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
 
         var name = enumerable.First().Name;
 
-        mockCode.Add($"#region Method : {name}").Add().Indent();
+        using (mockCode.Region($"Method : {name}"))
+        {
+            var methodCount = 1;
+            foreach (var symbol in enumerable)
+                if (Build(mockCode, symbol, methodCount))
+                    methodCount++;
 
-        var methodCount = 1;
-        foreach (var symbol in enumerable)
-            if (Build(mockCode, symbol, methodCount))
-                methodCount++;
-
-        mockCode.Add().Unindent().Add("#endregion");
-
-        return methodCount > 1;
+            return methodCount > 1;
+        }
     }
 
     /// <summary>
@@ -120,8 +114,6 @@ internal class MethodBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
                           }
                       }
                       """);
-
-        //helpers.AddRange(AddConfigExtensions(symbol, method, delegateInfo, parameters));
 
         return true;
     }

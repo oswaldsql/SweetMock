@@ -82,4 +82,25 @@ internal class CodeBuilder(string prepend = "")
 
         return this;
     }
+
+    public SurroundingCodeBuilder Region(string region) => new(this, "#region " + region, "#endregion");
+}
+
+internal class SurroundingCodeBuilder : IDisposable
+{
+    private readonly CodeBuilder builder;
+    private readonly string append1;
+
+    public SurroundingCodeBuilder(CodeBuilder codeBuilder, string prepend = "", string append = "")
+    {
+        builder = codeBuilder;
+        codeBuilder.Add(prepend).Indent();
+        append1 = append;
+    }
+
+
+    public void Dispose()
+    {
+        builder.Unindent().Add(append1);
+    }
 }

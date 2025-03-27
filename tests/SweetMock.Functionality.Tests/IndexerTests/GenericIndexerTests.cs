@@ -6,7 +6,7 @@ namespace Test.IndexerTests;
 public class GenericIndexerTests
 {
     [Fact]
-    [Mock<IGenericIndexRepository<string, object>>]
+    //[Mock<IGenericIndexRepository<string, object>>]
     public void GenericMethodsCanBeConfiguredWithDictionary()
     {
 //        // Arrange

@@ -1,11 +1,9 @@
-namespace MiniMock.Builders;
+namespace SweetMock.Builders;
 
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using SweetMock;
-using SweetMock.Builders;
-using SweetMock.Utils;
+using Utils;
 
 /// <summary>
 ///     Provides methods to build mock classes.
@@ -15,8 +13,6 @@ public class FactoryClassBuilder
     /// <summary>
     ///     Builds the mock classes based on the provided type symbols.
     /// </summary>
-    /// <param name="typeSymbols">The type symbols to generate mocks for.</param>
-    /// <param name="context">The source production context.</param>
     /// <returns>A string containing the generated mock classes.</returns>
     public string Build(MockDetails details)
     {
@@ -66,7 +62,7 @@ public class FactoryClassBuilder
     /// <summary>
     ///     Builds the factory method for the specified symbol.
     /// </summary>
-    /// <param name="symbol">The symbol to build the factory method for.</param>
+    /// <param name="details">Details on the mock to build.</param>
     /// <param name="builder">The code builder.</param>
     /// <param name="constructor">The constructor symbol, if any.</param>
     private static void BuildFactoryMethod(MockDetails details, CodeBuilder builder, IMethodSymbol? constructor = null)
@@ -80,7 +76,7 @@ public class FactoryClassBuilder
     /// <summary>
     ///     Builds a non-generic factory method for the specified symbol.
     /// </summary>
-    /// <param name="symbol">The symbol to build the factory method for.</param>
+    /// <param name="details">Details on the mock to build.</param>
     /// <param name="builder">The code builder.</param>
     /// <param name="constructor">The constructor symbol, if any.</param>
     private static void BuildNonGenericFactoryMethod(MockDetails details, CodeBuilder builder, IMethodSymbol? constructor)
@@ -105,7 +101,7 @@ public class FactoryClassBuilder
               internal static {{details.SourceName}} {{symbolName}}
                   ({{parameters}}System.Action<{{details.Namespace}}.{{details.MockType}}.Config>? config = null)
                   => new {{details.Namespace}}.{{details.MockName}}({{names}}config);
-              
+
               /// <summary>
               ///     Creates a mock object for <see cref="{{cref}}"/>.
               /// </summary>
@@ -121,11 +117,11 @@ public class FactoryClassBuilder
                   }
               """);
     }
-    
+
     /// <summary>
     ///     Builds a generic factory method for the specified symbol.
     /// </summary>
-    /// <param name="symbol">The symbol to build the factory method for.</param>
+    /// <param name="details">Details on the mock to build.</param>
     /// <param name="builder">The code builder.</param>
     /// <param name="constructor">The constructor symbol, if any.</param>
     private static void BuildGenericFactoryMethod(MockDetails details, CodeBuilder builder, IMethodSymbol? constructor = null)
@@ -137,10 +133,10 @@ public class FactoryClassBuilder
         var doc = constructorParameters.ToString(t => $"///     <param name=\"{t.Name}\">Base constructor parameter {t.Name}.</param>\n", "");
 
         var cref = details.Target.ToCRef();
-        
+
         var types = details.Target.TypeArguments.ToString(t => t.Name);
         var constraints = details.Target.TypeArguments.ToConstraints();
-        
+
         builder.Add(
             $$"""
               /// <summary>

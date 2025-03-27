@@ -17,10 +17,10 @@
         <PackageProjectUrl>https://github.com/oswaldsql/SweetMock</PackageProjectUrl>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <RepositoryUrl>https://github.com/oswaldsql/MiniMock</RepositoryUrl>
+        <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
         <PackageTags>mocking, unit-testing, TDD, mock-objects</PackageTags>
         <PackageIcon>Icon.jpg</PackageIcon>
-        <PackageReleaseNotes>Initial version of MiniMock supporting Interfaces and a subset of class mocking.</PackageReleaseNotes>
+        <PackageReleaseNotes>Initial version of SweetMock supporting Interfaces and a subset of class mocking.</PackageReleaseNotes>
         <AssemblyVersion>1.0.0</AssemblyVersion>
 
         <IncludeBuiltOutput>false</IncludeBuiltOutput>

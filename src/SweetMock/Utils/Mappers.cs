@@ -10,7 +10,33 @@ public static class Mappers
     internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") => 
         values == null ? "" : string.Join(separator, values.Select(mapper));
     
-    public static string ToCRef(this ISymbol symbol) => symbol.ToString().Replace('<', '{').Replace('>', '}');
+    static SymbolDisplayFormat format = new(
+        SymbolDisplayGlobalNamespaceStyle.Omitted,
+        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+    );
+    
+    public static string ToCRef(this ISymbol symbol)
+    {
+        var prefix = symbol.Prefix();
+
+        return $"{prefix}{symbol.ToDisplayString(format)}".Replace('<', '{').Replace('>', '}');
+    }
+
+    private static string Prefix(this ISymbol symbol) =>
+        symbol switch
+        {
+            INamespaceSymbol => "N:",
+            ITypeSymbol => "T:",
+            IFieldSymbol => "F:",
+            IPropertySymbol => "P:",
+            IMethodSymbol => "M:",
+            IEventSymbol => "E:",
+            _ => ""
+        };
 
     internal static string AccessibilityString(this ISymbol method) =>
         method.DeclaredAccessibility.AccessibilityString();

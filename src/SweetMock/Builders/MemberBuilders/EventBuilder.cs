@@ -9,7 +9,7 @@ using Utils;
 /// <summary>
 ///     Represents a builder for events, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class EventBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
+internal class EventBuilder : IBaseClassBuilder
 {
     public bool TryBuildBase(MockDetails details, CodeBuilder result, ISymbol[] symbols)
     {
@@ -20,18 +20,6 @@ internal class EventBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
         if (!(first.IsAbstract || first.IsVirtual) || first.IsStatic) return true;
 
         return BuildEvents(result, symbols.OfType<IEventSymbol>());
-    }
-
-    public bool TryBuildLoggingExtension(MockDetails details, CodeBuilder result, ISymbol[] symbols)
-    {
-        var first = symbols[0];
-        if (first is IMethodSymbol { MethodKind: MethodKind.EventAdd or MethodKind.EventRaise or MethodKind.EventRemove }) return true;
-        if (first is not IEventSymbol) return false;
-
-        if (!(first.IsAbstract || first.IsVirtual) || first.IsStatic) return true;
-        
-        return false;
-        //throw new NotImplementedException();
     }
     
     /// <summary>
@@ -82,16 +70,15 @@ internal class EventBuilder : IBaseClassBuilder, ILoggingExtensionBuilder
         var enumerable = eventSymbols as IEventSymbol[] ?? eventSymbols.ToArray();
         var name = enumerable.First().Name;
 
-        builder.Add($"#region Event : {name}").Indent();
+        using (builder.Region($"Event : {name}"))
+        {
+            var eventCount = 1;
+            foreach (var symbol in enumerable)
+                if (BuildEvent(builder, symbol, eventCount))
+                    eventCount++;
 
-        var eventCount = 1;
-        foreach (var symbol in enumerable)
-            if (BuildEvent(builder, symbol, eventCount))
-                eventCount++;
-
-        builder.Unindent().Add("#endregion");
-
-        return eventCount > 1;
+            return eventCount > 1;
+        }
     }
 
     /// <summary>

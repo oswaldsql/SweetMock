@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using MiniMock.Builders;
 
 public class MockBuilder
 {
@@ -30,9 +29,13 @@ public class MockBuilder
         
         var factories = new FactoryClassBuilder().Build(mockDetails);
         yield return new("Factory", factories);
-        
-        var logFilters = new LogBuilder().BuildLogExtensions(mockDetails);
+
+        var logFilters = new LogExtensionsBuilder().BuildLogExtensions(mockDetails);
         yield return new("Logging", logFilters);
+        
+        
+//        var logFilters = new LogBuilder().BuildLogExtensions(mockDetails);
+//        yield return new("Logging", logFilters);
         
 //        yield return new("Configuration", "//" + mockDetails.Target);
     }

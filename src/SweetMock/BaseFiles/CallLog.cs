@@ -11,7 +11,7 @@ namespace SweetMock {
 
         public string? MethodSignature { get; init; }
 
-        public Arguments Arguments { get; init; }
+        public Arguments Arguments { get; init; } = Arguments.Empty;
 
         public override string ToString() => Index.ToString("0000") + " : " + MethodSignature;
     }
@@ -37,7 +37,7 @@ namespace SweetMock {
             this.Arguments = arguments;
         }
         
-        protected Arguments Arguments { get;private set; }
+        protected Arguments Arguments { get;private set; } = Arguments.Empty;
     } 
     
     public class Arguments
