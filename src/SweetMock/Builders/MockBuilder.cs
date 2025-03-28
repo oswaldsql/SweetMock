@@ -7,11 +7,13 @@ using Microsoft.CodeAnalysis;
 
 public class MockBuilder
 {
-    
+
     public IEnumerable<BuildResult> BuildFiles(INamedTypeSymbol target)
     {
         try
         {
+            ValidateTargetIsValid(target);
+
             var mockDetails = GetMockDetails(target);
 
             return BuildResults(mockDetails).ToArray();
@@ -22,22 +24,24 @@ public class MockBuilder
         }
     }
 
+    private void ValidateTargetIsValid(INamedTypeSymbol target)
+    {
+        if(target.DeclaredAccessibility == Accessibility.Private) throw new Exception("Class must not be private");
+        if (target.IsSealed) throw new Exception("Target must be not be sealed");
+        if (target.IsStatic) throw new Exception("Target must be not be static");
+        if(target.IsAnonymousType) throw new Exception("Target must not be an anonymous type");
+    }
+
     private static IEnumerable<BuildResult> BuildResults(MockDetails mockDetails)
     {
-        var code = new BaseClassBuilder().Build(mockDetails);
+        var code = BaseClassBuilder.Build(mockDetails);
         yield return new("Base", code.ToString());
-        
+
         var factories = new FactoryClassBuilder().Build(mockDetails);
         yield return new("Factory", factories);
 
         var logFilters = new LogExtensionsBuilder().BuildLogExtensions(mockDetails);
         yield return new("Logging", logFilters);
-        
-        
-//        var logFilters = new LogBuilder().BuildLogExtensions(mockDetails);
-//        yield return new("Logging", logFilters);
-        
-//        yield return new("Configuration", "//" + mockDetails.Target);
     }
 
     private static MockDetails GetMockDetails(INamedTypeSymbol target)

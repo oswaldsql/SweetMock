@@ -18,7 +18,7 @@ public static class MockDetailsExtensions
         return memberCandidates.Distinct(SymbolEqualityComparer.IncludeNullability).ToLookup(t => t.Name);
     }
 
-    private static void AddInheritedInterfaces(List<ISymbol> memberCandidates, INamedTypeSymbol namedTypeSymbol)
+    internal static void AddInheritedInterfaces(List<ISymbol> memberCandidates, INamedTypeSymbol namedTypeSymbol)
     {
         var allInterfaces = namedTypeSymbol.AllInterfaces;
         foreach (var inherited in allInterfaces)

@@ -1,6 +1,7 @@
 namespace SweetMock.Builders.MemberBuilders;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Utils;
@@ -8,112 +9,29 @@ using Utils;
 /// <summary>
 ///     Represents a builder for properties, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class PropertyBuilder : IBaseClassBuilder
+internal class PropertyBuilder
 {
-    public bool TryBuildBase(MockDetails details, CodeBuilder result, ISymbol[] symbols)
+    public static CodeBuilder Build(IEnumerable<IPropertySymbol> symbols)
     {
-        var handled = IsHandled(symbols);
-        if (handled.HasValue)
+        CodeBuilder result = new();
+
+        var lookup = symbols.ToLookup(t => t.Name);
+        foreach (var m in lookup)
         {
-            return handled.Value;
+            result.Add(BuildProperties(m.ToArray()));
         }
-        
-        var propertySymbols = symbols.OfType<IPropertySymbol>().Where(t => !t.IsIndexer).ToArray();
-        return BuildProperties(result, propertySymbols, details);
+
+        return result;
     }
-
-    public bool? IsHandled(ISymbol[] symbols)
-    {
-        var first = symbols.First();
-
-        if (first is IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet }) return true;
-
-        if (first is not IPropertySymbol symbol || symbol.IsIndexer) return false;
-
-        if (!(first.IsAbstract || first.IsVirtual)) return true;
-
-        if (symbol.ReturnsByRef || symbol.ReturnsByRefReadonly) return false;
-
-        if (symbols.OfType<IPropertySymbol>().All(t => t.IsIndexer)) return false;
-
-        return null;
-    }
-
-    /// <summary>
-    ///     Builds helper methods for the property.
-    /// </summary>
-    /// <param name="symbol">The property symbol representing the property.</param>
-    /// <param name="type">The type of the property.</param>
-    /// <param name="internalName">The internal name of the property.</param>
-    /// <param name="propertyName">The name of the property.</param>
-    /// <returns>A collection of helper methods for the property.</returns>
-//    private static IEnumerable<ConfigExtension> BuildHelpers(IPropertySymbol symbol, string type, string internalName, string propertyName)
-//    {
-//        ConfigExtension cx(string signature, string code, string documentation, [CallerLineNumber] int ln = 0) => new(signature, code + "// line : " + ln, documentation,  symbol.ToString());
-//
-//        var hasGet = symbol.GetMethod != null;
-//        var hasSet = symbol.SetMethod != null;
-//
-//        var isNullable = symbol.NullableAnnotation == NullableAnnotation.Annotated;
-//        if (isNullable)
-//        {
-//            yield return cx(
-//                $"{type.Replace("?", "")} value"
-//                , $"""
-//                   target._{internalName} = value;
-//                   target._{internalName}_get = () => target._{internalName};
-//                   target._{internalName}_set = s => target._{internalName} = s;
-//                   """,
-//                $"Sets an initial value for {propertyName}.");
-//        }
-//        else
-//        {
-//            yield return cx(
-//                $"{type.Replace("?", "")} value"
-//                , $"""
-//                   target._{internalName} = value;
-//                   target._{internalName}_get = () => target._{internalName} ?? {symbol.BuildNotMockedException()};
-//                   target._{internalName}_set = s => target._{internalName} = s;
-//                   """,
-//                $"Sets an initial value for {propertyName}.");
-//        }
-//
-//        switch (hasSet, hasGet)
-//        {
-//            case (true, true):
-//                yield return cx(
-//                    $"System.Func<{type}> get, System.Action<{type}> set",
-//                    $"""
-//                     target._{internalName}_get = get;
-//                     target._{internalName}_set = set;
-//                     """,
-//                    $"Specifies a getter and setter method to call when the property {propertyName} is called.");
-//                break;
-//            case (false, true):
-//                yield return cx(
-//                    $"System.Func<{type}> get",
-//                    $"target._{internalName}_get = get;",
-//                    $"Specifies a getter method to call when the property {propertyName} is called.");
-//                break;
-//            case (true, false):
-//                yield return cx(
-//                    $"System.Action<{type}> set",
-//                    $"target._{internalName}_set = set;",
-//                    $"Specifies a setter method to call when the property {propertyName} is set.");
-//                break;
-//        }
-//    }
-
 
     /// <summary>
     ///     Builds properties and adds them to the code builder.
     /// </summary>
-    /// <param name="builder">The code builder to add the properties to.</param>
     /// <param name="symbols">An array of property symbols representing the properties.</param>
-    /// <param name="details"></param>
     /// <returns>True if at least one property was built; otherwise, false.</returns>
-    private static bool BuildProperties(CodeBuilder builder, IPropertySymbol[] symbols, MockDetails details)
+    private static CodeBuilder BuildProperties(IPropertySymbol[] symbols)
     {
+        CodeBuilder builder = new();
         var name = symbols.First().Name;
 
         using (builder.Region($"#region Property : {name}"))
@@ -131,10 +49,10 @@ internal class PropertyBuilder : IBaseClassBuilder
                 else
                 {
                     index++;
-                    BuildProperty(builder, symbol, index, details);
+                    BuildProperty(builder, symbol, index);
                 }
 
-            return index > 0;
+            return builder;
         }
     }
 
@@ -144,8 +62,7 @@ internal class PropertyBuilder : IBaseClassBuilder
     /// <param name="builder">The code builder to add the property to.</param>
     /// <param name="symbol">The property symbol representing the property.</param>
     /// <param name="index">The index of the property.</param>
-    /// <param name="details">Details of the mock created.</param>
-    private static void BuildProperty(CodeBuilder builder, IPropertySymbol symbol, int index, MockDetails details)
+    private static void BuildProperty(CodeBuilder builder, IPropertySymbol symbol, int index)
     {
         var propertyName = symbol.Name;
         var internalName = index == 1 ? propertyName : $"{propertyName}_{index}";

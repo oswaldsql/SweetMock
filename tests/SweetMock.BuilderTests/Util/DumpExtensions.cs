@@ -27,7 +27,7 @@ public static class DumpExtensions
             output.WriteLine("");
         }
 
-        foreach (var syntaxTree in syntaxTrees.Where(t => !t.FilePath.EndsWith("MapperAttribute.g.cs")))
+        foreach (var syntaxTree in syntaxTrees.Where(t => !t.FilePath.Contains(".BaseFiles.")))
         {
             output.WriteLine("--- File : " + syntaxTree.FilePath + " ---");
 

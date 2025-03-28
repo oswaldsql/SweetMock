@@ -8,69 +8,70 @@ using SweetMock.Utils;
 /// <summary>
 /// Represents a builder for constructing mock constructors.
 /// </summary>
-internal class ConstructorBuilder : IBaseClassBuilder
-{
-    public bool TryBuildBase(MockDetails details, CodeBuilder result, ISymbol[] symbols)
+internal static class ConstructorBuilder {
+    public static CodeBuilder Build(MockDetails details, IEnumerable<IMethodSymbol> constructors)
     {
-        if (symbols.All(t => t is IMethodSymbol { MethodKind: MethodKind.Constructor }))
-        {
-            Build(details, result, symbols.OfType<IMethodSymbol>());
-            return true;
-        }
+        constructors = constructors.Distinct().ToArray();
 
-        return false;
+        return !constructors.Any() ? BuildEmptyConstructor(details) : BuildConstructors(details, constructors);
     }
-    
-    private void Build(MockDetails details, CodeBuilder result, IEnumerable<IMethodSymbol> constructors)
+
+    private static CodeBuilder BuildConstructors(MockDetails details, IEnumerable<IMethodSymbol> constructors)
     {
+        CodeBuilder result = new();
+
         using (result.Region("Constructors"))
         {
             foreach (var constructor in constructors)
             {
                 var parameterList = constructor.Parameters.ToString(p => $"{p.Type} {p.Name}, ", "");
-                var argumentList = constructor.Parameters.ToString(p => p.Name);
-                var argumentList2 = constructor.Parameters.ToString(p => $"{p.Name}, ", "");
-                
+                var baseArguments = constructor.Parameters.ToString(p => p.Name);
+                var argumentList = constructor.Parameters.ToString(p => $"{p.Name}, ", "");
 
                 result.Add($$"""
-                             internal protected {{details.MockName}}({{parameterList}}System.Action<Config>? config = null) : base({{argumentList}}) {
+                             internal protected {{details.MockName}}({{parameterList}}System.Action<Config>? config = null) : base({{baseArguments}}) {
                                  var result = new Config(this);
                                  config?.Invoke(result);
                                  _config = result;
-                                 
+
                                  {{LogBuilder.BuildLogSegment(constructor)}}
                              }
-                             
+
                              internal partial class Config{
                                  /// <summary>
                                  ///     Creates a new instance of <see cref="{{details.Target.ToCRef()}}"/>
                                  /// </summary>
-                                 public static {{details.SourceName}} CreateNewMock({{parameterList}}System.Action<Config>? config = null) => new {{details.MockType}}({{argumentList2}}config);
+                                 public static {{details.SourceName}} CreateNewMock({{parameterList}}System.Action<Config>? config = null) => new {{details.MockType}}({{argumentList}}config);
                              }
                              """);
             }
         }
+
+        return result;
     }
 
-    public static string BuildEmptyConstructor(MockDetails details) =>
-        ($$"""
-           #region Constructors
-           ->
-           
-           internal protected MockOf_{{details.Target.Name}}(System.Action<Config>? config = null) {
-               var result = new Config(this);
-               config?.Invoke(result);
-               _config = result;
-               if(_hasLog) {
-                  _log.Add("{{details.Target}}.{{details.Target.Name}}()");
-               }
-           }
+    private static CodeBuilder BuildEmptyConstructor(MockDetails details)
+    {
+        CodeBuilder result = new();
 
-           internal partial class Config{
-               public static {{details.SourceName}} CreateNewMock(System.Action<Config>? config = null) => new {{details.MockType}}(config);
-           }
-           
-           <-
-           #endregion
-           """);
+        using (result.Region("Constructors"))
+        {
+            result.Add($$"""
+                         internal protected MockOf_{{details.Target.Name}}(System.Action<Config>? config = null) {
+                             var result = new Config(this);
+                             config?.Invoke(result);
+                             _config = result;
+                             if(_hasLog) {
+                                _log.Add("{{details.Target}}.{{details.Target.Name}}()");
+                             }
+                         }
+
+                         internal partial class Config{
+                             public static {{details.SourceName}} CreateNewMock(System.Action<Config>? config = null) => new {{details.MockType}}(config);
+                         }
+                         """);
+        }
+
+        return result;
+    }
 }
