@@ -57,3 +57,18 @@ public class AsyncMethodTests(ITestOutputHelper testOutputHelper)
         Task<int> WithoutParameter();
     }
 }
+
+public class Sub
+{
+    [Fact]
+    public void METHOD()
+    {
+        // Arrange
+        var namedTypeSymbol = SymbolHelper.GetClassSymbol("public class Name {}", "Name");
+
+        // ACT
+        Console.WriteLine(namedTypeSymbol);
+        
+        // Assert 
+    }
+}

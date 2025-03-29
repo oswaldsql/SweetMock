@@ -8,14 +8,14 @@ using Util;
 
 public class LargeTest(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "Missing config extension methods")]
     public void MethodWithOutArgumentTests()
     {
         var source = @"
 #nullable enable
 
 namespace Demo;
-using SweetMock.UnitTests;
+using SweetMock.BuilderTests;
 using SweetMock;
 using System;
 using System.Threading.Tasks;

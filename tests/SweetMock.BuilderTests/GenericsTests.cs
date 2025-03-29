@@ -8,18 +8,18 @@ using Util;
 
 public class GenericsTests(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact()]
     public void EventInheritanceTests()
     {
         var source = $@"
 namespace Demo;
 
-using SweetMock.UnitTests;
+using SweetMock.BuilderTests;
 using SweetMock;
 using System;
 
 
-[Mock<MiniMock.UnitTests.GenericsTests.IGeneric<int, int>>]
+[Mock<SweetMock.BuilderTests.GenericsTests.IGeneric<int, int>>]
 public class TestClass{{
     public void Test() {{
        {""}
@@ -33,7 +33,7 @@ public class TestClass{{
         Assert.Empty(generate.GetWarnings());
     }
 
-    [Theory]
+    [Theory()]
     [InlineData("where T : struct", "int, int")]
     [InlineData("where T : class", "Baseclass, int")]
     [InlineData("where T : class?", "Baseclass, int")]
@@ -53,8 +53,8 @@ public class TestClass{{
 #nullable enable
 namespace Demo;
 
-using MiniMock.UnitTests;
-using MiniMock;
+using SweetMock.BuilderTests;
+using SweetMock;
 using System;
 
 public class Baseclass {{}}

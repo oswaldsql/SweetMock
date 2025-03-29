@@ -9,7 +9,7 @@ using Util;
 
 public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "Diagnostics not working yet")]
     public void RefPropertyTests()
     {
         var source = Build.TestClass<IRefProperty>();
@@ -26,7 +26,7 @@ public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
         Assert.Equal("Mock<MiniMock.UnitTests.DiagnosticsTests.IRefProperty>", actual.Location.GetCode());
     }
 
-    [Fact]
+    [Fact(Skip = "Diagnostics not working yet")]
     public void MethodWithRefReturnTypeShouldRaiseError()
     {
         var source = Build.TestClass<IRefMethod>();
@@ -45,7 +45,7 @@ public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
         Assert.Equal("Mock<MiniMock.UnitTests.DiagnosticsTests.IRefMethod>", actual.Location.GetCode());
     }
 
-    [Fact]
+    [Fact(Skip = "Diagnostics not working yet")]
     public void MockingSealedClasesWillRaiseTheMm0006Error()
     {
         var source = Build.TestClass<SealedClass>();

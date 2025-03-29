@@ -7,59 +7,59 @@ using MemberBuilders;
 using Microsoft.CodeAnalysis;
 using SweetMock.Utils;
 
-public class LogBuilder
+public static class LogBuilder
 {
-    public static string InitializeLogging() =>
-        $$"""
-          # region Logging
-          ->
+    internal static CodeBuilder InitializeLogging(this CodeBuilder source)
+    {
 
-          private bool _hasLog = false;
-          private SweetMock.CallLog _log = new SweetMock.CallLog();
-          
-          /// <summary>
-          /// Adding logging to the configuration.
-          /// </summary>
-          internal partial class Config
-          {
-            public Config LogCallsTo(SweetMock.CallLog callLog) {
-                target._log = callLog;
-                target._hasLog = true;
-                return this;
+        using (source.Region("Logging"))
+        {
+            source.Add("""
+                       private bool _hasLog = false;
+                       private SweetMock.CallLog _log = new SweetMock.CallLog();
+                       """);
+            using (source.AddToConfig())
+            {
+                source.AddSummary("Add logging to the configuration.");
+                source.AddParameter("callLog", "CallLog to use for logging.");
+                source.AddReturns("The configuration object.");
+                source.Add("""
+                           public Config LogCallsTo(SweetMock.CallLog callLog) {
+                                 target._log = callLog;
+                                 target._hasLog = true;
+                                 return this;
+                           }
+                           """);
             }
-          }
-          <-
-          #endregion
-          """;
+        }
+
+        return source;
+    }
 
     public static string BuildLogSegment(IMethodSymbol? symbol, bool skipParameters = false)
     {
         if (symbol == null) { return "";}
 
-        string logSegment;
+        CodeBuilder result = new();
+        BuildLogSegment(result, symbol, skipParameters);
+        return result.ToString();
+    }
+
+    internal static CodeBuilder BuildLogSegment(this CodeBuilder builder, IMethodSymbol? symbol, bool skipParameters = false)
+    {
+        if (symbol == null) { return builder;}
+
         if (!skipParameters && symbol.Parameters.Any(t => t.RefKind == RefKind.None))
         {
             var LogArgumentsValue = symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(argument);
-            logSegment = $$"""
-                           if(_hasLog) {
-                           ->
-                             _log.Add("{{symbol}}", SweetMock.Arguments{{string.Join("", LogArgumentsValue)}});
-                           }
-                           <-
-                           """;
+            builder.Scope("if(_hasLog)", b => b.Add($"_log.Add(\"{symbol}\", SweetMock.Arguments{string.Join("", LogArgumentsValue)});"));
         }
         else
         {
-            logSegment = $$"""
-                           if(_hasLog) {
-                           ->
-                             _log.Add("{{symbol}}");
-                           }
-                           <-
-                           """;
+            builder.Scope("if(_hasLog)", b => b.Add($"_log.Add(\"{symbol}\");"));
         }
 
-        return logSegment;
+        return builder;
     }
 
     private static string argument(IParameterSymbol t, int i)

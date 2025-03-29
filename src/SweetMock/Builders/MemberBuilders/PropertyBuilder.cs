@@ -38,19 +38,10 @@ internal class PropertyBuilder
         {
             var index = 0;
             foreach (var symbol in symbols)
-                if (symbol.IsStatic)
-                {
-                    builder.Add($"// Ignoring Static property {symbol}.");
-                }
-                else if (symbol is { IsAbstract: false, IsVirtual: false })
-                {
-                    builder.Add($"// Ignoring property {symbol}.");
-                }
-                else
-                {
-                    index++;
-                    BuildProperty(builder, symbol, index);
-                }
+            {
+                index++;
+                BuildProperty(builder, symbol, index);
+            }
 
             return builder;
         }
@@ -64,6 +55,8 @@ internal class PropertyBuilder
     /// <param name="index">The index of the property.</param>
     private static void BuildProperty(CodeBuilder builder, IPropertySymbol symbol, int index)
     {
+        if(symbol.ReturnsByRef) throw new Exception("Property has returns byref");
+
         var propertyName = symbol.Name;
         var internalName = index == 1 ? propertyName : $"{propertyName}_{index}";
         var type = symbol.Type.ToString();
@@ -100,37 +93,19 @@ internal class PropertyBuilder
 
                       """);
 
-        builder.Add("internal partial class Config {");
-
-        switch (hasSet, hasGet)
+        using (builder.AddToConfig())
         {
-            case (true, true):
-                builder.Add($$"""
-                                public Config {{internalName}}(System.Func<{{type}}> get, System.Action<{{type}}> set) {
-                                    target._{{internalName}}_get = get;
-                                    target._{{internalName}}_set = set;
-                                    return this;
-                                }
-                              """);
-                break;
-            case (false, true):
-                builder.Add($$"""
-                                public Config {{internalName}}(System.Func<{{type}}> get) {
-                                    target._{{internalName}}_get = get;
-                                    return this;
-                                }
-                              """);
-                break;
-            case (true, false):
-                builder.Add($$"""
-                                public Config {{internalName}}(System.Action<{{type}}> set) {
-                                    target._{{internalName}}_set = set;
-                                    return this;
-                                }
-                              """);
-                break;
-        }
+            var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{type}> set" : "");
 
-        builder.Add("}");
+            builder.AddSummary($"Configures {internalName} by specifying methods to call when the property is accessed.");
+            builder.AddParameter("get", "Function to call when the property is read.", hasGet);
+            builder.AddParameter("set", "Function to call when the property is set.", hasGet);
+            builder.AddReturns("The configuration object.");
+            builder.Add($$"""public Config {{internalName}}({{p}}) {""").Indent();
+            builder.Add(hasGet, () => $"target._{internalName}_get = get;");
+            builder.Add(hasSet, () => $"target._{internalName}_set = set;");
+            builder.Add("return this;");
+            builder.Unindent().Add($$"""}""");
+        }
     }
 }

@@ -1,5 +1,6 @@
 namespace SweetMock.Builders.MemberBuilders;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -8,11 +9,11 @@ using Utils;
 /// <summary>
 ///     Represents a builder for methods, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class MethodBuilder
+internal static class MethodBuilder
 {
     public static CodeBuilder Build(IEnumerable<IMethodSymbol> methods)
     {
-        CodeBuilder result = new();
+        using CodeBuilder result = new();
 
         var lookup = methods.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -31,7 +32,7 @@ internal class MethodBuilder
     /// <returns>True if at least one method was built; otherwise, false.</returns>
     private static CodeBuilder BuildMethods(IMethodSymbol[] methodSymbols)
     {
-        CodeBuilder result = new();
+        using CodeBuilder result = new();
 
         var name = methodSymbols.First().Name;
 
@@ -39,8 +40,10 @@ internal class MethodBuilder
         {
             var methodCount = 1;
             foreach (var symbol in methodSymbols)
-                if (Build(result, symbol, methodCount))
-                    methodCount++;
+            {
+                result.Add(Build(symbol, methodCount));
+                methodCount++;
+            }
         }
 
         return result;
@@ -53,8 +56,12 @@ internal class MethodBuilder
     /// <param name="symbol">The method symbol to build the method from.</param>
     /// <param name="methodCount">The count of methods built so far.</param>
     /// <returns>True if the method was built; otherwise, false.</returns>
-    private static bool Build(CodeBuilder builder, IMethodSymbol symbol, int methodCount)
+    private static CodeBuilder Build(IMethodSymbol symbol, int methodCount)
     {
+        if(symbol.ReturnsByRef) throw new Exception("Property has returns byref");
+
+        using CodeBuilder builder = new();
+
         var parameters = symbol.ParameterStrings();
 
         var method = MethodMetadata(symbol);
@@ -75,26 +82,24 @@ internal class MethodBuilder
                           {{method.ReturnString}}{{castString}}this.{{functionPointer}}.Invoke({{parameters.nameList}});
                       }
                       private Config.{{delegateInfo.Name}} {{functionPointer}} {get;set;} = ({{delegateInfo.Parameters}}) => {{symbol.BuildNotMockedException()}}
-
-                      internal partial class Config{
-                          /// <summary>
-                          /// Delegate for calling {{symbol}}
-                          /// </summary>
-                          public delegate {{delegateInfo.Type}} {{delegateInfo.Name}}({{delegateInfo.Parameters}});
-
-                          /// <summary>
-                          /// Configures the mock to execute the specified action when the method matching the signature is called.
-                          /// </summary>
-                          /// <param name="call">The action or function to execute when the method is called.</param>
-                          /// <returns>The mock Configuration</returns>
-                          public Config {{method.Name}}({{delegateInfo.Name}} call){
-                              target.{{functionPointer}} = call;
-                              return this;
-                          }
-                      }
                       """);
 
-        return true;
+        using (builder.AddToConfig())
+        {
+            builder.AddSummary($"Delegate for calling {symbol}");
+            builder.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
+            builder.AddSummary("Configures the mock to execute the specified action when the method matching the signature is called.");
+            builder.AddParameter("call", "The action or function to execute when the method is called.");
+            builder.AddReturns("The mock Configuration");
+            builder.Add($$"""
+                              public Config {{method.Name}}({{delegateInfo.Name}} call){
+                                  target.{{functionPointer}} = call;
+                                  return this;
+                              }
+                          """);
+        }
+
+        return builder;
     }
 
     private static DelegateInfo DelegateInfo(IMethodSymbol symbol, int methodCount)

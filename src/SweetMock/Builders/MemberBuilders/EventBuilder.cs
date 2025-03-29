@@ -12,7 +12,7 @@ internal static class EventBuilder
 {
     public static CodeBuilder Build(IEnumerable<IEventSymbol> events)
     {
-        CodeBuilder result = new();
+        using CodeBuilder result = new();
 
         var lookup = events.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -29,19 +29,20 @@ internal static class EventBuilder
     /// <param name="builder">The code builder to add the events to.</param>
     /// <param name="eventSymbols">The event symbols to build.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
-    private static CodeBuilder BuildEvents(IEnumerable<IEventSymbol> eventSymbols)
+    private static CodeBuilder BuildEvents(IEventSymbol[] eventSymbols)
     {
-        CodeBuilder builder = new();
+        using CodeBuilder builder = new();
 
-        var enumerable = eventSymbols as IEventSymbol[] ?? eventSymbols.ToArray();
-        var name = enumerable.First().Name;
+        var name = eventSymbols.First().Name;
 
         using (builder.Region($"Event : {name}"))
         {
             var eventCount = 1;
-            foreach (var symbol in enumerable)
-                if (BuildEvent(builder, symbol, eventCount))
-                    eventCount++;
+            foreach (var symbol in eventSymbols)
+            {
+                BuildEvent(builder, symbol, eventCount);
+                eventCount++;
+            }
         }
 
         return builder;
@@ -55,7 +56,7 @@ internal static class EventBuilder
     /// <param name="helpers">A list of helper methods to add to.</param>
     /// <param name="eventCount">The count of the event being built.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
-    private static bool BuildEvent(CodeBuilder builder, IEventSymbol symbol, int eventCount)
+    private static void BuildEvent(CodeBuilder builder, IEventSymbol symbol, int eventCount)
     {
         var eventName = symbol.Name;
         var invokeMethod = symbol.Type.GetMembers().OfType<IMethodSymbol>().First(t => t.Name == "Invoke");
@@ -71,40 +72,34 @@ internal static class EventBuilder
                       private event {{typeSymbol}}? _{{eventFunction}};
                       {{accessibilityString}}event {{typeSymbol}}? {{containingSymbol}}{{eventName}}
                       {
-                          add
-                          {
-                      ->
-                          {{LogBuilder.BuildLogSegment(symbol.AddMethod, true)}}
-                          this._{{eventFunction}} += value;
-                      <-
-                          }
-                          remove {
-                      ->
-                          {{LogBuilder.BuildLogSegment(symbol.RemoveMethod, true)}}
-                          this._{{eventFunction}} -= value;
-                      <-
-                          }
-                      }
-
                       """);
 
-        builder.Add("internal partial class Config {").Indent();
-        if (types == "System.EventArgs")
-            builder.Add($$"""
-                          public Config {{eventName}}(out System.Action trigger) {
-                              trigger = () => target._{{eventName}}?.Invoke(target, System.EventArgs.Empty);
-                              return this;
-                          }
-                          """);
-        else
-            builder.Add($$"""
-                          public Config {{eventName}}(out System.Action<{{types}}> trigger) {
-                              trigger = args => target._{{eventName}}?.Invoke(target, args);
-                              return this;
-                          }
-                          """);
-        builder.Unindent().Add("}");
+        builder.Scope("add", b => b
+            .BuildLogSegment(symbol.AddMethod, true)
+            .Add($"this._{eventFunction} += value;"));
 
-        return true;
+        builder.Scope("remove", b => b
+            .BuildLogSegment(symbol.RemoveMethod, true)
+            .Add($"this._{eventFunction} -= value;"));
+
+        builder.Add("}");
+
+        using (builder.AddToConfig())
+        {
+            if (types == "System.EventArgs")
+                builder.Add($$"""
+                              public Config {{eventName}}(out System.Action trigger) {
+                                  trigger = () => target._{{eventName}}?.Invoke(target, System.EventArgs.Empty);
+                                  return this;
+                              }
+                              """);
+            else
+                builder.Add($$"""
+                              public Config {{eventName}}(out System.Action<{{types}}> trigger) {
+                                  trigger = args => target._{{eventName}}?.Invoke(target, args);
+                                  return this;
+                              }
+                              """);
+        }
     }
 }

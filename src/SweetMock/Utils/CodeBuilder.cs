@@ -3,26 +3,35 @@ namespace SweetMock.Utils;
 using System;
 using System.Collections.Generic;
 
-internal class CodeBuilder(string prepend = "")
+internal class CodeBuilder(string prepend = "") : IDisposable
 {
     private readonly List<string> lines = [];
-    private int indentation;
 
     public bool IsEmpty => this.lines.Count == 0;
 
+    public int Indentation { get; private set; }
+
+    public void Dispose()
+    {
+        if (this.Indentation != 0)
+        {
+            throw new("Indentation can not be zero");
+        }
+    }
+
     public CodeBuilder Indent()
     {
-        this.indentation += 1;
+        this.Indentation = this.Indentation + 1;
         return this;
     }
 
     public CodeBuilder Unindent()
     {
-        this.indentation -= 1;
+        this.Indentation = this.Indentation - 1;
 
-        if (this.indentation < 0)
+        if (this.Indentation < 0)
         {
-            throw new Exception("Indentation can not be less than 0");
+            throw new("Indentation can not be less than 0");
         }
 
         return this;
@@ -42,13 +51,15 @@ internal class CodeBuilder(string prepend = "")
             switch (s)
             {
                 case "->":
-                    this.indentation += 1;
+                    this.Indentation = this.Indentation + 1;
                     continue;
                 case "<-":
-                    this.indentation -= 1;
+                    this.Indentation = this.Indentation - 1;
+                    continue;
+                case "--":
                     continue;
                 default:
-                    this.lines.Add(prepend + new string(' ', this.indentation * 4) + s);
+                    this.lines.Add(prepend + new string(' ', this.Indentation * 4) + s);
                     break;
             }
         }
@@ -58,8 +69,15 @@ internal class CodeBuilder(string prepend = "")
 
     public CodeBuilder Add(bool condition, Func<string> add) => condition ? this.Add(add()) : this;
 
-    public CodeBuilder On(Func<bool> predicate) => predicate() ? this : new CodeBuilder();
-    public CodeBuilder On(bool condition) => condition ? this : new CodeBuilder();
+    public CodeBuilder Condition(bool condition, Action<CodeBuilder> add)
+    {
+        if (condition) add(this);
+        return this;
+    }
+
+
+    public CodeBuilder On(Func<bool> predicate) => predicate() ? this : new();
+    public CodeBuilder On(bool condition) => condition ? this : new();
 
     public CodeBuilder Add(CodeBuilder builder)
     {
@@ -84,23 +102,14 @@ internal class CodeBuilder(string prepend = "")
     }
 
     public SurroundingCodeBuilder Region(string region) => new(this, "#region " + region, "#endregion");
-}
 
-internal class SurroundingCodeBuilder : IDisposable
-{
-    private readonly CodeBuilder builder;
-    private readonly string append1;
-
-    public SurroundingCodeBuilder(CodeBuilder codeBuilder, string prepend = "", string append = "")
+    public CodeBuilder Scope(string prefix, Action<CodeBuilder> body)
     {
-        builder = codeBuilder;
-        codeBuilder.Add(prepend).Indent();
-        append1 = append;
-    }
+        this.Add(prefix + "{").Indent();
 
+        body(this);
 
-    public void Dispose()
-    {
-        builder.Unindent().Add(append1);
+        this.Unindent().Add("}");
+        return this;
     }
 }

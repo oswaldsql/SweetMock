@@ -18,7 +18,7 @@ internal static class ConstructorBuilder {
 
     private static CodeBuilder BuildConstructors(MockDetails details, IEnumerable<IMethodSymbol> constructors)
     {
-        CodeBuilder result = new();
+        using CodeBuilder result = new();
 
         using (result.Region("Constructors"))
         {
@@ -30,20 +30,16 @@ internal static class ConstructorBuilder {
 
                 result.Add($$"""
                              internal protected {{details.MockName}}({{parameterList}}System.Action<Config>? config = null) : base({{baseArguments}}) {
-                                 var result = new Config(this);
-                                 config?.Invoke(result);
-                                 _config = result;
-
+                                 var result = new Config(this, config);
                                  {{LogBuilder.BuildLogSegment(constructor)}}
                              }
-
-                             internal partial class Config{
-                                 /// <summary>
-                                 ///     Creates a new instance of <see cref="{{details.Target.ToCRef()}}"/>
-                                 /// </summary>
-                                 public static {{details.SourceName}} CreateNewMock({{parameterList}}System.Action<Config>? config = null) => new {{details.MockType}}({{argumentList}}config);
-                             }
                              """);
+
+                using (result.AddToConfig())
+                {
+                    result.AddSummary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>");
+                    result.Add($"public static {details.SourceName} CreateNewMock({parameterList}System.Action<Config>? config = null) => new {details.MockType}({argumentList}config);");
+                }
             }
         }
 
@@ -52,24 +48,23 @@ internal static class ConstructorBuilder {
 
     private static CodeBuilder BuildEmptyConstructor(MockDetails details)
     {
-        CodeBuilder result = new();
+        using CodeBuilder result = new();
 
         using (result.Region("Constructors"))
         {
             result.Add($$"""
                          internal protected MockOf_{{details.Target.Name}}(System.Action<Config>? config = null) {
-                             var result = new Config(this);
-                             config?.Invoke(result);
-                             _config = result;
+                             var result = new Config(this, config);
                              if(_hasLog) {
                                 _log.Add("{{details.Target}}.{{details.Target.Name}}()");
                              }
                          }
-
-                         internal partial class Config{
-                             public static {{details.SourceName}} CreateNewMock(System.Action<Config>? config = null) => new {{details.MockType}}(config);
-                         }
                          """);
+            using (result.AddToConfig())
+            {
+                result.AddSummary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>");
+                result.Add($"public static {details.SourceName} CreateNewMock(System.Action<Config>? config = null) => new {details.MockType}(config);");
+            }
         }
 
         return result;

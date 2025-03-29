@@ -51,12 +51,12 @@ public class MethodTests(ITestOutputHelper testOutputHelper)
         Assert.Empty(generate.GetErrors());
     }
 
-    [Fact]
+    [Fact()]
     public void GenericTests()
     {
         var source = @"namespace Demo;
-using MiniMock.UnitTests;
-using MiniMock;
+using SweetMock.BuilderTests;
+using SweetMock;
 using System;
 
 [Mock<MethodTests.IGeneric<string>>]
