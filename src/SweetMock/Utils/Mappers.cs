@@ -7,18 +7,18 @@ using Microsoft.CodeAnalysis;
 
 public static class Mappers
 {
-    internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") => 
+    internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
         values == null ? "" : string.Join(separator, values.Select(mapper));
-    
+
     static SymbolDisplayFormat format = new(
         SymbolDisplayGlobalNamespaceStyle.Omitted,
         SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
         memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
-        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut,
-        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
+        //miscellaneousOptions: SymbolDisplayMiscellaneousOptions.
     );
-    
+
     public static string ToCRef(this ISymbol symbol)
     {
         var prefix = symbol.Prefix();

@@ -40,15 +40,16 @@ public class UnitTest1(ITestOutputHelper testOutputHelper)
             testOutputHelper.WriteLine(log.ToString() + "[" + log.Arguments + "]");
         }
 
-        var sequence = callLog.Sequence(log => log.DownloadExists(), log => log.CurrentVersion_Set(), log => log.CurrentVersion_Get());//,  log => log.CurrentVersion_Get(), log => log.CurrentVersion_Get(), log => log.Item_Set(), log => log.DownloadExists());
-        foreach (var log in sequence)
-        {
-            testOutputHelper.WriteLine(log.ToString() + "[" + log.Arguments + "]");
-        }
+//        var sequence = callLog.Sequence(log => log.DownloadExists(), log => log.CurrentVersion_Set(), log => log.CurrentVersion_Get());//,  log => log.CurrentVersion_Get(), log => log.CurrentVersion_Get(), log => log.Item_Set(), log => log.DownloadExists());
+//        foreach (var log in sequence)
+//        {
+//            testOutputHelper.WriteLine(log.ToString() + "[" + log.Arguments + "]");
+//        }
         
         callLog.CurrentVersion_Set(t => t.value.Major == 2);
         callLog.CurrentVersion_Get();
         callLog.Item_Set(t => t.key == "current");
+        callLog.NewVersionAdded_Add();
         callLog.DownloadExists(t => t.version == "new Version(1, 2, 3)");
         
         EventHandler<Version> sutOnNewVersionAdded()
@@ -58,26 +59,29 @@ public class UnitTest1(ITestOutputHelper testOutputHelper)
     }
 }
 
+
+
 public static class CallLogExtensions
 {
-    public static IEnumerable<CallLogItem> Sequence(this CallLog callLog, params Func<IEnumerable<CallLogItem>, IEnumerable<CallLogItem>>[] funcs)
-    {
-        int lastIndex = 0;
-        List<CallLogItem> result = [];
-        foreach (var func in funcs)
-        {
-            var match = func(callLog.Skip(lastIndex)).FirstOrDefault();
-            if (match != null)
-            {
-                lastIndex = match.Index;
-                result.Add(match);
-            }
-            else
-            {
-                result = [];
-                continue;
-            }
-        }
-        return result;
-    }
+    
+//    public static IEnumerable<CallLogItem> Sequence(this CallLog callLog, params Func<CallLog, IEnumerable<CallLogItem>>[] funcs)
+//    {
+//        int lastIndex = 0;
+//        List<CallLogItem> result = [];
+//        foreach (var func in funcs)
+//        {
+//            var match = func(callLog.Skip(lastIndex)).FirstOrDefault();
+//            if (match != null)
+//            {
+//                lastIndex = match.Index;
+//                result.Add(match);
+//            }
+//            else
+//            {
+//                result = [];
+//                continue;
+//            }
+//        }
+//        return result;
+//    }
 }

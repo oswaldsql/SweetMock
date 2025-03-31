@@ -1,10 +1,10 @@
 ﻿#nullable enable
+using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 
 namespace SweetMock {
-    using System.Linq;
-
     public class CallLogItem
     {
         public int Index { get; init; }
@@ -36,21 +36,21 @@ namespace SweetMock {
         {
             this.Arguments = arguments;
         }
-        
+
         protected Arguments Arguments { get;private set; } = Arguments.Empty;
-    } 
-    
+    }
+
     public class Arguments
     {
         Dictionary<string, object?> values = new Dictionary<string, object?>();
-        
+
         public static Arguments Empty => new Arguments();
-        
+
         public static Arguments With(string key, object? value)
         {
             return new Arguments().And(key, value);
         }
-        
+
         public Arguments And(string key, object? value)
         {
             values[key] = value;
@@ -74,7 +74,7 @@ namespace SweetMock {
             return values.Count == 0 ? "" : string.Join(", ", values.Select(t => $"{t.Key} : '{t.Value}'"));
         }
     }
-    
+
     public class CallLog : System.Collections.Generic.IEnumerable<CallLogItem>
     {
         private int index = 0;
@@ -94,5 +94,15 @@ namespace SweetMock {
         public IEnumerator<CallLogItem> GetEnumerator() => this._logs.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() =>  this._logs.GetEnumerator();
+
+        public IEnumerable<TypedCallLogItem<T>> Matching<T>(string signature, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
+            this.Where(t => t.MethodSignature == signature)
+                .Select(t => new TypedCallLogItem<T>(t))
+                .Where(t => predicate == null || predicate(t.TypedArguments));
+
+        public IEnumerable<TypedCallLogItem<T>> Matching<T>(HashSet<string> signatures, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
+            this.Where(t => signatures.Contains(t.MethodSignature!))
+                .Select(t => new TypedCallLogItem<T>(t))
+                .Where(t => predicate == null || predicate(t.TypedArguments));
     }
 }

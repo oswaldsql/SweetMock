@@ -86,9 +86,9 @@ internal static class MethodBuilder
 
         using (builder.AddToConfig())
         {
-            builder.AddSummary($"Delegate for calling {symbol}");
+            builder.AddSummary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>");
             builder.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
-            builder.AddSummary("Configures the mock to execute the specified action when the method matching the signature is called.");
+            builder.AddSummary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.");
             builder.AddParameter("call", "The action or function to execute when the method is called.");
             builder.AddReturns("The mock Configuration");
             builder.Add($$"""

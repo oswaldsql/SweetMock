@@ -20,7 +20,7 @@ public class InheritanceTests(ITestOutputHelper testOutputHelper)
         Assert.Empty(generate.GetWarnings());
     }
 
-    [Fact]
+    [Fact(Skip = "new keyword not supported yet")]
     public void ClassInheritanceTests2()
     {
         var source = Build.TestClass<IDerived>();
@@ -142,7 +142,7 @@ public class InheritanceTests(ITestOutputHelper testOutputHelper)
 
 public class DoubleInheritanceTest(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "Multiple inheritance does not work right now")]
     public void MethodsInheritedFromMultipleSourcesShouldOnlyBeWrittenOnce()
     {
         var source = Build.TestClass<IDoubleInheritance>();

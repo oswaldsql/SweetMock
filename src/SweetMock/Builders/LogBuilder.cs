@@ -1,17 +1,13 @@
 ﻿namespace SweetMock.Builders;
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using MemberBuilders;
 using Microsoft.CodeAnalysis;
-using SweetMock.Utils;
+using Utils;
 
 public static class LogBuilder
 {
     internal static CodeBuilder InitializeLogging(this CodeBuilder source)
     {
-
         using (source.Region("Logging"))
         {
             source.Add("""
@@ -38,7 +34,7 @@ public static class LogBuilder
 
     public static string BuildLogSegment(IMethodSymbol? symbol, bool skipParameters = false)
     {
-        if (symbol == null) { return "";}
+        if (symbol == null) { return ""; }
 
         CodeBuilder result = new();
         BuildLogSegment(result, symbol, skipParameters);
@@ -47,7 +43,7 @@ public static class LogBuilder
 
     internal static CodeBuilder BuildLogSegment(this CodeBuilder builder, IMethodSymbol? symbol, bool skipParameters = false)
     {
-        if (symbol == null) { return builder;}
+        if (symbol == null) { return builder; }
 
         if (!skipParameters && symbol.Parameters.Any(t => t.RefKind == RefKind.None))
         {
@@ -62,8 +58,5 @@ public static class LogBuilder
         return builder;
     }
 
-    private static string argument(IParameterSymbol t, int i)
-    {
-        return i == 0 ? $".With(\"{t.Name}\", {t.Name})" : $".And(\"{t.Name}\", {t.Name})";
-    }
+    private static string argument(IParameterSymbol t, int i) => i == 0 ? $".With(\"{t.Name}\", {t.Name})" : $".And(\"{t.Name}\", {t.Name})";
 }

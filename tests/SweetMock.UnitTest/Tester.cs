@@ -1,9 +1,9 @@
 namespace SweetMock.UnitTest;
 
 [Mock<IVersionLibrary>]
-[Mock<RepoBaseClass>]
-[Mock<MethodExamples>]
-[Mock<IMethodExamples>]
+//[Mock<RepoBaseClass>]
+//[Mock<MethodExamples>]
+//[Mock<IMethodExamples>]
 public class Tester
 {
     public void t()
