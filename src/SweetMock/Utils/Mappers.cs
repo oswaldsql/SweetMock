@@ -23,7 +23,7 @@ public static class Mappers
     {
         var prefix = symbol.Prefix();
 
-        return $"{prefix}{symbol.ToDisplayString(format)}".Replace('<', '{').Replace('>', '}');
+        return $"{prefix}{symbol.ToDisplayString(format)}".Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
     }
 
     private static string Prefix(this ISymbol symbol) =>

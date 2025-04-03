@@ -21,6 +21,25 @@ public class AbstractClassesTest(ITestOutputHelper output)
 
     [Fact]
     [Mock<AbstractClass>]
+    public void PropertiesCanBeSetToReturnASpecificValue()
+    {
+        CallLog callLog = new();
+        var sut = Mock.AbstractClass(config => config
+            .LogCallsTo(callLog)
+            .Abstract("Abstract")
+            .AbstractGetOnly("AbstractGetOnly")
+            .AbstractSetOnly("AbstractSetOnly"));
+
+        sut.Abstract += "_Test";
+        var actualGet = sut.AbstractGetOnly ;
+        sut.AbstractSetOnly = "set";
+
+        Assert.Equal("Abstract_Test", sut.Abstract);
+        Assert.Equal("AbstractGetOnly", actualGet);
+    }
+    
+    [Fact]
+    [Mock<AbstractClass>]
     public void AbstractClassPropertiesFunctionsCanBeSet()
     {
         string? actualAbstract = null;

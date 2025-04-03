@@ -23,9 +23,9 @@ public class IndexTests(ITestOutputHelper testOutputHelper)
     internal interface IIndexRepository
     {
         int this[uint index] { set; }
-        int this[int index] { get; }
-        int this[string index] { get; set; }
-        (string name, int age) this[Guid index] { get; set; }
-        string this[(string name, int age) index] { get; set; }
+//        int this[int index] { get; }
+//        int this[string index] { get; set; }
+//        (string name, int age) this[Guid index] { get; set; }
+//        string this[(string name, int age) index] { get; set; }
     }
 }

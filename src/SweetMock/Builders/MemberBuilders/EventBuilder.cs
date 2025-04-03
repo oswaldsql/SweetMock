@@ -1,5 +1,6 @@
 namespace SweetMock.Builders.MemberBuilders;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -101,5 +102,56 @@ internal static class EventBuilder
                               }
                               """);
         }
+    }
+
+    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IEventSymbol> events)
+    {
+        var result = new CodeBuilder();
+
+        foreach (var eventSymbol in events)
+        {
+            var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod.Parameters.Skip(1).Select(t => t.Type));
+
+            result.Add();
+            result.AddSummary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.");
+            result.AddParameter("config", "The configuration object used to set up the mock.");
+            if (types != "System.EventArgs")
+            {
+                result.AddParameter("eventArgs", "The arguments used in the event.");
+                result.AddReturns("The updated configuration object.");
+                result.AddConfigExtension(mock, eventSymbol.Name, [types + " eventArgs"], builder =>
+                {
+                    builder.Add($"config.{eventSymbol.Name}(out var trigger);");
+                    builder.Add("trigger.Invoke(eventArgs);");
+                });
+            }
+            else
+            {
+                result.AddReturns("The updated configuration object.");
+                result.AddConfigExtension(mock, eventSymbol.Name, [], builder =>
+                {
+                    builder.Add($"config.{eventSymbol.Name}(out var trigger);");
+                    builder.Add("trigger.Invoke();");
+                });
+            }
+        }
+
+        return result;
+    }
+
+    public static CodeBuilder AddConfigExtension(this CodeBuilder result, MockDetails mock, string name, string[] arguments, Action<CodeBuilder> build)
+    {
+        string args = "";
+        if (arguments.Length > 0)
+        {
+            args = ", " + string.Join(" , ", arguments);
+        }
+
+        result.Add($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args})");
+        result.Add("{").Indent();
+        build(result);
+        result.Add("return config;");
+        result.Unindent().Add("}");
+        return result;
     }
 }

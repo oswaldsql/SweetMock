@@ -100,12 +100,39 @@ internal class PropertyBuilder
             builder.AddSummary($"Configures {internalName} by specifying methods to call when the property is accessed.");
             builder.AddParameter("get", "Function to call when the property is read.", hasGet);
             builder.AddParameter("set", "Function to call when the property is set.", hasGet);
-            builder.AddReturns("The configuration object.");
+            builder.AddReturns("The updated configuration object.");
             builder.Add($$"""public Config {{internalName}}({{p}}) {""").Indent();
             builder.Add(hasGet, () => $"target._{internalName}_get = get;");
             builder.Add(hasSet, () => $"target._{internalName}_set = set;");
             builder.Add("return this;");
             builder.Unindent().Add($$"""}""");
         }
+    }
+
+    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IPropertySymbol> properties)
+    {
+        var result = new CodeBuilder();
+
+        foreach (var property in properties)
+        {
+            var hasGet = property.GetMethod != null;
+            var hasSet = property.SetMethod != null;
+
+            result.AddSummary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.",
+                "This method configures the mock to use the specified value when the property is accessed.");
+            result.AddParameter("config", "The configuration object used to set up the mock.");
+            result.AddParameter("returns", "The value to use for mocking the property.");
+            result.AddReturns("The updated configuration object.");
+            result.Add($"public static {mock.MockType}.Config {property.Name}(this {mock.MockType}.Config config, {property.Type} returns)");
+            result.Add("{").Indent();
+            result.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
+            result.Add(hasGet && hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
+            result.Add(hasGet && !hasSet, () =>$"config.{property.Name}(get : () => {property.Name}_value.Value);");
+            result.Add(!hasGet && hasSet, () =>$"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
+            result.Add("return config;");
+            result.Unindent().Add("}");
+        }
+
+        return result;
     }
 }

@@ -59,7 +59,7 @@ public class GeneratedCodeAttributeTests
     public void GeneratedLoggerMockClassShouldHaveAttribute()
     {
         // Arrange
-        var sut = typeof(LogExtensionsFor_MockOf_IGeneratorTarget);
+        var sut = typeof(MockOf_IGeneratorTarget_LogExtensions);
 
         // ACT
         var actual = sut.GetCustomAttributes<GeneratedCodeAttribute>();

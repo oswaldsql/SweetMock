@@ -1,7 +1,5 @@
 ﻿namespace SweetMock.Builders;
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using MemberBuilders;
 using Microsoft.CodeAnalysis;
@@ -11,40 +9,30 @@ internal static class BaseClassBuilder
 {
     public static CodeBuilder Build(MockDetails details)
     {
-        using CodeBuilder result = new();
+        using CodeBuilder fileScope = new();
 
         var documentationName = details.Target.ToCRef();
 
-        result.AddFileHeader();
-        result.Add($$"""
-                     #nullable enable
-                     namespace {{details.Namespace}}
-                     {
-                     """).Indent();
-        result.AddSummary($"Mock implementation of <see cref=\"{documentationName}\"/>. Should only be used for testing purposes.");
-        result.Add($$"""
-                     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SourceGeneratorMetadata.Version}}")]
-                     internal class {{details.MockType}} : {{details.SourceName}} {{details.Constraints}}
-                     {
-                     """).Indent();
+        fileScope.AddFileHeader();
+        fileScope.Add("#nullable enable");
+        fileScope.Scope($"namespace {details.Namespace}", namespaceScope =>
+        {
+            namespaceScope.AddSummary($"Mock implementation of <see cref=\"{documentationName}\"/>.", "Should only be used for testing purposes.");
+            namespaceScope.AddGeneratedCodeAttrib();
+            namespaceScope.Scope($"internal class {details.MockType} : {details.SourceName}{details.Constraints}", classScope =>
+            {
+                namespaceScope.InitializeConfig(details);
 
-        InitializeConfig(details, result);
+                namespaceScope.InitializeLogging();
 
-        result.InitializeLogging();
+                namespaceScope.Add(BuildMembers(details));
+            });
+        });
 
-        result.Add(BuildMembers(details));
-
-        result.Add("""
-                    <-
-                    }
-                    <-
-                    }
-                    """);
-
-        return result;
+        return fileScope;
     }
 
-    private static void InitializeConfig(MockDetails details, CodeBuilder result)
+    private static void InitializeConfig(this CodeBuilder result, MockDetails details)
     {
         using (result.Region("Configuration"))
         {
@@ -52,7 +40,7 @@ internal static class BaseClassBuilder
             using (result.AddToConfig())
             {
                 result.Add($"private readonly {details.MockType} target;");
-                result.AddSummary("Initializes a new instance of the <see cref=\"T:Config\"/> class");
+                result.AddSummary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class");
                 result.AddParameter("target", "The target mock class.");
                 result.AddParameter("config", "Optional configuration method.");
                 result.Add($$"""
@@ -70,43 +58,23 @@ internal static class BaseClassBuilder
     {
         using CodeBuilder result = new();
 
-        var allMembers = details.Target.GetMembers().ToList();
-        if(details.Target.TypeKind == TypeKind.Interface)
-            AddInheritedInterfaces(allMembers, details.Target);
-        var m = allMembers.Where(IsCandidate).ToArray();
+        var candidates = details.GetCandidates();
 
-        var constructors = m.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Constructor);
+        var constructors = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Constructor);
         result.Add(ConstructorBuilder.Build(details, constructors));
 
-        m = m.Where(IsOverwritable).ToArray();
-
-        var methods = m.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
+        var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
         result.Add(MethodBuilder.Build(methods));
 
-        var properties = m.OfType<IPropertySymbol>().Where(t => !t.IsIndexer);
+        var properties = candidates.OfType<IPropertySymbol>().Where(t => !t.IsIndexer);
         result.Add(PropertyBuilder.Build(properties));
 
-        var indexers = m.OfType<IPropertySymbol>().Where(t => t.IsIndexer);
+        var indexers = candidates.OfType<IPropertySymbol>().Where(t => t.IsIndexer);
         result.Add(IndexBuilder.Build(indexers));
 
-        var events = m.OfType<IEventSymbol>();
+        var events = candidates.OfType<IEventSymbol>();
         result.Add(EventBuilder.Build(events));
 
         return result;
     }
-
-    private static bool IsOverwritable(ISymbol t) => t.IsAbstract || t.IsVirtual;
-
-    internal static void AddInheritedInterfaces(List<ISymbol> memberCandidates, INamedTypeSymbol namedTypeSymbol)
-    {
-        var allInterfaces = namedTypeSymbol.AllInterfaces;
-        foreach (var inherited in allInterfaces)
-        {
-            memberCandidates.AddRange(inherited.GetMembers());
-            AddInheritedInterfaces(memberCandidates, inherited);
-        }
-    }
-
-    private static bool IsCandidate(ISymbol symbol) =>
-        symbol is { IsStatic: false, IsSealed: false, DeclaredAccessibility: Accessibility.Public or Accessibility.Protected };
 }

@@ -13,10 +13,13 @@ public class Tester
         var sut = Mock.IVersionLibrary(config =>
             {
                 config
+                    .DownloadExists(throws:new ArgumentException())
                     .DownloadExists((string version) => true)
                     .DownloadLinkAsync(version => Task.FromResult(new Uri($"https://download/{version}")))
                     .CurrentVersion(get: () => new Version(1, 2, 3), set: version => { })
                     .NewVersionAdded(out triggerVersionAdded)
+                    .Indexer(new Dictionary<string, Version>())
+                    .Indexer(s => new Version(), (s, version) => {})
                     .LogCallsTo(callLog);
             })
             ;
@@ -30,15 +33,31 @@ public class Tester
             Console.WriteLine(log);
         }
         
-        
         Action<Version> a = null;
         var newMock = MockOf_IVersionLibrary.Config.CreateNewMock(config => config
             .DownloadExists((string version) => true)
             .DownloadLinkAsync(version => Task.FromResult(new Uri("https://sweetmock.org")))
             .NewVersionAdded(out a));
         a(new Version());
-        
     }
+}
+
+internal static class Ext
+{
+    public static MockOf_IVersionLibrary.Config DownloadExists(this MockOf_IVersionLibrary.Config config, Exception throws)
+    {
+        config.DownloadExists((string _) => throw throws);
+        config.DownloadExists((Version _) => throw throws);
+        return config;
+    }
+    
+    public static MockOf_IVersionLibrary.Config NewVersionAdded2(this MockOf_IVersionLibrary.Config config, Version newVersion)
+    {
+        config.NewVersionAdded(out var trigger);
+        trigger.Invoke(newVersion);
+        return config;
+    }
+    
 }
 
 public class MethodExamples

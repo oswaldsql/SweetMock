@@ -106,4 +106,30 @@ internal static class IndexBuilder
 
         return builder;
     }
+
+    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IPropertySymbol> indexers)
+    {
+        var result = new CodeBuilder();
+
+        foreach (var indexer in indexers)
+        {
+            var hasGet = indexer.GetMethod != null;
+            var hasSet = indexer.SetMethod != null;
+
+            var typeSymbol = indexer.Parameters[0].Type;
+            result.Add();
+            result.AddSummary("Gets or sets values in the dictionary when the indexer is called.", $"Configures <see cref=\"{indexer.ToCRef()}\" />");
+            result.AddParameter("config", "The configuration object used to set up the mock.");
+            result.AddParameter("values", "Dictionary containing the values for the indexer.");
+            result.AddReturns("The updated configuration object.");
+            result.Add($"public static {mock.MockType}.Config Indexer(this {mock.MockType}.Config config, System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values) =>");
+            result.Indent();
+            result.Add(hasGet && hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+            result.Add(hasGet && !hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key]);");
+            result.Add(!hasGet && hasSet, () => $"config.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+            result.Unindent();
+        }
+
+        return result;
+    }
 }

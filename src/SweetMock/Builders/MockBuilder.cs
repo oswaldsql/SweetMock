@@ -42,6 +42,9 @@ public class MockBuilder
 
         var logFilters = new LogExtensionsBuilder().BuildLogExtensions(mockDetails);
         yield return new("Logging", logFilters);
+
+        var configFiles = new ConfigExtensionsBuilder().Build(mockDetails);
+        yield return new("Config", configFiles);
     }
 
     private static MockDetails GetMockDetails(INamedTypeSymbol target)
