@@ -399,5 +399,6 @@ FodyWeavers.xsd
 
 .idea/
 /.NCrunch_SweetMock/StoredText
+/.NCrunch_SweetMock.slnx/StoredText
 *.ncrunchsolution
 *.ncrunchproject
