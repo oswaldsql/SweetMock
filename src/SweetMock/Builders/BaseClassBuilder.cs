@@ -9,23 +9,19 @@ internal static class BaseClassBuilder
 {
     public static CodeBuilder Build(MockDetails details)
     {
-        using CodeBuilder fileScope = new();
-
-        var documentationName = details.Target.ToCRef();
+        CodeBuilder fileScope = new();
 
         fileScope.AddFileHeader();
         fileScope.Add("#nullable enable");
         fileScope.Scope($"namespace {details.Namespace}", namespaceScope =>
         {
-            namespaceScope.AddSummary($"Mock implementation of <see cref=\"{documentationName}\"/>.", "Should only be used for testing purposes.");
+            namespaceScope.AddSummary($"Mock implementation of <see cref=\"{details.Target.ToCRef()}\"/>.", "Should only be used for testing purposes.");
             namespaceScope.AddGeneratedCodeAttrib();
             namespaceScope.Scope($"internal class {details.MockType} : {details.SourceName}{details.Constraints}", classScope =>
             {
-                namespaceScope.InitializeConfig(details);
-
-                namespaceScope.InitializeLogging();
-
-                namespaceScope.Add(BuildMembers(details));
+                classScope.InitializeConfig(details);
+                classScope.InitializeLogging();
+                classScope.Add(BuildMembers(details));
             });
         });
 
@@ -56,7 +52,7 @@ internal static class BaseClassBuilder
 
     private static CodeBuilder BuildMembers(MockDetails details)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         var candidates = details.GetCandidates();
 

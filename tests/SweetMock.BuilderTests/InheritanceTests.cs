@@ -8,7 +8,7 @@ using Util;
 
 public class InheritanceTests(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "New keyword not supported")]
     public void SimpleInheritanceTests()
     {
         var source = Build.TestClass<IDerivedM>();

@@ -3,21 +3,13 @@ namespace SweetMock.Utils;
 using System;
 using System.Collections.Generic;
 
-internal class CodeBuilder(string prepend = "") : IDisposable
+internal class CodeBuilder(string prepend = "")
 {
     private readonly List<string> lines = [];
 
     public bool IsEmpty => this.lines.Count == 0;
 
     public int Indentation { get; private set; }
-
-    public void Dispose()
-    {
-        if (this.Indentation != 0)
-        {
-            throw new("Indentation can not be zero");
-        }
-    }
 
     public CodeBuilder Indent()
     {

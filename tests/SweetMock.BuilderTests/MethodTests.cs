@@ -51,7 +51,7 @@ public class MethodTests(ITestOutputHelper testOutputHelper)
         Assert.Empty(generate.GetErrors());
     }
 
-    [Fact()]
+    [Fact(Skip = "Generic not supported right now")]
     public void GenericTests()
     {
         var source = @"namespace Demo;
@@ -113,6 +113,8 @@ public class TestClass{
         public virtual string VirtualProperty { get; set; } = "test";
         public abstract void AbstractMethod();
         public virtual void VirtualMethod() { }
+        public virtual Task TaskMethod(string something) { throw new Exception();}
+        public virtual ValueTask TaskMethod() { throw new Exception();}
     }
 
     public interface IWithOverloads

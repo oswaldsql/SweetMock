@@ -13,7 +13,7 @@ internal static class EventBuilder
 {
     public static CodeBuilder Build(IEnumerable<IEventSymbol> events)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         var lookup = events.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -32,7 +32,7 @@ internal static class EventBuilder
     /// <returns>True if any events were built; otherwise, false.</returns>
     private static CodeBuilder BuildEvents(IEventSymbol[] eventSymbols)
     {
-        using CodeBuilder builder = new();
+        CodeBuilder builder = new();
 
         var name = eventSymbols.First().Name;
 
@@ -119,7 +119,7 @@ internal static class EventBuilder
             {
                 result.AddParameter("eventArgs", "The arguments used in the event.");
                 result.AddReturns("The updated configuration object.");
-                result.AddConfigExtension(mock, eventSymbol.Name, [types + " eventArgs"], builder =>
+                result.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], builder =>
                 {
                     builder.Add($"config.{eventSymbol.Name}(out var trigger);");
                     builder.Add("trigger.Invoke(eventArgs);");
@@ -128,7 +128,7 @@ internal static class EventBuilder
             else
             {
                 result.AddReturns("The updated configuration object.");
-                result.AddConfigExtension(mock, eventSymbol.Name, [], builder =>
+                result.AddConfigExtension(mock, eventSymbol, [], builder =>
                 {
                     builder.Add($"config.{eventSymbol.Name}(out var trigger);");
                     builder.Add("trigger.Invoke();");
@@ -139,8 +139,10 @@ internal static class EventBuilder
         return result;
     }
 
-    public static CodeBuilder AddConfigExtension(this CodeBuilder result, MockDetails mock, string name, string[] arguments, Action<CodeBuilder> build)
+    public static CodeBuilder AddConfigExtension(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
     {
+        string name = symbol.Name;
+
         string args = "";
         if (arguments.Length > 0)
         {
@@ -152,6 +154,23 @@ internal static class EventBuilder
         build(result);
         result.Add("return config;");
         result.Unindent().Add("}");
+        return result;
+    }
+
+    public static CodeBuilder AddConfigExtensionXB(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
+    {
+        string name = symbol.Name;
+
+        string args = "";
+        if (arguments.Length > 0)
+        {
+            args = ", " + string.Join(" , ", arguments);
+        }
+
+        result.Add($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args}) =>");
+        result.Indent();
+        build(result);
+        result.Unindent();
         return result;
     }
 }

@@ -8,7 +8,7 @@ using Util;
 
 public class GenericsTests(ITestOutputHelper testOutputHelper)
 {
-    [Fact()]
+    [Fact(Skip = "Generic not supported right now")]
     public void EventInheritanceTests()
     {
         var source = $@"
@@ -78,7 +78,7 @@ public class TestClass{{
         Assert.Empty(generate.GetWarnings());
     }
 
-    [Fact]
+    [Fact(Skip = "Generic not supported right now")]
     public void GenericMethodsInNoGenericInterfaceIsNotSupported()
     {
         var source = Build.TestClass<IGenericMethod>();

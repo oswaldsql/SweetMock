@@ -97,7 +97,7 @@ internal class PropertyBuilder
         {
             var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{type}> set" : "");
 
-            builder.AddSummary($"Configures {internalName} by specifying methods to call when the property is accessed.");
+            builder.AddSummary($"Configures <see cref=\"{symbol.ToCRef()}\"/> by specifying methods to call when the property is accessed.");
             builder.AddParameter("get", "Function to call when the property is read.", hasGet);
             builder.AddParameter("set", "Function to call when the property is set.", hasGet);
             builder.AddReturns("The updated configuration object.");

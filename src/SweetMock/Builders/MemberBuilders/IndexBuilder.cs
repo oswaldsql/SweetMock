@@ -12,7 +12,7 @@ internal static class IndexBuilder
 {
     public static CodeBuilder Build(IEnumerable<IPropertySymbol> symbols)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -30,7 +30,7 @@ internal static class IndexBuilder
     /// <returns>True if any indexers were built; otherwise, false.</returns>
     private static CodeBuilder BuildIndexes(IEnumerable<IPropertySymbol> indexerSymbols)
     {
-        using CodeBuilder builder = new();
+        CodeBuilder builder = new();
 
         var symbols = indexerSymbols as IPropertySymbol[] ?? indexerSymbols.ToArray();
         var indexType = symbols.First().Parameters[0].Type.ToString();
@@ -56,7 +56,7 @@ internal static class IndexBuilder
     /// <param name="index">The count of indexers built so far.</param>
     private static CodeBuilder BuildIndex(IPropertySymbol symbol, int index)
     {
-        using CodeBuilder builder = new();
+        CodeBuilder builder = new();
 
         var returnType = symbol.Type.ToString();
         var indexType = symbol.Parameters[0].Type.ToString();
@@ -93,7 +93,7 @@ internal static class IndexBuilder
         {
             var p = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
 
-            builder.AddSummary($"Configures {internalName} by specifying methods to call when the property is accessed.")
+            builder.AddSummary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
                 .AddParameter("get", "Function to call when the property is read.", hasGet)
                 .AddParameter("set", "Function to call when the property is set.", hasGet)
                 .AddReturns("The configuration object.")

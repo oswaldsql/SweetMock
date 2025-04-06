@@ -25,7 +25,7 @@ public class ConfigExtensionsBuilder
                 namespaceScope.AddGeneratedCodeAttrib()
                     .Scope($"internal static class {mock.MockName}_ConfigExtensions", classScope =>
                     {
-                        builder.Add(this.BuildMembers(mock));
+                        classScope.Add(this.BuildMembers(mock));
                     });
             }
         );
@@ -35,15 +35,15 @@ public class ConfigExtensionsBuilder
 
     private CodeBuilder BuildMembers(MockDetails mock)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         var candidates = mock.GetCandidates();
 
 //        var constructors = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Constructor);
 //        result.Add(ConstructorBuilder.BuildConfigExtensions(details, constructors));
-//
-//        var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
-//        result.Add(MethodBuilder.BuildConfigExtensions(details, methods));
+
+        var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
+        result.Add(MethodBuilder.BuildConfigExtensions(mock, methods));
 
         var properties = candidates.OfType<IPropertySymbol>().Where(t => !t.IsIndexer);
         result.Add(PropertyBuilder.BuildConfigExtensions(mock, properties));

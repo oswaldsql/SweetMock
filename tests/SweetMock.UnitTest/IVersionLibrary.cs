@@ -28,6 +28,10 @@ public interface IVersionLibrary
     /// <returns>The uri to the specified version</returns>
     Task<Uri> DownloadLinkAsync(string version);
 
+    Task PrepareDownloadAsync(string version);
+    ValueTask PrepareDownloadAsync(Version version);
+    void PrepareDownloadAsync(int version);
+    
     /// <summary>
     ///     Occurs when a new version is added.
     /// </summary>

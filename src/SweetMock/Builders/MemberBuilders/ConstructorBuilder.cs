@@ -18,7 +18,7 @@ internal static class ConstructorBuilder {
 
     private static CodeBuilder BuildConstructors(MockDetails details, IEnumerable<IMethodSymbol> constructors)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         using (result.Region("Constructors"))
         {
@@ -48,7 +48,7 @@ internal static class ConstructorBuilder {
 
     private static CodeBuilder BuildEmptyConstructor(MockDetails details)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         using (result.Region("Constructors"))
         {

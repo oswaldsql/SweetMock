@@ -13,7 +13,7 @@ internal static class MethodBuilder
 {
     public static CodeBuilder Build(IEnumerable<IMethodSymbol> methods)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         var lookup = methods.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -32,7 +32,7 @@ internal static class MethodBuilder
     /// <returns>True if at least one method was built; otherwise, false.</returns>
     private static CodeBuilder BuildMethods(IMethodSymbol[] methodSymbols)
     {
-        using CodeBuilder result = new();
+        CodeBuilder result = new();
 
         var name = methodSymbols.First().Name;
 
@@ -60,7 +60,7 @@ internal static class MethodBuilder
     {
         if(symbol.ReturnsByRef) throw new Exception("Property has returns byref");
 
-        using CodeBuilder builder = new();
+        CodeBuilder builder = new();
 
         var parameters = symbol.ParameterStrings();
 
@@ -90,7 +90,7 @@ internal static class MethodBuilder
             builder.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
             builder.AddSummary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.");
             builder.AddParameter("call", "The action or function to execute when the method is called.");
-            builder.AddReturns("The mock Configuration");
+            builder.AddReturns("The updated configuration object.");
             builder.Add($$"""
                               public Config {{method.Name}}({{delegateInfo.Name}} call){
                                   target.{{functionPointer}} = call;
@@ -134,8 +134,177 @@ internal static class MethodBuilder
         var types = string.Join(", ", typeArguments.Select(t => t.Name));
         return $"<{types}>";
     }
-}
 
+    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IMethodSymbol> methods)
+    {
+        var result = new CodeBuilder();
+        IMethodSymbol[] source = methods.ToArray();
+
+        result.AddReturnsValueExtensions(mock, source);
+
+        result.AddNoReturnValueExtensions(mock, source);
+
+        result.AddThrowExtensions(mock, methods);
+
+        return result;
+    }
+
+    private static CodeBuilder AddReturnsValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    {
+        var methodSymbols = source.Where(t => (!t.ReturnsVoid) && !t.Parameters.Any(t => t.RefKind == RefKind.Out));
+        var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
+        foreach (var candidate in candidates)
+        {
+            var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+
+            result.Add();
+            result.AddSummary("Configures the mock to return a specific value disregarding the arguments.", $"Configures {seeString}");
+            result.AddParameter("config", "The configuration object used to set up the mock.");
+            result.AddParameter("returns", "The value that should be returned");
+            result.AddReturns("The updated configuration object.");
+            result.AddConfigExtension(mock, candidate.First(), [candidate.First().ReturnType + " returns"], builder =>
+            {
+                foreach (var m in candidate)
+                {
+                    var parameterList = m.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
+
+                    var str = m.ReturnType.ToString() switch
+                    {
+                        "System.Threading.Tasks.Task" => ($"config.{m.Name}(({parameterList}) => returns);"),
+                        "System.Threading.Tasks.ValueTask" => ($"config.{m.Name}(({parameterList}) => returns);"),
+                        _ => ($"config.{m.Name}(({parameterList}) => returns);")
+                    };
+
+                    builder.Add(str);
+                }
+            });
+        }
+
+        return result;
+    }
+
+    private static CodeBuilder AddNoReturnValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    {
+        var methodSymbols = source.Where(t => (t.ReturnsVoid || t.ReturnType.ToString() == "System.Threading.Tasks.Task" || t.ReturnType.ToString() == "System.Threading.Tasks.ValueTask") && !t.Parameters.Any(t => t.RefKind == RefKind.Out));
+        var candidates = methodSymbols.ToLookup(t => t.Name);
+        foreach (var candidate in candidates)
+        {
+            var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+
+            result.Add();
+            result.AddSummary("Configures the mock to accept any call to methods not returning values.", $"Configures {seeString}");
+            result.AddParameter("config", "The configuration object used to set up the mock.");
+            result.AddReturns("The updated configuration object.");
+            result.AddConfigExtension(mock, candidate.First(), [], builder =>
+            {
+
+                foreach (var m in candidate)
+                {
+                    var parameterList = m.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
+
+                    var str = m.ReturnType.ToString() switch
+                    {
+                        "void" => ($"config.{m.Name}(({parameterList}) => {{}});"),
+                        "System.Threading.Tasks.Task" => ($"config.{m.Name}(({parameterList}) => System.Threading.Tasks.Task.CompletedTask);"),
+                        "System.Threading.Tasks.ValueTask" => ($"config.{m.Name}(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);"),
+                        _ => ""
+                    };
+
+                    builder.Add(str);
+                }
+            });
+        }
+
+        return result;
+    }
+
+    private static CodeBuilder AddThrowExtensions(this CodeBuilder result, MockDetails mock, IEnumerable<IMethodSymbol> methods)
+    {
+        foreach (var methodGroup in methods.ToLookup(t => t.Name))
+        {
+            var seeString = string.Join(", ", methodGroup.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+
+            result.Add();
+            result.AddSummary("Configures the mock to throw the specified exception when the method is called.", $"Configures {seeString}");
+            result.AddParameter("config", "The configuration object used to set up the mock.");
+            result.AddParameter("throws", "The exception to be thrown when the method is called.");
+            result.AddReturns("The updated configuration object.");
+            result.AddConfigExtension(mock, methodGroup.First(), ["Exception throws"], builder =>
+            {
+                foreach (var method in methodGroup)
+                {
+                    var parameterList = method.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
+                    builder.Add($"config.{method.Name}(({parameterList}) => throw throws);");
+                }
+            });
+        }
+
+        return result;
+    }
+}
+/*
+    private static IEnumerable<HelperMethod> AddHelpers(IMethodSymbol symbol, string functionPointer, string parameterList, string delegateType, string typeList, string nameList)
+    {
+        var seeCref = symbol.ToString();
+
+        if (!HasOutOrRef(symbol) && !symbol.ReturnsVoid)
+        {
+            var code = $$"""
+                         var {{functionPointer}}_Values = returnValues.GetEnumerator();
+                         this.{{functionPointer}}(({{parameterList}}) =>
+                         {
+                             if ({{functionPointer}}_Values.MoveNext())
+                             {
+                                 return {{functionPointer}}_Values.Current;
+                             }
+
+                             {{symbol.BuildNotMockedException()}}
+                             });
+                         """;
+            yield return new HelperMethod($"System.Collections.Generic.IEnumerable<{delegateType}> returnValues", code, Documentation.SpecificValueList, seeCref);
+        }
+
+        if (symbol.IsReturningTask())
+        {
+            if (symbol.HasParameters())
+            {
+                yield return new HelperMethod($"System.Action<{typeList}> call", $$"""this.{{functionPointer}}(({{parameterList}}) => {call({{nameList}});return System.Threading.Tasks.Task.CompletedTask;});""", Documentation.CallBack, seeCref);
+            }
+            else
+            {
+                yield return new HelperMethod("System.Action call", $$"""this.{{functionPointer}}(({{nameList}}) => {call({{nameList}});return System.Threading.Tasks.Task.CompletedTask;});""", Documentation.CallBack, seeCref);
+            }
+        }
+
+        if (symbol.IsReturningGenericTask())
+        {
+            var genericType = ((INamedTypeSymbol)symbol.ReturnType).TypeArguments.First();
+            yield return new HelperMethod($"{genericType} returns", $"this.{functionPointer}(({parameterList}) => System.Threading.Tasks.Task.FromResult(returns));", Documentation.GenericTaskObject, seeCref);
+
+            var code = $$"""
+                         var {{functionPointer}}_Values = returnValues.GetEnumerator();
+                         this.{{functionPointer}}(({{parameterList}}) =>
+                         {
+                             if ({{functionPointer}}_Values.MoveNext())
+                             {
+                                 return System.Threading.Tasks.Task.FromResult({{functionPointer}}_Values.Current);
+                             }
+
+                             {{symbol.BuildNotMockedException()}}
+                             });
+                         """;
+            yield return new HelperMethod($"System.Collections.Generic.IEnumerable<{genericType}> returnValues", code, Documentation.SpecificValueList, seeCref);
+
+            if (symbol.HasParameters())
+            {
+                yield return new HelperMethod($"System.Func<{typeList},{genericType}> call", $"this.{functionPointer}(({nameList}) => System.Threading.Tasks.Task.FromResult(call({nameList})));", Documentation.GenericTaskFunction, seeCref);
+            }
+            else
+            {
+                yield return new HelperMethod($"System.Func<{genericType}> call", $"this.{functionPointer}(({nameList}) => System.Threading.Tasks.Task.FromResult(call({nameList})));", Documentation.GenericTaskFunction, seeCref);
+            }
+        }
+ */
 public record DelegateInfo(string Name, string Type, string Container, string FullName, string Parameters);
 
 public record MethodInfo(string Name, string ReturnType, string ReturnString);
