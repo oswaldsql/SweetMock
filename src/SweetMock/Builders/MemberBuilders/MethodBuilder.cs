@@ -27,7 +27,6 @@ internal static class MethodBuilder
     /// <summary>
     ///     Builds methods from the provided method symbols and adds them to the code builder.
     /// </summary>
-    /// <param name="mockCode">The code builder to add the methods to.</param>
     /// <param name="methodSymbols">The method symbols to build methods from.</param>
     /// <returns>True if at least one method was built; otherwise, false.</returns>
     private static CodeBuilder BuildMethods(IMethodSymbol[] methodSymbols)
@@ -52,7 +51,6 @@ internal static class MethodBuilder
     /// <summary>
     ///     Builds a method and adds it to the code builder.
     /// </summary>
-    /// <param name="builder">The code builder to add the method to.</param>
     /// <param name="symbol">The method symbol to build the method from.</param>
     /// <param name="methodCount">The count of methods built so far.</param>
     /// <returns>True if the method was built; otherwise, false.</returns>
@@ -76,10 +74,10 @@ internal static class MethodBuilder
         var castString = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + method.ReturnType + ") " : "";
 
         builder.Add($$"""
-                      {{overwrites.accessibilityString}}{{overwrites.overrideString}}{{method.ReturnType}} {{overwrites.containingSymbol}}{{method.Name}}{{genericString}}({{parameters.methodParameters}})
+                      {{overwrites.AccessibilityString}}{{overwrites.OverrideString}}{{method.ReturnType}} {{overwrites.ContainingSymbol}}{{method.Name}}{{genericString}}({{parameters.MethodParameters}})
                       {
                           {{LogBuilder.BuildLogSegment(symbol)}}
-                          {{method.ReturnString}}{{castString}}this.{{functionPointer}}.Invoke({{parameters.nameList}});
+                          {{method.ReturnString}}{{castString}}this.{{functionPointer}}.Invoke({{parameters.NameList}});
                       }
                       private Config.{{delegateInfo.Name}} {{functionPointer}} {get;set;} = ({{delegateInfo.Parameters}}) => {{symbol.BuildNotMockedException()}}
                       """);
@@ -138,20 +136,20 @@ internal static class MethodBuilder
     public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IMethodSymbol> methods)
     {
         var result = new CodeBuilder();
-        IMethodSymbol[] source = methods.ToArray();
+        var source = methods.ToArray();
 
         result.AddReturnsValueExtensions(mock, source);
 
         result.AddNoReturnValueExtensions(mock, source);
 
-        result.AddThrowExtensions(mock, methods);
+        result.AddThrowExtensions(mock, source);
 
         return result;
     }
 
     private static CodeBuilder AddReturnsValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
     {
-        var methodSymbols = source.Where(t => (!t.ReturnsVoid) && !t.Parameters.Any(t => t.RefKind == RefKind.Out));
+        var methodSymbols = source.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
         var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
         foreach (var candidate in candidates)
         {
@@ -170,9 +168,9 @@ internal static class MethodBuilder
 
                     var str = m.ReturnType.ToString() switch
                     {
-                        "System.Threading.Tasks.Task" => ($"config.{m.Name}(({parameterList}) => returns);"),
-                        "System.Threading.Tasks.ValueTask" => ($"config.{m.Name}(({parameterList}) => returns);"),
-                        _ => ($"config.{m.Name}(({parameterList}) => returns);")
+                        "System.Threading.Tasks.Task" => $"config.{m.Name}(({parameterList}) => returns);",
+                        "System.Threading.Tasks.ValueTask" => $"config.{m.Name}(({parameterList}) => returns);",
+                        _ => $"config.{m.Name}(({parameterList}) => returns);"
                     };
 
                     builder.Add(str);
@@ -185,7 +183,7 @@ internal static class MethodBuilder
 
     private static CodeBuilder AddNoReturnValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
     {
-        var methodSymbols = source.Where(t => (t.ReturnsVoid || t.ReturnType.ToString() == "System.Threading.Tasks.Task" || t.ReturnType.ToString() == "System.Threading.Tasks.ValueTask") && !t.Parameters.Any(t => t.RefKind == RefKind.Out));
+        var methodSymbols = source.Where(t => (t.ReturnsVoid || t.ReturnType.ToString() == "System.Threading.Tasks.Task" || t.ReturnType.ToString() == "System.Threading.Tasks.ValueTask") && !t.Parameters.Any(s => s.RefKind == RefKind.Out));
         var candidates = methodSymbols.ToLookup(t => t.Name);
         foreach (var candidate in candidates)
         {
@@ -204,9 +202,9 @@ internal static class MethodBuilder
 
                     var str = m.ReturnType.ToString() switch
                     {
-                        "void" => ($"config.{m.Name}(({parameterList}) => {{}});"),
-                        "System.Threading.Tasks.Task" => ($"config.{m.Name}(({parameterList}) => System.Threading.Tasks.Task.CompletedTask);"),
-                        "System.Threading.Tasks.ValueTask" => ($"config.{m.Name}(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);"),
+                        "void" => $"config.{m.Name}(({parameterList}) => {{}});",
+                        "System.Threading.Tasks.Task" => $"config.{m.Name}(({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
+                        "System.Threading.Tasks.ValueTask" => $"config.{m.Name}(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
                         _ => ""
                     };
 

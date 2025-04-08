@@ -24,7 +24,7 @@ public class MockBuilder
         }
     }
 
-    private void ValidateTargetIsValid(INamedTypeSymbol target)
+    private static void ValidateTargetIsValid(INamedTypeSymbol target)
     {
         if(target.DeclaredAccessibility == Accessibility.Private) throw new Exception("Class must not be private");
         if (target.IsSealed) throw new Exception("Target must be not be sealed");
@@ -37,13 +37,13 @@ public class MockBuilder
         var code = BaseClassBuilder.Build(mockDetails);
         yield return new("Base", code.ToString());
 
-        var factories = new FactoryClassBuilder().Build(mockDetails);
+        var factories = FactoryClassBuilder.Build(mockDetails);
         yield return new("Factory", factories);
 
-        var logFilters = new LogExtensionsBuilder().BuildLogExtensions(mockDetails);
+        var logFilters = LogExtensionsBuilder.BuildLogExtensions(mockDetails);
         yield return new("Logging", logFilters);
 
-        var configFiles = new ConfigExtensionsBuilder().Build(mockDetails);
+        var configFiles = ConfigExtensionsBuilder.Build(mockDetails);
         yield return new("Config", configFiles);
     }
 

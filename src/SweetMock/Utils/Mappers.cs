@@ -10,7 +10,7 @@ public static class Mappers
     internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
         values == null ? "" : string.Join(separator, values.Select(mapper));
 
-    static SymbolDisplayFormat format = new(
+    private static readonly SymbolDisplayFormat Format = new(
         SymbolDisplayGlobalNamespaceStyle.Omitted,
         SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
@@ -23,7 +23,7 @@ public static class Mappers
     {
         var prefix = symbol.Prefix();
 
-        return $"{prefix}{symbol.ToDisplayString(format)}".Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
+        return $"{prefix}{symbol.ToDisplayString(Format)}".Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
     }
 
     private static string Prefix(this ISymbol symbol) =>

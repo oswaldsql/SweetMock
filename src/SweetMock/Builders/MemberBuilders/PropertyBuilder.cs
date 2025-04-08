@@ -69,7 +69,7 @@ internal class PropertyBuilder
 
         builder.Add($$"""
 
-                      {{overwriteString.accessibilityString}}{{overwriteString.overrideString}}{{type}} {{overwriteString.containingSymbol}}{{propertyName}}
+                      {{overwriteString.AccessibilityString}}{{overwriteString.OverrideString}}{{type}} {{overwriteString.ContainingSymbol}}{{propertyName}}
                       {
                       """).Indent();
         builder.Add(hasGet, () => $$"""

@@ -13,47 +13,43 @@ namespace SweetMock {
 
         public Arguments Arguments { get; init; } = Arguments.Empty;
 
-        public override string ToString() => Index.ToString("0000") + " : " + MethodSignature;
+        public override string ToString() => this.Index.ToString("0000") + " : " + this.MethodSignature;
     }
 
     public class TypedCallLogItem<T> : CallLogItem where T : TypedArguments, new()
     {
         public TypedCallLogItem(CallLogItem source)
         {
-            base.Index = source.Index;
-            base.MethodSignature = source.MethodSignature;
-            base.Arguments = source.Arguments;
-            TypedArguments = new T();
+            this.Index = source.Index;
+            this.MethodSignature = source.MethodSignature;
+            this.Arguments = source.Arguments;
+            this.TypedArguments = new T();
             this.TypedArguments.Init(source.Arguments);
         }
 
         public T TypedArguments { get; private set; }
     }
 
-    public abstract class TypedArguments()
+    public abstract class TypedArguments
     {
-        internal void Init(Arguments arguments)
-        {
+        internal void Init(Arguments arguments) =>
             this.Arguments = arguments;
-        }
 
         protected Arguments Arguments { get;private set; } = Arguments.Empty;
     }
 
     public class Arguments
     {
-        Dictionary<string, object?> values = new Dictionary<string, object?>();
+        private readonly Dictionary<string, object?> values = new Dictionary<string, object?>();
 
         public static Arguments Empty => new Arguments();
 
-        public static Arguments With(string key, object? value)
-        {
-            return new Arguments().And(key, value);
-        }
+        public static Arguments With(string key, object? value) =>
+            new Arguments().And(key, value);
 
         public Arguments And(string key, object? value)
         {
-            values[key] = value;
+            this.values[key] = value;
             return this;
         }
 
@@ -61,7 +57,7 @@ namespace SweetMock {
         {
             get
             {
-                if (values.TryGetValue(key, out var value))
+                if (this.values.TryGetValue(key, out var value))
                 {
                     return value;
                 }
@@ -69,31 +65,30 @@ namespace SweetMock {
             }
         }
 
-        public override string ToString()
-        {
-            return values.Count == 0 ? "" : string.Join(", ", values.Select(t => $"{t.Key} : '{t.Value}'"));
-        }
+        public override string ToString() =>
+            this.values.Count == 0 ? "" : string.Join(", ", this.values.Select(t => $"{t.Key} : '{t.Value}'"));
     }
 
     public class CallLog : System.Collections.Generic.IEnumerable<CallLogItem>
     {
-        private int index = 0;
-        private List<CallLogItem> _logs = new();
-        private object _lock = new();
+        private int index;
+        private readonly List<CallLogItem> logs = new();
+        private readonly object @lock = new();
         public void Add(string signature, Arguments? arguments = null)
         {
-            lock (_lock)
+            lock (this.@lock)
             {
-                index++;
+                this.index++;
 
-                if(arguments == null) arguments = Arguments.Empty;
-                this._logs.Add(new CallLogItem(){Index = this.index, MethodSignature = signature, Arguments = arguments });
+                arguments ??= Arguments.Empty;
+
+                this.logs.Add(new CallLogItem(){Index = this.index, MethodSignature = signature, Arguments = arguments });
             }
         }
 
-        public IEnumerator<CallLogItem> GetEnumerator() => this._logs.GetEnumerator();
+        public IEnumerator<CallLogItem> GetEnumerator() => this.logs.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() =>  this._logs.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() =>  this.logs.GetEnumerator();
 
         public IEnumerable<TypedCallLogItem<T>> Matching<T>(string signature, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
             this.Where(t => t.MethodSignature == signature)

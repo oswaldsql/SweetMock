@@ -56,8 +56,8 @@ public static class ISymbolExtensions
     }
 }
 
-public record OverwriteString(string containingSymbol, string accessibilityString, string overrideString);
-internal record ParameterStrings(string methodParameters, string parameterList, string typeList, string nameList);
+public record OverwriteString(string ContainingSymbol, string AccessibilityString, string OverrideString);
+internal record ParameterStrings(string MethodParameters, string ParameterList, string TypeList, string NameList);
 
 public record ParameterInfo(string Type, string Name, string OutString, string Function);
 

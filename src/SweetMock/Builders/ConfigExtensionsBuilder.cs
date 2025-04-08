@@ -7,7 +7,7 @@ using Utils;
 
 public class ConfigExtensionsBuilder
 {
-    public string Build(MockDetails mock)
+    public static string Build(MockDetails mock)
     {
         var builder = new CodeBuilder();
 
@@ -25,7 +25,7 @@ public class ConfigExtensionsBuilder
                 namespaceScope.AddGeneratedCodeAttrib()
                     .Scope($"internal static class {mock.MockName}_ConfigExtensions", classScope =>
                     {
-                        classScope.Add(this.BuildMembers(mock));
+                        classScope.Add(BuildMembers(mock));
                     });
             }
         );
@@ -33,7 +33,7 @@ public class ConfigExtensionsBuilder
         return builder.ToString();
     }
 
-    private CodeBuilder BuildMembers(MockDetails mock)
+    private static CodeBuilder BuildMembers(MockDetails mock)
     {
         CodeBuilder result = new();
 

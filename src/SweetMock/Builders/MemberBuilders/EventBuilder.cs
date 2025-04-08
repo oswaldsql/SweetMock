@@ -27,7 +27,6 @@ internal static class EventBuilder
     /// <summary>
     ///     Builds the events based on the given symbols and adds them to the code builder.
     /// </summary>
-    /// <param name="builder">The code builder to add the events to.</param>
     /// <param name="eventSymbols">The event symbols to build.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
     private static CodeBuilder BuildEvents(IEventSymbol[] eventSymbols)
@@ -54,7 +53,6 @@ internal static class EventBuilder
     /// </summary>
     /// <param name="builder">The code builder to add the event to.</param>
     /// <param name="symbol">The event symbol to build.</param>
-    /// <param name="helpers">A list of helper methods to add to.</param>
     /// <param name="eventCount">The count of the event being built.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
     private static void BuildEvent(CodeBuilder builder, IEventSymbol symbol, int eventCount)
@@ -110,7 +108,7 @@ internal static class EventBuilder
 
         foreach (var eventSymbol in events)
         {
-            var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod.Parameters.Skip(1).Select(t => t.Type));
+            var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type));
 
             result.Add();
             result.AddSummary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.");
@@ -141,9 +139,9 @@ internal static class EventBuilder
 
     public static CodeBuilder AddConfigExtension(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
     {
-        string name = symbol.Name;
+        var name = symbol.Name;
 
-        string args = "";
+        var args = "";
         if (arguments.Length > 0)
         {
             args = ", " + string.Join(" , ", arguments);
@@ -154,23 +152,6 @@ internal static class EventBuilder
         build(result);
         result.Add("return config;");
         result.Unindent().Add("}");
-        return result;
-    }
-
-    public static CodeBuilder AddConfigExtensionXB(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
-    {
-        string name = symbol.Name;
-
-        string args = "";
-        if (arguments.Length > 0)
-        {
-            args = ", " + string.Join(" , ", arguments);
-        }
-
-        result.Add($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args}) =>");
-        result.Indent();
-        build(result);
-        result.Unindent();
         return result;
     }
 }

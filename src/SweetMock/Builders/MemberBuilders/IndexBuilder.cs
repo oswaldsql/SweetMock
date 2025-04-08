@@ -51,7 +51,6 @@ internal static class IndexBuilder
     /// <summary>
     ///     Builds a single indexer and adds it to the code builder.
     /// </summary>
-    /// <param name="builder">The code builder to add the indexer to.</param>
     /// <param name="symbol">The property symbol representing the indexer.</param>
     /// <param name="index">The count of indexers built so far.</param>
     private static CodeBuilder BuildIndex(IPropertySymbol symbol, int index)
@@ -70,7 +69,7 @@ internal static class IndexBuilder
 
         var argName = symbol.Parameters[0].Name;
 
-        builder.Add($$"""{{overwrites.accessibilityString}}{{returnType}} {{overwrites.containingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
+        builder.Add($$"""{{overwrites.AccessibilityString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
 
         builder.Condition(hasGet, b => b.Add("get {").Indent()
             .BuildLogSegment(symbol.GetMethod)

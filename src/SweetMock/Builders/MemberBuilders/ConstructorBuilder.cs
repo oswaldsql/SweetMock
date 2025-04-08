@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using SweetMock.Utils;
+using Utils;
 
 /// <summary>
 /// Represents a builder for constructing mock constructors.

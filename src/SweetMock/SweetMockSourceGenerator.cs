@@ -33,13 +33,13 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(mockAttributes, GenerateCode);
     }
 
-    private void GenerateCode(SourceProductionContext context, ImmutableArray<AttributeData> attributes)
+    private static void GenerateCode(SourceProductionContext context, ImmutableArray<AttributeData> attributes)
     {
         var mockBuilder = new MockBuilder();
         var uniqueAttributes = attributes.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default).Where(t => t.Key != null);
         foreach (var attribute in uniqueAttributes)
         {
-            var fileName = attribute.Key.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
+            var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
 
             foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
             {
@@ -54,8 +54,6 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         return firstGenericType?.IsGenericType == true ? firstGenericType.OriginalDefinition : firstGenericType;
     }
 
-    private IEnumerable<AttributeData> GetAttributes(GeneratorAttributeSyntaxContext arg1, CancellationToken arg2)
-    {
-        return arg1.Attributes;
-    }
+    private static IEnumerable<AttributeData> GetAttributes(GeneratorAttributeSyntaxContext arg1, CancellationToken arg2) =>
+        arg1.Attributes;
 }

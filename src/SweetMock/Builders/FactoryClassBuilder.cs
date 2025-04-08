@@ -1,6 +1,5 @@
 namespace SweetMock.Builders;
 
-using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Utils;
@@ -14,7 +13,7 @@ public class FactoryClassBuilder
     ///     Builds the mock classes based on the provided type symbols.
     /// </summary>
     /// <returns>A string containing the generated mock classes.</returns>
-    public string Build(MockDetails details)
+    public static string Build(MockDetails details)
     {
         var builder = new CodeBuilder();
 
@@ -42,10 +41,8 @@ public class FactoryClassBuilder
     /// </summary>
     /// <param name="methodSymbol">The method symbol to check.</param>
     /// <returns><c>true</c> if the method symbol should be included; otherwise, <c>false</c>.</returns>
-    private static bool Include(IMethodSymbol methodSymbol)
-    {
-        return methodSymbol.DeclaredAccessibility is Accessibility.Public or Accessibility.Protected && !methodSymbol.IsStatic;
-    }
+    private static bool Include(IMethodSymbol methodSymbol) =>
+        methodSymbol.DeclaredAccessibility is Accessibility.Public or Accessibility.Protected && !methodSymbol.IsStatic;
 
     /// <summary>
     ///     Builds the factory method for the specified symbol.
@@ -122,7 +119,6 @@ public class FactoryClassBuilder
 
         var parameters = constructorParameters.ToString(t => $"{t.Type} {t.Name}, ", "");
         var arguments = constructorParameters.ToString(t => $"{t.Name}, ", "");
-        var doc = constructorParameters.ToString(t => $"///     <param name=\"{t.Name}\">Base constructor parameter {t.Name}.</param>\n", "");
 
         var cref = details.Target.ToCRef();
 

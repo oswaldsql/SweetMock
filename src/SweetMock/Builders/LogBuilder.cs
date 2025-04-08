@@ -47,7 +47,7 @@ public static class LogBuilder
 
         if (!skipParameters && symbol.Parameters.Any(t => t.RefKind == RefKind.None))
         {
-            var LogArgumentsValue = symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(argument);
+            var LogArgumentsValue = symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(Argument);
             builder.Scope("if(_hasLog)", b => b.Add($"_log.Add(\"{symbol}\", SweetMock.Arguments{string.Join("", LogArgumentsValue)});"));
         }
         else
@@ -58,5 +58,5 @@ public static class LogBuilder
         return builder;
     }
 
-    private static string argument(IParameterSymbol t, int i) => i == 0 ? $".With(\"{t.Name}\", {t.Name})" : $".And(\"{t.Name}\", {t.Name})";
+    private static string Argument(IParameterSymbol t, int i) => i == 0 ? $".With(\"{t.Name}\", {t.Name})" : $".And(\"{t.Name}\", {t.Name})";
 }
