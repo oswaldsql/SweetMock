@@ -6,7 +6,7 @@ namespace SweetMock.UnitTest;
 [Mock<IMethodExamples>]
 public class Tester
 {
-    public void t()
+    public void IVersionLibExperiments()
     {
         Action<Version> triggerVersionAdded = null;
         var callLog = new CallLog();
@@ -22,9 +22,10 @@ public class Tester
                     .Indexer(new Dictionary<string, Version>())
                     .Indexer(s => new Version(), (s, version) => {})
                     .LogCallsTo(callLog);
-            })
-            ;
+            });
 
+        triggerVersionAdded(new Version(1, 1, 2));
+        
         sut.DownloadExists("1,2,3,4");
         var actual = sut.CurrentVersion;
         var url = sut.DownloadLinkAsync("1,2,3,4");

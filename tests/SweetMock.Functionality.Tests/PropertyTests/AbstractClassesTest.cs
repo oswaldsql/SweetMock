@@ -83,7 +83,7 @@ public class AbstractClassesTest(ITestOutputHelper output)
         // Arrange
 
         // ACT
-        var memberInfos = typeof(MockOf_AbstractClass.Config).GetMembers().Select(t => t.Name).Order();
+        var memberInfos = typeof(MockOf_AbstractClass.Config).GetMembers().Select(t => t.Name).Order().ToArray();
         foreach (var memberInfo in memberInfos)
         {
             output.WriteLine(memberInfo);

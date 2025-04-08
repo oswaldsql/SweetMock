@@ -10,9 +10,7 @@ internal static partial class Mock
 
 public class ValueBox<T>
 {
-    public ValueBox(T value)
-    {
-        Value = value;
-    }
+    public ValueBox(T value) =>
+        this.Value = value;
     public T Value { get; set; } = default(T);
 }
