@@ -121,12 +121,12 @@ internal static class IndexBuilder
             result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddParameter("values", "Dictionary containing the values for the indexer.");
             result.AddReturns("The updated configuration object.");
-            result.Add($"public static {mock.MockType}.Config Indexer(this {mock.MockType}.Config config, System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values) =>");
-            result.Indent();
-            result.Add(hasGet && hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
-            result.Add(hasGet && !hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key]);");
-            result.Add(!hasGet && hasSet, () => $"config.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
-            result.Unindent();
+            result.AddConfigExtension(mock, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
+            {
+                builder.Add(hasGet && hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+                builder.Add(hasGet && !hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key]);");
+                builder.Add(!hasGet && hasSet, () => $"config.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+            });
         }
 
         return result;

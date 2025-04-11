@@ -123,14 +123,24 @@ internal class PropertyBuilder
             result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddParameter("returns", "The value to use for mocking the property.");
             result.AddReturns("The updated configuration object.");
-            result.Add($"public static {mock.MockType}.Config {property.Name}(this {mock.MockType}.Config config, {property.Type} returns)");
-            result.Add("{").Indent();
-            result.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
-            result.Add(hasGet && hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
-            result.Add(hasGet && !hasSet, () =>$"config.{property.Name}(get : () => {property.Name}_value.Value);");
-            result.Add(!hasGet && hasSet, () =>$"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
-            result.Add("return config;");
-            result.Unindent().Add("}");
+
+            result.AddConfigExtension(mock, property, [$"{property.Type} returns"], builder =>
+                {
+                    builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
+                    builder.Add(hasGet && hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
+                    builder.Add(hasGet && !hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value);");
+                    builder.Add(!hasGet && hasSet, () => $"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
+                }
+            );
+
+//            result.Add($"public static {mock.MockType}.Config {property.Name}(this {mock.MockType}.Config config, {property.Type} returns)");
+//            result.Add("{").Indent();
+//            result.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
+//            result.Add(hasGet && hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
+//            result.Add(hasGet && !hasSet, () =>$"config.{property.Name}(get : () => {property.Name}_value.Value);");
+//            result.Add(!hasGet && hasSet, () =>$"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
+//            result.Add("return config;");
+//            result.Unindent().Add("}");
         }
 
         return result;

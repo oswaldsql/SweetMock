@@ -78,15 +78,15 @@ internal static class LogExtensionsBuilder
     {
         using (result.Region("Event : " + m.Key))
         {
-            result.Add(BuildLoggingExtension(eventSymbol.AddMethod, eventSymbol));
-            result.Add(BuildLoggingExtension(eventSymbol.RemoveMethod, eventSymbol));
-            result.Add(BuildLoggingExtension(eventSymbol.RaiseMethod, eventSymbol));
+            result.Add(BuildLoggingExtension(eventSymbol.AddMethod, eventSymbol, true));
+            result.Add(BuildLoggingExtension(eventSymbol.RemoveMethod, eventSymbol, true));
+            result.Add(BuildLoggingExtension(eventSymbol.RaiseMethod, eventSymbol, true));
         }
     }
 
     private static void BuildIndexer(CodeBuilder result, IGrouping<string, ISymbol> m, IPropertySymbol indexerSymbol)
     {
-        using (result.Region("Indexer : " + m.Key))
+        using (result.Region("Indexer : " + m.First()))
         {
             result.Add(BuildLoggingExtension(indexerSymbol.GetMethod, indexerSymbol ));
             result.Add(BuildLoggingExtension(indexerSymbol.SetMethod, indexerSymbol));
@@ -130,7 +130,7 @@ internal static class LogExtensionsBuilder
         }
     }
 
-    private static CodeBuilder BuildLoggingExtension(IMethodSymbol? methodSymbol, ISymbol target)
+    private static CodeBuilder BuildLoggingExtension(IMethodSymbol? methodSymbol, ISymbol target, bool ignoreArguments = false)
     {
         CodeBuilder result = new();
 
@@ -139,15 +139,15 @@ internal static class LogExtensionsBuilder
             return result;
         }
 
-        result.Add(RenderArgumentClass(methodSymbol, $"{GetMethodName(methodSymbol)}_Args"));
+        result.Add(RenderArgumentClass(methodSymbol, $"{GetMethodName(methodSymbol)}_Args", ignoreArguments));
 
         result.Add(BuildPredicateDocumentation([methodSymbol], target));
 
         result.Add($"""
-                     public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{$"{GetMethodName(methodSymbol)}_Args"}>> {GetMethodName(methodSymbol)}(this SweetMock.CallLog log, Func<{$"{GetMethodName(methodSymbol)}_Args"}, bool>? predicate = null) =>
-                        log.Matching<{$"{GetMethodName(methodSymbol)}_Args"}>("{methodSymbol}", predicate);
+                    public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{$"{GetMethodName(methodSymbol)}_Args"}>> {GetMethodName(methodSymbol)}(this SweetMock.CallLog log, Func<{$"{GetMethodName(methodSymbol)}_Args"}, bool>? predicate = null) =>
+                       log.Matching<{$"{GetMethodName(methodSymbol)}_Args"}>("{methodSymbol}", predicate);
 
-                     """);
+                    """);
 
         return result;
     }
@@ -192,34 +192,37 @@ internal static class LogExtensionsBuilder
         return result;
     }
 
-    private static CodeBuilder RenderArgumentClass(IMethodSymbol symbol, string argsClass)=>
-     RenderArgumentClass([symbol], argsClass);
+    private static CodeBuilder RenderArgumentClass(IMethodSymbol symbol, string argsClass, bool ignoreArguments = false)=>
+     RenderArgumentClass([symbol], argsClass, ignoreArguments);
 
-    private static CodeBuilder RenderArgumentClass(IMethodSymbol[] symbols, string argsClass)
+    private static CodeBuilder RenderArgumentClass(IMethodSymbol[] symbols, string argsClass, bool ignoreArguments = false)
     {
         CodeBuilder result = new();
 
         var lookup = symbols.SelectMany(t => t.Parameters).ToLookup(t => t.Name, t => t.Type);
-        if(lookup.Count == 0)
+        if(lookup.Count == 0 || ignoreArguments)
             return result.Add($"public class {argsClass} : SweetMock.TypedArguments {{ }}").Add();
 
         result.Add($"public class {argsClass} : SweetMock.TypedArguments {{").Indent();
-        foreach (var l in lookup)
-            if (l.Count() > 1)
-            {
-                result.AddSummary("");
-                result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
-            }
-            else if(l.First() is ITypeParameterSymbol)
-            {
-                result.AddSummary("The argument is a generic type.")
-                    .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
-            }
-            else
-            {
-                var p = l.First();
-                result.Add($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
-            }
+        if (!ignoreArguments)
+        {
+            foreach (var l in lookup)
+                if (l.Count() > 1)
+                {
+                    result.AddSummary("");
+                    result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                }
+                else if (l.First() is ITypeParameterSymbol)
+                {
+                    result.AddSummary("The argument is a generic type.")
+                        .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                }
+                else
+                {
+                    var p = l.First();
+                    result.Add($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
+                }
+        }
 
         result.Unindent().Add("}");
 

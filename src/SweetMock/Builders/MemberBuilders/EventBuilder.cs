@@ -136,22 +136,4 @@ internal static class EventBuilder
 
         return result;
     }
-
-    public static CodeBuilder AddConfigExtension(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
-    {
-        var name = symbol.Name;
-
-        var args = "";
-        if (arguments.Length > 0)
-        {
-            args = ", " + string.Join(" , ", arguments);
-        }
-
-        result.Add($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args})");
-        result.Add("{").Indent();
-        build(result);
-        result.Add("return config;");
-        result.Unindent().Add("}");
-        return result;
-    }
 }
