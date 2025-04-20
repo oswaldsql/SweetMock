@@ -73,14 +73,13 @@ internal static class MethodBuilder
         var genericString = GenericString(symbol);
         var castString = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + method.ReturnType + ") " : "";
 
-        builder.Add($$"""
-                      {{overwrites.AccessibilityString}}{{overwrites.OverrideString}}{{method.ReturnType}} {{overwrites.ContainingSymbol}}{{method.Name}}{{genericString}}({{parameters.MethodParameters}})
-                      {
-                          {{LogBuilder.BuildLogSegment(symbol)}}
-                          {{method.ReturnString}}{{castString}}this.{{functionPointer}}.Invoke({{parameters.NameList}});
-                      }
-                      private Config.{{delegateInfo.Name}} {{functionPointer}} {get;set;} = ({{delegateInfo.Parameters}}) => {{symbol.BuildNotMockedException()}}
-                      """);
+        builder.Scope($"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})", b =>
+        {
+            b.Add(LogBuilder.BuildLogSegment(symbol));
+            b.Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
+        });
+
+        builder.Add($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
 
         using (builder.AddToConfig())
         {
@@ -90,10 +89,10 @@ internal static class MethodBuilder
             builder.AddParameter("call", "The action or function to execute when the method is called.");
             builder.AddReturns("The updated configuration object.");
             builder.Add($$"""
-                              public Config {{method.Name}}({{delegateInfo.Name}} call){
-                                  target.{{functionPointer}} = call;
-                                  return this;
-                              }
+                          public Config {{method.Name}}({{delegateInfo.Name}} call){
+                              target.{{functionPointer}} = call;
+                              return this;
+                          }
                           """);
         }
 

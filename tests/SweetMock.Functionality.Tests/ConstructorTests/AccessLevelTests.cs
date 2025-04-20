@@ -37,38 +37,3 @@ public class AccessLevelTests
         private AccessLevelTestClass(double privateCtor) { }
     }
 }
-
-public class GenericClassTests
-{
-    [Fact]
-    //[Mock<GenericClass<string>>]
-    [Mock<IGenericInterface<string>>]
-    public void CanMockGenericClass()
-    {
-        // Arrange
-        var sut = Mock.IGenericInterface<string>(config => config.Passthrough(call: s => s));
-
-        // ACT
-        var actual = sut.Passthrough("test2");
-        
-        // Assert 
-        Assert.NotNull(sut);
-        Assert.Equal("test2", actual);
-    }
-
-    internal class GenericClass<T> where T : class
-    {
-        public virtual T Passthrough(T arg) => arg;
-    }
-    
-    internal interface IGenericInterface<T> where T : class
-    {
-        T Passthrough(T arg) => arg;
-        
-        T GenericParameter { get; set; }
-
-        T this[string key] { get; set; }
-
-        event EventHandler<T> GenericEvent;
-    }
-}

@@ -17,7 +17,7 @@ internal static class BaseClassBuilder
         {
             namespaceScope.AddSummary($"Mock implementation of <see cref=\"{details.Target.ToCRef()}\"/>.", "Should only be used for testing purposes.");
             namespaceScope.AddGeneratedCodeAttrib();
-            namespaceScope.Scope($"internal class {details.MockType} : {details.SourceName}{details.Constraints}", classScope =>
+            namespaceScope.Scope($"internal partial class {details.MockType} : {details.SourceName}{details.Constraints}", classScope =>
             {
                 classScope.InitializeConfig(details);
                 classScope.InitializeLogging();

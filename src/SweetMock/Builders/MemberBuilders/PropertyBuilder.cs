@@ -87,7 +87,6 @@ internal class PropertyBuilder
         builder.Unindent().Add("}").Add();
 
         builder.Add($$"""
-                      //private {{type.TrimEnd('?')}}? _{{internalName}};
                       private System.Func<{{type}}> _{{internalName}}_get { get; set; } = () => {{symbol.BuildNotMockedException()}}
                       private System.Action<{{type}}> _{{internalName}}_set { get; set; } = s => {{symbol.BuildNotMockedException()}}
 
@@ -132,15 +131,6 @@ internal class PropertyBuilder
                     builder.Add(!hasGet && hasSet, () => $"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
                 }
             );
-
-//            result.Add($"public static {mock.MockType}.Config {property.Name}(this {mock.MockType}.Config config, {property.Type} returns)");
-//            result.Add("{").Indent();
-//            result.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
-//            result.Add(hasGet && hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
-//            result.Add(hasGet && !hasSet, () =>$"config.{property.Name}(get : () => {property.Name}_value.Value);");
-//            result.Add(!hasGet && hasSet, () =>$"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
-//            result.Add("return config;");
-//            result.Unindent().Add("}");
         }
 
         return result;

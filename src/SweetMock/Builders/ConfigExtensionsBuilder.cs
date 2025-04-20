@@ -68,14 +68,9 @@ public static class ConfigExtensionsBuilder
 
         var constraints = mock.Target.TypeArguments.ToConstraints();
 
-        if (mock.Target.TypeArguments.Length != 0)
+        if (symbol is IMethodSymbol method && method.TypeArguments.Length != 0)
         {
-            name = name + "<" + string.Join(", ", mock.Target.TypeArguments.Select(t => t.Name)) + ">";
-            //result.Add(ConstraintBuilder.ToConstraints(mock.Target.TypeArguments));
-//            foreach (var typeArgument in mock.Target.TypeArguments)
-//            {
-//                result.Add("//" + typeArgument.Name + " : " + ConstraintBuilder.ToConstraints([typeArgument]));
-//            }
+            name = name + "<" + string.Join(", ", method.TypeArguments.Select(t => t.Name)) + ">";
         }
 
         if (symbol is IMethodSymbol namedTypeSymbol && namedTypeSymbol.TypeArguments.Length != 0)
