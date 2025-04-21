@@ -14,7 +14,7 @@ public static class ConfigExtensionsBuilder
 
         builder.AddFileHeader();
 
-        builder.Add($"""
+        builder.AddLines($"""
                      #nullable enable
                      using System.Linq;
 
@@ -26,7 +26,7 @@ public static class ConfigExtensionsBuilder
                 namespaceScope.AddGeneratedCodeAttrib()
                     .Scope($"internal static class {mock.MockName}_ConfigExtensions", classScope =>
                     {
-                        classScope.Add(BuildMembers(mock));
+                        BuildMembers(builder, mock);
                     });
             }
         );
@@ -34,28 +34,24 @@ public static class ConfigExtensionsBuilder
         return builder.ToString();
     }
 
-    private static CodeBuilder BuildMembers(MockDetails mock)
+    private static void BuildMembers(CodeBuilder builder, MockDetails mock)
     {
-        CodeBuilder result = new();
-
         var candidates = mock.GetCandidates();
 
 //        var constructors = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Constructor);
 //        result.Add(ConstructorBuilder.BuildConfigExtensions(details, constructors));
 
         var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
-        result.Add(MethodBuilder.BuildConfigExtensions(mock, methods));
+        MethodBuilder.BuildConfigExtensions(builder, mock, methods);
 
         var properties = candidates.OfType<IPropertySymbol>().Where(t => !t.IsIndexer);
-        result.Add(PropertyBuilder.BuildConfigExtensions(mock, properties));
+        PropertyBuilder.BuildConfigExtensions(builder, mock, properties);
 
         var indexers = candidates.OfType<IPropertySymbol>().Where(t => t.IsIndexer);
-        result.Add(IndexBuilder.BuildConfigExtensions(mock, indexers));
+        IndexBuilder.BuildConfigExtensions(builder, mock, indexers);
 
         var events = candidates.OfType<IEventSymbol>();
-        result.Add(EventBuilder.BuildConfigExtensions(mock, events));
-
-        return result;
+        EventBuilder.BuildConfigExtensions(builder, mock, events);
     }
 
     internal static CodeBuilder AddConfigExtension(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
@@ -77,7 +73,7 @@ public static class ConfigExtensionsBuilder
         {
             foreach (var typeArgument in namedTypeSymbol.TypeArguments)
             {
-                result.Add("//" + typeArgument.Name + " : " + ConstraintBuilder.ToConstraints([typeArgument]));
+                result.AddLines("//" + typeArgument.Name + " : " + ConstraintBuilder.ToConstraints([typeArgument]));
             }
 
         }
@@ -88,11 +84,11 @@ public static class ConfigExtensionsBuilder
             args = ", " + string.Join(" , ", arguments);
         }
 
-        result.Add($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args})" + constraints);
-        result.Add("{").Indent();
+        result.AddLines($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args})" + constraints);
+        result.AddLines("{").Indent();
         build(result);
-        result.Add("return config;");
-        result.Unindent().Add("}");
+        result.AddLines("return config;");
+        result.Unindent().AddLines("}");
         return result;
     }
 }

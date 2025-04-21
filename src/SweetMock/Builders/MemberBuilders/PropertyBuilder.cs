@@ -9,41 +9,35 @@ using Utils;
 /// <summary>
 ///     Represents a builder for properties, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class PropertyBuilder
+internal static class PropertyBuilder
 {
-    public static CodeBuilder Build(IEnumerable<IPropertySymbol> symbols)
+    public static void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
     {
-        CodeBuilder result = new();
-
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
         {
-            result.Add(BuildProperties(m.ToArray()));
+            BuildProperties(classScope, m.ToArray());
         }
-
-        return result;
     }
 
     /// <summary>
     ///     Builds properties and adds them to the code builder.
     /// </summary>
+    /// <param name="classScope"></param>
     /// <param name="symbols">An array of property symbols representing the properties.</param>
     /// <returns>True if at least one property was built; otherwise, false.</returns>
-    private static CodeBuilder BuildProperties(IPropertySymbol[] symbols)
+    private static void BuildProperties(CodeBuilder classScope, IPropertySymbol[] symbols)
     {
-        CodeBuilder builder = new();
         var name = symbols.First().Name;
 
-        using (builder.Region($"#region Property : {name}"))
+        using (classScope.Region($"#region Property : {name}"))
         {
             var index = 0;
             foreach (var symbol in symbols)
             {
                 index++;
-                BuildProperty(builder, symbol, index);
+                BuildProperty(classScope, symbol, index);
             }
-
-            return builder;
         }
     }
 
@@ -67,7 +61,7 @@ internal class PropertyBuilder
         var hasGet = symbol.GetMethod != null;
         var hasSet = symbol.SetMethod != null;
 
-        builder.Add($$"""
+        builder.AddLines($$"""
 
                       {{overwriteString.AccessibilityString}}{{overwriteString.OverrideString}}{{type}} {{overwriteString.ContainingSymbol}}{{propertyName}}
                       {
@@ -84,9 +78,9 @@ internal class PropertyBuilder
                                         this._{{internalName}}_set(value);
                                     }
                                     """);
-        builder.Unindent().Add("}").Add();
+        builder.Unindent().AddLines("}").AddLineBreak();
 
-        builder.Add($$"""
+        builder.AddLines($$"""
                       private System.Func<{{type}}> _{{internalName}}_get { get; set; } = () => {{symbol.BuildNotMockedException()}}
                       private System.Action<{{type}}> _{{internalName}}_set { get; set; } = s => {{symbol.BuildNotMockedException()}}
 
@@ -100,39 +94,35 @@ internal class PropertyBuilder
             builder.AddParameter("get", "Function to call when the property is read.", hasGet);
             builder.AddParameter("set", "Function to call when the property is set.", hasGet);
             builder.AddReturns("The updated configuration object.");
-            builder.Add($$"""public Config {{internalName}}({{p}}) {""").Indent();
+            builder.AddLines($$"""public Config {{internalName}}({{p}}) {""").Indent();
             builder.Add(hasGet, () => $"target._{internalName}_get = get;");
             builder.Add(hasSet, () => $"target._{internalName}_set = set;");
-            builder.Add("return this;");
-            builder.Unindent().Add($$"""}""");
+            builder.AddLines("return this;");
+            builder.Unindent().AddLines("}");
         }
     }
 
-    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IPropertySymbol> properties)
+    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IPropertySymbol> properties)
     {
-        var result = new CodeBuilder();
-
         foreach (var property in properties)
         {
             var hasGet = property.GetMethod != null;
             var hasSet = property.SetMethod != null;
 
-            result.AddSummary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.",
+            codeBuilder.AddSummary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.",
                 "This method configures the mock to use the specified value when the property is accessed.");
-            result.AddParameter("config", "The configuration object used to set up the mock.");
-            result.AddParameter("returns", "The value to use for mocking the property.");
-            result.AddReturns("The updated configuration object.");
+            codeBuilder.AddParameter("config", "The configuration object used to set up the mock.");
+            codeBuilder.AddParameter("returns", "The value to use for mocking the property.");
+            codeBuilder.AddReturns("The updated configuration object.");
 
-            result.AddConfigExtension(mock, property, [$"{property.Type} returns"], builder =>
+            codeBuilder.AddConfigExtension(mock, property, [$"{property.Type} returns"], builder =>
                 {
-                    builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
+                    builder.AddLines($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
                     builder.Add(hasGet && hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
                     builder.Add(hasGet && !hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value);");
                     builder.Add(!hasGet && hasSet, () => $"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
                 }
             );
         }
-
-        return result;
     }
 }

@@ -21,7 +21,7 @@ internal static class BaseClassBuilder
             {
                 classScope.InitializeConfig(details);
                 classScope.InitializeLogging();
-                classScope.Add(BuildMembers(details));
+                BuildMembers(classScope, details);
             });
         });
 
@@ -35,11 +35,11 @@ internal static class BaseClassBuilder
             result.AddSummary("Configuration class for the mock.");
             using (result.AddToConfig())
             {
-                result.Add($"private readonly {details.MockType} target;");
+                result.AddLines($"private readonly {details.MockType} target;");
                 result.AddSummary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class");
                 result.AddParameter("target", "The target mock class.");
                 result.AddParameter("config", "Optional configuration method.");
-                result.Add($$"""
+                result.AddLines($$"""
                               public Config({{details.MockType}} target, System.Action<Config>? config = null)
                               {
                                   this.target = target;
@@ -50,27 +50,23 @@ internal static class BaseClassBuilder
         }
     }
 
-    private static CodeBuilder BuildMembers(MockDetails details)
+    private static void BuildMembers(CodeBuilder classScope, MockDetails details)
     {
-        CodeBuilder result = new();
-
         var candidates = details.GetCandidates();
 
         var constructors = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Constructor);
-        result.Add(ConstructorBuilder.Build(details, constructors));
+        ConstructorBuilder.Build(classScope, details, constructors);
 
         var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
-        result.Add(MethodBuilder.Build(methods));
+        MethodBuilder.Build(classScope, methods);
 
         var properties = candidates.OfType<IPropertySymbol>().Where(t => !t.IsIndexer);
-        result.Add(PropertyBuilder.Build(properties));
+        PropertyBuilder.Build(classScope, properties);
 
         var indexers = candidates.OfType<IPropertySymbol>().Where(t => t.IsIndexer);
-        result.Add(IndexBuilder.Build(indexers));
+        IndexBuilder.Build(classScope, indexers);
 
         var events = candidates.OfType<IEventSymbol>();
-        result.Add(EventBuilder.Build(events));
-
-        return result;
+        EventBuilder.Build(classScope, events);
     }
 }

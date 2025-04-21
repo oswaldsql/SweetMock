@@ -12,7 +12,7 @@ internal static class LogExtensionsBuilder
 
         builder.AddFileHeader();
 
-        builder.Add($$"""
+        builder.AddLines($$"""
                       #nullable enable
                       using System.Linq;
                       using System;
@@ -24,9 +24,9 @@ internal static class LogExtensionsBuilder
                       ->
                       """);
 
-        builder.Add(BuildMembers(details));
+        BuildMembers(builder, details);
 
-        builder.Add("""
+        builder.AddLines("""
                     <-
                     }
                     <-
@@ -37,10 +37,8 @@ internal static class LogExtensionsBuilder
         return builder.ToString();
     }
 
-    private static CodeBuilder BuildMembers(MockDetails details)
+    private static void BuildMembers(CodeBuilder builder, MockDetails details)
     {
-        var result = new CodeBuilder();
-
         var members = details.GetCandidates().Distinct(SymbolEqualityComparer.IncludeNullability).ToLookup(t => t.Name);
 
         foreach (var m in members)
@@ -51,36 +49,34 @@ internal static class LogExtensionsBuilder
                 case IMethodSymbol {MethodKind: MethodKind.EventAdd or MethodKind.EventRaise or MethodKind.EventRemove or MethodKind.PropertyGet or MethodKind.PropertySet}:
                     break;
                 case IMethodSymbol { MethodKind: MethodKind.Constructor }:
-                    BuildConstructors(result, m);
+                    BuildConstructors(builder, m);
                     break;
                 case IMethodSymbol { MethodKind: MethodKind.Ordinary }:
-                    BuildMethods(result, m);
+                    BuildMethods(builder, m);
                     break;
                 case IPropertySymbol { IsIndexer: false } propertySymbol:
-                    BuildProperties(result, m, propertySymbol);
+                    BuildProperties(builder, m, propertySymbol);
                     break;
                 case IPropertySymbol { IsIndexer: true } indexerSymbol:
-                    BuildIndexer(result, m, indexerSymbol);
+                    BuildIndexer(builder, m, indexerSymbol);
                     break;
                 case IEventSymbol eventSymbol:
-                    BuildEvent(result, m, eventSymbol);
+                    BuildEvent(builder, m, eventSymbol);
                     break;
                 default:
-                    result.Add("//" + f);
+                    builder.AddLines("//" + f);
                     break;
             }
         }
-
-        return result;
     }
 
     private static void BuildEvent(CodeBuilder result, IGrouping<string, ISymbol> m, IEventSymbol eventSymbol)
     {
         using (result.Region("Event : " + m.Key))
         {
-            result.Add(BuildLoggingExtension(eventSymbol.AddMethod, eventSymbol, true));
-            result.Add(BuildLoggingExtension(eventSymbol.RemoveMethod, eventSymbol, true));
-            result.Add(BuildLoggingExtension(eventSymbol.RaiseMethod, eventSymbol, true));
+            BuildLoggingExtension(result, eventSymbol.AddMethod, eventSymbol, true);
+            BuildLoggingExtension(result, eventSymbol.RemoveMethod, eventSymbol, true);
+            BuildLoggingExtension(result, eventSymbol.RaiseMethod, eventSymbol, true);
         }
     }
 
@@ -88,8 +84,8 @@ internal static class LogExtensionsBuilder
     {
         using (result.Region("Indexer : " + m.First()))
         {
-            result.Add(BuildLoggingExtension(indexerSymbol.GetMethod, indexerSymbol ));
-            result.Add(BuildLoggingExtension(indexerSymbol.SetMethod, indexerSymbol));
+            BuildLoggingExtension(result, indexerSymbol.GetMethod, indexerSymbol );
+            BuildLoggingExtension(result, indexerSymbol.SetMethod, indexerSymbol);
         }
     }
 
@@ -99,18 +95,18 @@ internal static class LogExtensionsBuilder
         {
             if (propertySymbol.GetMethod != null)
             {
-                result.Add(RenderArgumentClass(propertySymbol.GetMethod, $"{GetMethodName(propertySymbol.GetMethod)}_Args"));
+                RenderArgumentClass(result, propertySymbol.GetMethod, $"{GetMethodName(propertySymbol.GetMethod)}_Args");
 
                 //result.Add(BuildPredicateDocumentation([propertySymbol.GetMethod], propertySymbol));
 
-                result.Add($"""
+                result.AddLines($"""
                              public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{$"{GetMethodName(propertySymbol.GetMethod)}_Args"}>> {GetMethodName(propertySymbol.GetMethod)}(this SweetMock.CallLog log, Func<{$"{GetMethodName(propertySymbol.GetMethod)}_Args"}, bool>? predicate = null) =>
                                 log.Matching<{$"{GetMethodName(propertySymbol.GetMethod)}_Args"}>("{propertySymbol.GetMethod}", predicate);
 
                              """);
             }
 
-            result.Add(BuildLoggingExtension(propertySymbol.SetMethod,propertySymbol));
+            BuildLoggingExtension(result, propertySymbol.SetMethod,propertySymbol);
         }
     }
 
@@ -118,7 +114,7 @@ internal static class LogExtensionsBuilder
     {
         using (result.Region("Method : " + m.Key))
         {
-            result.Add(BuildOverwrittenLoggingExtension(m.OfType<IMethodSymbol>().ToArray()));
+            BuildOverwrittenLoggingExtension(result, m.OfType<IMethodSymbol>().ToArray());
         }
     }
 
@@ -126,30 +122,26 @@ internal static class LogExtensionsBuilder
     {
         using (result.Region("Constructors"))
         {
-            result.Add(BuildOverwrittenLoggingExtension(m.OfType<IMethodSymbol>().ToArray()));
+            BuildOverwrittenLoggingExtension(result, m.OfType<IMethodSymbol>().ToArray());
         }
     }
 
-    private static CodeBuilder BuildLoggingExtension(IMethodSymbol? methodSymbol, ISymbol target, bool ignoreArguments = false)
+    private static void BuildLoggingExtension(CodeBuilder result, IMethodSymbol? methodSymbol, ISymbol target, bool ignoreArguments = false)
     {
-        CodeBuilder result = new();
-
         if (methodSymbol == null)
         {
-            return result;
+            return;
         }
 
-        result.Add(RenderArgumentClass(methodSymbol, $"{GetMethodName(methodSymbol)}_Args", ignoreArguments));
+        RenderArgumentClass(result, methodSymbol, $"{GetMethodName(methodSymbol)}_Args", ignoreArguments);
 
-        result.Add(BuildPredicateDocumentation([methodSymbol], target));
+        BuildPredicateDocumentation(result, [methodSymbol], target);
 
-        result.Add($"""
+        result.AddLines($"""
                     public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{$"{GetMethodName(methodSymbol)}_Args"}>> {GetMethodName(methodSymbol)}(this SweetMock.CallLog log, Func<{$"{GetMethodName(methodSymbol)}_Args"}, bool>? predicate = null) =>
                        log.Matching<{$"{GetMethodName(methodSymbol)}_Args"}>("{methodSymbol}", predicate);
 
                     """);
-
-        return result;
     }
 
     private static string GetMethodName(IMethodSymbol methodSymbol) =>
@@ -165,82 +157,81 @@ internal static class LogExtensionsBuilder
             _ => methodSymbol.Name
         };
 
-    private static CodeBuilder BuildOverwrittenLoggingExtension(IMethodSymbol[] symbols)
+    private static void BuildOverwrittenLoggingExtension(CodeBuilder result, IMethodSymbol[] symbols)
     {
-        if (symbols.Length == 1) return BuildLoggingExtension(symbols[0], symbols[0]);
-
-        CodeBuilder result = new();
+        if (symbols.Length == 1)
+        {
+            BuildLoggingExtension(result, symbols[0], symbols[0]);
+            return;
+        }
 
         var propertyName = GetMethodName(symbols[0]);
 
         var argsClass = $"{propertyName}_Args";
 
-        result.Add(RenderArgumentClass(symbols, argsClass));
+        RenderArgumentClass(result, symbols, argsClass);
 
         var signatures = string.Join(", ", symbols.Select(t => $"\"{t}\""));
 
-        result.Add($"private static System.Collections.Generic.HashSet<string> {propertyName}_Signatures = new System.Collections.Generic.HashSet<string> {{{signatures}}};").Add();
+        result.AddLines($"private static System.Collections.Generic.HashSet<string> {propertyName}_Signatures = new System.Collections.Generic.HashSet<string> {{{signatures}}};").AddLineBreak();
 
-        result.Add(BuildPredicateDocumentation(symbols, symbols[0]));
+        BuildPredicateDocumentation(result, symbols, symbols[0]);
 
-        result.Add($$"""
+        result.AddLines($$"""
                      public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{{argsClass}}>> {{propertyName}}(this SweetMock.CallLog log, Func<{{argsClass}}, bool>? predicate = null) =>
                         log.Matching<{{argsClass}}>({{propertyName}}_Signatures, predicate);
 
                      """);
-
-        return result;
     }
 
-    private static CodeBuilder RenderArgumentClass(IMethodSymbol symbol, string argsClass, bool ignoreArguments = false)=>
-     RenderArgumentClass([symbol], argsClass, ignoreArguments);
+    private static void RenderArgumentClass(CodeBuilder result, IMethodSymbol symbol, string argsClass, bool ignoreArguments = false)=>
+     RenderArgumentClass(result, [symbol], argsClass, ignoreArguments);
 
-    private static CodeBuilder RenderArgumentClass(IMethodSymbol[] symbols, string argsClass, bool ignoreArguments = false)
+    private static void RenderArgumentClass(CodeBuilder result, IMethodSymbol[] symbols, string argsClass, bool ignoreArguments = false)
     {
-        CodeBuilder result = new();
-
         var lookup = symbols.SelectMany(t => t.Parameters).ToLookup(t => t.Name, t => t.Type);
-        if(lookup.Count == 0 || ignoreArguments)
-            return result.Add($"public class {argsClass} : SweetMock.TypedArguments {{ }}").Add();
+        if (lookup.Count == 0 || ignoreArguments)
+        {
+            result.AddLines($"public class {argsClass} : SweetMock.TypedArguments {{ }}").AddLineBreak();
+            return;
+        }
 
-        result.Add($"public class {argsClass} : SweetMock.TypedArguments {{").Indent();
+        result.AddLines($"public class {argsClass} : SweetMock.TypedArguments {{").Indent();
         if (!ignoreArguments)
         {
             foreach (var l in lookup)
+            {
                 if (l.Count() > 1)
                 {
                     result.AddSummary("");
-                    result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                    result.AddLines($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
                 else if (l.First() is ITypeParameterSymbol)
                 {
                     result.AddSummary("The argument is a generic type.")
-                        .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                        .AddLines($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
                 else
                 {
                     var p = l.First();
-                    result.Add($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
+                    result.AddLines($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
                 }
+            }
         }
 
-        result.Unindent().Add("}");
-
-        return result;
+        result.Unindent().AddLines("}");
     }
 
-    private static CodeBuilder BuildPredicateDocumentation(IMethodSymbol[] symbols, ISymbol target)
+    private static void BuildPredicateDocumentation(CodeBuilder result, IMethodSymbol[] symbols, ISymbol target)
     {
-        CodeBuilder result = new();
-        result.Add("/// <summary>");
-        result.Add("///     "+ GetArgumentSummery(symbols[0], target));
-        result.Add($"/// <see cref=\"{target.ToCRef()}\"/>");
+        result.AddLines("/// <summary>");
+        result.AddLines("///     "+ GetArgumentSummery(symbols[0], target));
+        result.AddLines($"/// <see cref=\"{target.ToCRef()}\"/>");
         foreach (var symbol in symbols)
         {
-            result.Add($"/// <see cref=\"{symbol.ToCRef()}\"/>");
+            result.AddLines($"/// <see cref=\"{symbol.ToCRef()}\"/>");
         }
-        result.Add("/// </summary>");
-        return result;
+        result.AddLines("/// </summary>");
     }
 
     private static string GetArgumentSummery(IMethodSymbol symbol, ISymbol target) =>

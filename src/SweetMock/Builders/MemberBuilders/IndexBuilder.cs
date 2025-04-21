@@ -10,53 +10,45 @@ using Utils;
 /// </summary>
 internal static class IndexBuilder
 {
-    public static CodeBuilder Build(IEnumerable<IPropertySymbol> symbols)
+    public static void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
     {
-        CodeBuilder result = new();
-
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
         {
-            result.Add(BuildIndexes(m.ToArray()));
+            BuildIndexes(classScope, m.ToArray());
         }
-
-        return result;
     }
 
     /// <summary>
     ///     Builds the indexers and adds them to the code builder.
     /// </summary>
+    /// <param name="classScope"></param>
     /// <param name="indexerSymbols">The collection of indexer symbols to build.</param>
     /// <returns>True if any indexers were built; otherwise, false.</returns>
-    private static CodeBuilder BuildIndexes(IEnumerable<IPropertySymbol> indexerSymbols)
+    private static void BuildIndexes(CodeBuilder classScope, IEnumerable<IPropertySymbol> indexerSymbols)
     {
-        CodeBuilder builder = new();
-
         var symbols = indexerSymbols as IPropertySymbol[] ?? indexerSymbols.ToArray();
         var indexType = symbols.First().Parameters[0].Type.ToString();
 
-        using (builder.Region($"Index : this[{indexType}]"))
+        using (classScope.Region($"Index : this[{indexType}]"))
         {
             var indexerCount = 0;
             foreach (var symbol in symbols)
             {
                 indexerCount++;
-                builder.Add(BuildIndex(symbol, indexerCount));
+                BuildIndex(classScope, symbol, indexerCount);
             }
         }
-
-        return builder;
     }
 
     /// <summary>
     ///     Builds a single indexer and adds it to the code builder.
     /// </summary>
+    /// <param name="classScope"></param>
     /// <param name="symbol">The property symbol representing the indexer.</param>
     /// <param name="index">The count of indexers built so far.</param>
-    private static CodeBuilder BuildIndex(IPropertySymbol symbol, int index)
+    private static void BuildIndex(CodeBuilder classScope, IPropertySymbol symbol, int index)
     {
-        CodeBuilder builder = new();
-
         var returnType = symbol.Type.ToString();
         var indexType = symbol.Parameters[0].Type.ToString();
         var exception = symbol.BuildNotMockedExceptionForIndexer();
@@ -69,66 +61,60 @@ internal static class IndexBuilder
 
         var argName = symbol.Parameters[0].Name;
 
-        builder.Add($$"""{{overwrites.AccessibilityString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
+        classScope.AddLines($$"""{{overwrites.AccessibilityString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
 
-        builder.Condition(hasGet, b => b.Add("get {").Indent()
+        classScope.Condition(hasGet, b => b.AddLines("get {").Indent()
             .BuildLogSegment(symbol.GetMethod)
-            .Add($"return this.{internalName}_get({argName});")
-            .Unindent().Add("}"));
+            .AddLines($"return this.{internalName}_get({argName});")
+            .Unindent().AddLines("}"));
 
-        builder.Condition(hasSet, b => b.Add("set {").Indent()
+        classScope.Condition(hasSet, b => b.AddLines("set {").Indent()
             .BuildLogSegment(symbol.SetMethod)
-            .Add($"this.{internalName}_set({argName}, value);")
-            .Unindent().Add("}"));
+            .AddLines($"this.{internalName}_set({argName}, value);")
+            .Unindent().AddLines("}"));
 
-        builder.Unindent().Add("}");
+        classScope.Unindent().AddLines("}");
 
-        builder.Add($$"""
-                      private System.Func<{{indexType}}, {{returnType}}> {{internalName}}_get { get; set; } = (_) => {{exception}}
-                      private System.Action<{{indexType}}, {{returnType}}> {{internalName}}_set { get; set; } = (_, _) => {{exception}}
-                      """);
+        classScope.AddLines($$"""
+                         private System.Func<{{indexType}}, {{returnType}}> {{internalName}}_get { get; set; } = (_) => {{exception}}
+                         private System.Action<{{indexType}}, {{returnType}}> {{internalName}}_set { get; set; } = (_, _) => {{exception}}
+                         """);
 
-        using (builder.AddToConfig())
+        using (classScope.AddToConfig())
         {
             var p = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
 
-            builder.AddSummary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
+            classScope.AddSummary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
                 .AddParameter("get", "Function to call when the property is read.", hasGet)
                 .AddParameter("set", "Function to call when the property is set.", hasGet)
                 .AddReturns("The configuration object.")
-                .Add($$"""public Config Indexer({{p}}) {""").Indent()
+                .AddLines($$"""public Config Indexer({{p}}) {""").Indent()
                 .Add(hasGet, () => $"target.{internalName}_get = get;")
                 .Add(hasSet, () => $"target.{internalName}_set = set;")
-                .Add("return this;")
-                .Unindent().Add("}");
+                .AddLines("return this;")
+                .Unindent().AddLines("}");
         }
-
-        return builder;
     }
 
-    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IPropertySymbol> indexers)
+    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IPropertySymbol> indexers)
     {
-        var result = new CodeBuilder();
-
         foreach (var indexer in indexers)
         {
             var hasGet = indexer.GetMethod != null;
             var hasSet = indexer.SetMethod != null;
 
             var typeSymbol = indexer.Parameters[0].Type;
-            result.Add();
-            result.AddSummary("Gets or sets values in the dictionary when the indexer is called.", $"Configures <see cref=\"{indexer.ToCRef()}\" />");
-            result.AddParameter("config", "The configuration object used to set up the mock.");
-            result.AddParameter("values", "Dictionary containing the values for the indexer.");
-            result.AddReturns("The updated configuration object.");
-            result.AddConfigExtension(mock, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
+            codeBuilder.AddLineBreak();
+            codeBuilder.AddSummary("Gets or sets values in the dictionary when the indexer is called.", $"Configures <see cref=\"{indexer.ToCRef()}\" />");
+            codeBuilder.AddParameter("config", "The configuration object used to set up the mock.");
+            codeBuilder.AddParameter("values", "Dictionary containing the values for the indexer.");
+            codeBuilder.AddReturns("The updated configuration object.");
+            codeBuilder.AddConfigExtension(mock, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
             {
                 builder.Add(hasGet && hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
                 builder.Add(hasGet && !hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key]);");
                 builder.Add(!hasGet && hasSet, () => $"config.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
             });
         }
-
-        return result;
     }
 }

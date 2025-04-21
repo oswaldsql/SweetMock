@@ -10,7 +10,7 @@ public static class LogBuilder
     {
         using (source.Region("Logging"))
         {
-            source.Add("""
+            source.AddLines("""
                        private bool _hasLog = false;
                        private SweetMock.CallLog _log = new SweetMock.CallLog();
                        """);
@@ -19,7 +19,7 @@ public static class LogBuilder
                 source.AddSummary("Add logging to the configuration.");
                 source.AddParameter("callLog", "CallLog to use for logging.");
                 source.AddReturns("The configuration object.");
-                source.Add("""
+                source.AddLines("""
                            public Config LogCallsTo(SweetMock.CallLog callLog) {
                                  target._log = callLog;
                                  target._hasLog = true;
@@ -48,11 +48,11 @@ public static class LogBuilder
         if (!skipParameters && symbol.Parameters.Any(t => t.RefKind == RefKind.None))
         {
             var LogArgumentsValue = symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(Argument);
-            builder.Scope("if(_hasLog)", b => b.Add($"_log.Add(\"{symbol}\", SweetMock.Arguments{string.Join("", LogArgumentsValue)});"));
+            builder.Scope("if(_hasLog)", b => b.AddLines($"_log.Add(\"{symbol}\", SweetMock.Arguments{string.Join("", LogArgumentsValue)});"));
         }
         else
         {
-            builder.Scope("if(_hasLog)", b => b.Add($"_log.Add(\"{symbol}\");"));
+            builder.Scope("if(_hasLog)", b => b.AddLines($"_log.Add(\"{symbol}\");"));
         }
 
         return builder;

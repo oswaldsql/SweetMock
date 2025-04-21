@@ -11,41 +11,34 @@ using Utils;
 /// </summary>
 internal static class EventBuilder
 {
-    public static CodeBuilder Build(IEnumerable<IEventSymbol> events)
+    public static void Build(CodeBuilder classScope, IEnumerable<IEventSymbol> events)
     {
-        CodeBuilder result = new();
-
         var lookup = events.ToLookup(t => t.Name);
         foreach (var m in lookup)
         {
-            result.Add(BuildEvents(m.ToArray()));
+            BuildEvents(classScope, m.ToArray());
         }
-
-        return result;
     }
 
     /// <summary>
     ///     Builds the events based on the given symbols and adds them to the code builder.
     /// </summary>
+    /// <param name="classScope"></param>
     /// <param name="eventSymbols">The event symbols to build.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
-    private static CodeBuilder BuildEvents(IEventSymbol[] eventSymbols)
+    private static void BuildEvents(CodeBuilder classScope, IEventSymbol[] eventSymbols)
     {
-        CodeBuilder builder = new();
-
         var name = eventSymbols.First().Name;
 
-        using (builder.Region($"Event : {name}"))
+        using (classScope.Region($"Event : {name}"))
         {
             var eventCount = 1;
             foreach (var symbol in eventSymbols)
             {
-                BuildEvent(builder, symbol, eventCount);
+                BuildEvent(classScope, symbol, eventCount);
                 eventCount++;
             }
         }
-
-        return builder;
     }
 
     /// <summary>
@@ -66,7 +59,7 @@ internal static class EventBuilder
 
         var (containingSymbol, accessibilityString, _) = symbol.Overwrites();
 
-        builder.Add($$"""
+        builder.AddLines($$"""
 
                       private event {{typeSymbol}}? _{{eventFunction}};
                       {{accessibilityString}}event {{typeSymbol}}? {{containingSymbol}}{{eventName}}
@@ -75,25 +68,25 @@ internal static class EventBuilder
 
         builder.Scope("add", b => b
             .BuildLogSegment(symbol.AddMethod, true)
-            .Add($"this._{eventFunction} += value;"));
+            .AddLines($"this._{eventFunction} += value;"));
 
         builder.Scope("remove", b => b
             .BuildLogSegment(symbol.RemoveMethod, true)
-            .Add($"this._{eventFunction} -= value;"));
+            .AddLines($"this._{eventFunction} -= value;"));
 
-        builder.Add("}");
+        builder.AddLines("}");
 
         using (builder.AddToConfig())
         {
             if (types == "System.EventArgs")
-                builder.Add($$"""
+                builder.AddLines($$"""
                               public Config {{eventName}}(out System.Action trigger) {
                                   trigger = () => target._{{eventName}}?.Invoke(target, System.EventArgs.Empty);
                                   return this;
                               }
                               """);
             else
-                builder.Add($$"""
+                builder.AddLines($$"""
                               public Config {{eventName}}(out System.Action<{{types}}> trigger) {
                                   trigger = args => target._{{eventName}}?.Invoke(target, args);
                                   return this;
@@ -102,38 +95,34 @@ internal static class EventBuilder
         }
     }
 
-    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IEventSymbol> events)
+    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IEventSymbol> events)
     {
-        var result = new CodeBuilder();
-
         foreach (var eventSymbol in events)
         {
             var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type));
 
-            result.Add();
-            result.AddSummary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.");
-            result.AddParameter("config", "The configuration object used to set up the mock.");
+            codeBuilder.AddLineBreak();
+            codeBuilder.AddSummary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.");
+            codeBuilder.AddParameter("config", "The configuration object used to set up the mock.");
             if (types != "System.EventArgs")
             {
-                result.AddParameter("eventArgs", "The arguments used in the event.");
-                result.AddReturns("The updated configuration object.");
-                result.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], builder =>
+                codeBuilder.AddParameter("eventArgs", "The arguments used in the event.");
+                codeBuilder.AddReturns("The updated configuration object.");
+                codeBuilder.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], builder =>
                 {
-                    builder.Add($"config.{eventSymbol.Name}(out var trigger);");
-                    builder.Add("trigger.Invoke(eventArgs);");
+                    builder.AddLines($"config.{eventSymbol.Name}(out var trigger);");
+                    builder.AddLines("trigger.Invoke(eventArgs);");
                 });
             }
             else
             {
-                result.AddReturns("The updated configuration object.");
-                result.AddConfigExtension(mock, eventSymbol, [], builder =>
+                codeBuilder.AddReturns("The updated configuration object.");
+                codeBuilder.AddConfigExtension(mock, eventSymbol, [], builder =>
                 {
-                    builder.Add($"config.{eventSymbol.Name}(out var trigger);");
-                    builder.Add("trigger.Invoke();");
+                    builder.AddLines($"config.{eventSymbol.Name}(out var trigger);");
+                    builder.AddLines("trigger.Invoke();");
                 });
             }
         }
-
-        return result;
     }
 }

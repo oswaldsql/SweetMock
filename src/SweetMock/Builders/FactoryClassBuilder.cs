@@ -18,12 +18,12 @@ public class FactoryClassBuilder
         var builder = new CodeBuilder();
 
         builder.AddFileHeader();
-        builder.Add("""
+        builder.AddLines("""
                     #nullable enable
                     namespace SweetMock {
                     """).Indent();
         builder.AddSummary("Factory for creating mock objects.");
-        builder.Add("internal static partial class Mock {").Indent();
+        builder.AddLines("internal static partial class Mock {").Indent();
 
         if (!details.Target.Constructors.Any(t => !t.IsStatic))
             BuildFactoryMethod(details, builder);
@@ -31,7 +31,7 @@ public class FactoryClassBuilder
             foreach (var constructor in details.Target.Constructors.Where(Include))
                 BuildFactoryMethod(details, builder, constructor);
 
-        builder.Unindent().Add("}").Unindent().Add("}");
+        builder.Unindent().AddLines("}").Unindent().AddLines("}");
 
         return builder.ToString();
     }
@@ -82,7 +82,7 @@ public class FactoryClassBuilder
         }
         builder.AddParameter("config", "Optional configuration for the mock object.");
         builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
-        builder.Add($"""
+        builder.AddLines($"""
                       internal static {details.SourceName} {symbolName}
                           ({parameters}System.Action<{details.Namespace}.{details.MockType}.Config>? config = null)
                           => new {details.Namespace}.{details.MockName}({names}config);
@@ -95,7 +95,7 @@ public class FactoryClassBuilder
         }
         builder.AddParameter($"config{symbolName}", "Outputs configuration for the mock object.");
         builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
-        builder.Add($$"""
+        builder.AddLines($$"""
                       internal static {{details.SourceName}} {{symbolName}}
                           ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{symbolName}})
                           {
@@ -133,7 +133,7 @@ public class FactoryClassBuilder
         builder.AddParameter("config", "Optional configuration for the mock object.");
         builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
 
-        builder.Add($"""
+        builder.AddLines($"""
                       internal static {details.SourceName} {details.Target.Name}<{types}>
                           ({parameters}System.Action<{details.Namespace}.{details.MockType}.Config>? config = null) {constraints}
                           => new {details.Namespace}.{details.MockType}({arguments}config);
@@ -146,7 +146,7 @@ public class FactoryClassBuilder
         }
         builder.AddParameter("config", "Outputs configuration for the mock object.");
         builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
-        builder.Add($$"""
+        builder.AddLines($$"""
                       internal static {{details.SourceName}} {{details.Target.Name}}<{{types}}>
                           ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{details.Target.Name}}) {{constraints}}
                           {

@@ -12,13 +12,13 @@ internal class SurroundingCodeBuilder : IDisposable
     {
         this.builder = codeBuilder;
         this.startIndentation = this.builder.Indentation;
-        codeBuilder.Add(prepend).Indent();
+        codeBuilder.AddLines(prepend).Indent();
         this.append1 = append;
     }
 
     public void Dispose()
     {
-        this.builder.Unindent().Add(this.append1);
+        this.builder.Unindent().AddLines(this.append1);
         if (this.startIndentation != this.builder.Indentation)
         {
             throw new("Indentation must be the same");

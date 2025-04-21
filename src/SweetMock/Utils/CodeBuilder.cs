@@ -1,25 +1,40 @@
 namespace SweetMock.Utils;
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
-internal class CodeBuilder(string prepend = "")
+internal class CodeBuilder
 {
-    private readonly List<string> lines = [];
+    private readonly StringBuilder result = new();
 
-    public bool IsEmpty => this.lines.Count == 0;
+    private const int MaxIndent = 50;
+    private const int IndentSize = 4;
+    private static readonly string[] IndentCache = new string[MaxIndent];
+
+    static CodeBuilder()
+    {
+        IndentCache = Enumerable.Range(0, MaxIndent)
+            .Select(i => new string(' ', i * IndentSize))
+            .ToArray();
+    }
 
     public int Indentation { get; private set; }
 
+    private string GetIndentation =>
+        this.Indentation < MaxIndent
+            ? IndentCache[this.Indentation]
+            : new(' ', this.Indentation * 4);
+
     public CodeBuilder Indent()
     {
-        this.Indentation = this.Indentation + 1;
+        this.Indentation += 1;
         return this;
     }
 
     public CodeBuilder Unindent()
     {
-        this.Indentation = this.Indentation - 1;
+        this.Indentation -= 1;
 
         if (this.Indentation < 0)
         {
@@ -29,29 +44,29 @@ internal class CodeBuilder(string prepend = "")
         return this;
     }
 
-    public CodeBuilder Add()
+    public CodeBuilder AddLineBreak()
     {
-        this.lines.Add(prepend);
+        this.result.AppendLine();
         return this;
     }
 
-    public CodeBuilder Add(string text)
+    public CodeBuilder AddLines(string text)
     {
-        var strings = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        var strings = text.Split(["\r\n", "\n"], StringSplitOptions.None);
         foreach (var s in strings)
         {
             switch (s)
             {
                 case "->":
-                    this.Indentation = this.Indentation + 1;
+                    this.Indentation += 1;
                     continue;
                 case "<-":
-                    this.Indentation = this.Indentation - 1;
+                    this.Indentation -= 1;
                     continue;
                 case "--":
                     continue;
                 default:
-                    this.lines.Add(prepend + new string(' ', this.Indentation * 4) + s);
+                    this.result.Append(this.GetIndentation).AppendLine(s);
                     break;
             }
         }
@@ -59,39 +74,25 @@ internal class CodeBuilder(string prepend = "")
         return this;
     }
 
-    public CodeBuilder Add(bool condition, Func<string> add) => condition ? this.Add(add()) : this;
+    public CodeBuilder Add(string line)
+    {
+        this.result.Append(this.GetIndentation).AppendLine(line);
+        return this;
+    }
+
+    public CodeBuilder Add(bool condition, Func<string> add) => condition ? this.AddLines(add()) : this;
 
     public CodeBuilder Condition(bool condition, Action<CodeBuilder> add)
     {
-        if (condition) add(this);
-        return this;
-    }
-
-
-    public CodeBuilder On(Func<bool> predicate) => predicate() ? this : new();
-    public CodeBuilder On(bool condition) => condition ? this : new();
-
-    public CodeBuilder Add(CodeBuilder builder)
-    {
-        foreach (var text in builder.lines)
+        if (condition)
         {
-            this.Add(text);
+            add(this);
         }
 
         return this;
     }
 
-    public override string ToString() => string.Join("\r\n", this.lines);
-
-    public CodeBuilder Add(List<string> builder)
-    {
-        foreach (var text in builder)
-        {
-            this.Add(text);
-        }
-
-        return this;
-    }
+    public override string ToString() => string.Join("\r\n", this.result);
 
     public SurroundingCodeBuilder Region(string region) => new(this, "#region " + region, "#endregion");
 

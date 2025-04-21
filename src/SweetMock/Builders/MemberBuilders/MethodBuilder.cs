@@ -11,17 +11,13 @@ using Utils;
 /// </summary>
 internal static class MethodBuilder
 {
-    public static CodeBuilder Build(IEnumerable<IMethodSymbol> methods)
+    public static void Build(CodeBuilder classScope, IEnumerable<IMethodSymbol> methods)
     {
-        CodeBuilder result = new();
-
         var lookup = methods.ToLookup(t => t.Name);
         foreach (var m in lookup)
         {
-            result.Add(BuildMethods(m.ToArray()));
+            BuildMethods(classScope, m.ToArray());
         }
-
-        return result;
     }
 
     /// <summary>
@@ -29,23 +25,19 @@ internal static class MethodBuilder
     /// </summary>
     /// <param name="methodSymbols">The method symbols to build methods from.</param>
     /// <returns>True if at least one method was built; otherwise, false.</returns>
-    private static CodeBuilder BuildMethods(IMethodSymbol[] methodSymbols)
+    private static void BuildMethods(CodeBuilder classScope, IMethodSymbol[] methodSymbols)
     {
-        CodeBuilder result = new();
-
         var name = methodSymbols.First().Name;
 
-        using (result.Region($"Method : {name}"))
+        using (classScope.Region($"Method : {name}"))
         {
             var methodCount = 1;
             foreach (var symbol in methodSymbols)
             {
-                result.Add(Build(symbol, methodCount));
+                Build(classScope, symbol, methodCount);
                 methodCount++;
             }
         }
-
-        return result;
     }
 
     /// <summary>
@@ -54,11 +46,9 @@ internal static class MethodBuilder
     /// <param name="symbol">The method symbol to build the method from.</param>
     /// <param name="methodCount">The count of methods built so far.</param>
     /// <returns>True if the method was built; otherwise, false.</returns>
-    private static CodeBuilder Build(IMethodSymbol symbol, int methodCount)
+    private static void Build(CodeBuilder classScope, IMethodSymbol symbol, int methodCount)
     {
         if(symbol.ReturnsByRef) throw new Exception("Property has returns byref");
-
-        CodeBuilder builder = new();
 
         var parameters = symbol.ParameterStrings();
 
@@ -73,30 +63,28 @@ internal static class MethodBuilder
         var genericString = GenericString(symbol);
         var castString = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + method.ReturnType + ") " : "";
 
-        builder.Scope($"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})", b =>
+        classScope.Scope($"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})", b =>
         {
-            b.Add(LogBuilder.BuildLogSegment(symbol));
-            b.Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
+            b.AddLines(LogBuilder.BuildLogSegment(symbol));
+            b.AddLines($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
         });
 
-        builder.Add($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
+        classScope.AddLines($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
 
-        using (builder.AddToConfig())
+        using (classScope.AddToConfig())
         {
-            builder.AddSummary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>");
-            builder.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
-            builder.AddSummary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.");
-            builder.AddParameter("call", "The action or function to execute when the method is called.");
-            builder.AddReturns("The updated configuration object.");
-            builder.Add($$"""
-                          public Config {{method.Name}}({{delegateInfo.Name}} call){
-                              target.{{functionPointer}} = call;
-                              return this;
-                          }
-                          """);
+            classScope.AddSummary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>");
+            classScope.AddLines($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
+            classScope.AddSummary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.");
+            classScope.AddParameter("call", "The action or function to execute when the method is called.");
+            classScope.AddReturns("The updated configuration object.");
+            classScope.AddLines($$"""
+                             public Config {{method.Name}}({{delegateInfo.Name}} call){
+                                 target.{{functionPointer}} = call;
+                                 return this;
+                             }
+                             """);
         }
-
-        return builder;
     }
 
     private static DelegateInfo DelegateInfo(IMethodSymbol symbol, int methodCount)
@@ -132,9 +120,9 @@ internal static class MethodBuilder
         return $"<{types}>";
     }
 
-    public static CodeBuilder BuildConfigExtensions(MockDetails mock, IEnumerable<IMethodSymbol> methods)
+    public static void BuildConfigExtensions(CodeBuilder builder, MockDetails mock, IEnumerable<IMethodSymbol> methods)
     {
-        var result = new CodeBuilder();
+        var result = builder;
         var source = methods.ToArray();
 
         result.AddReturnsValueExtensions(mock, source);
@@ -142,8 +130,6 @@ internal static class MethodBuilder
         result.AddNoReturnValueExtensions(mock, source);
 
         result.AddThrowExtensions(mock, source);
-
-        return result;
     }
 
     private static CodeBuilder AddReturnsValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
@@ -154,7 +140,7 @@ internal static class MethodBuilder
         {
             var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
 
-            result.Add();
+            result.AddLineBreak();
             result.AddSummary("Configures the mock to return a specific value disregarding the arguments.", $"Configures {seeString}");
             result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddParameter("returns", "The value that should be returned");
@@ -172,7 +158,7 @@ internal static class MethodBuilder
                         _ => $"config.{m.Name}(({parameterList}) => returns);"
                     };
 
-                    builder.Add(str);
+                    builder.AddLines(str);
                 }
             });
         }
@@ -188,7 +174,7 @@ internal static class MethodBuilder
         {
             var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
 
-            result.Add();
+            result.AddLineBreak();
             result.AddSummary("Configures the mock to accept any call to methods not returning values.", $"Configures {seeString}");
             result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddReturns("The updated configuration object.");
@@ -207,7 +193,7 @@ internal static class MethodBuilder
                         _ => ""
                     };
 
-                    builder.Add(str);
+                    builder.AddLines(str);
                 }
             });
         }
@@ -221,7 +207,7 @@ internal static class MethodBuilder
         {
             var seeString = string.Join(", ", methodGroup.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
 
-            result.Add();
+            result.AddLineBreak();
             result.AddSummary("Configures the mock to throw the specified exception when the method is called.", $"Configures {seeString}");
             result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddParameter("throws", "The exception to be thrown when the method is called.");
@@ -231,7 +217,7 @@ internal static class MethodBuilder
                 foreach (var method in methodGroup)
                 {
                     var parameterList = method.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
-                    builder.Add($"config.{method.Name}(({parameterList}) => throw throws);");
+                    builder.AddLines($"config.{method.Name}(({parameterList}) => throw throws);");
                 }
             });
         }
