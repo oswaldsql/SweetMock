@@ -23,11 +23,13 @@ public static class ConfigExtensionsBuilder
 
         builder.Scope($"namespace {mock.Namespace}", namespaceScope =>
             {
-                namespaceScope.AddGeneratedCodeAttrib()
-                    .Scope($"internal static class {mock.MockName}_ConfigExtensions", classScope =>
+                namespaceScope
+//                    .AddGeneratedCodeAttrib()
+                    .Scope($"internal partial class {mock.MockName}", codeBuilder => codeBuilder
+                    .Scope($"internal partial class Config", classScope =>
                     {
-                        BuildMembers(builder, mock);
-                    });
+                        BuildMembers(classScope, mock);
+                    }));
             }
         );
 
@@ -81,13 +83,13 @@ public static class ConfigExtensionsBuilder
         var args = "";
         if (arguments.Length > 0)
         {
-            args = ", " + string.Join(" , ", arguments);
+            args = string.Join(" , ", arguments);
         }
 
-        result.Add($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args})" + constraints);
+        result.Add($"public Config {name}({args})" + constraints);
         result.Add("{").Indent();
         build(result);
-        result.Add("return config;");
+        result.Add("return this;");
         result.Unindent().Add("}");
         return result;
     }

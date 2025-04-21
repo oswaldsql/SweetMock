@@ -142,7 +142,6 @@ internal static class MethodBuilder
 
             result.AddLineBreak();
             result.AddSummary("Configures the mock to return a specific value disregarding the arguments.", $"Configures {seeString}");
-            result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddParameter("returns", "The value that should be returned");
             result.AddReturns("The updated configuration object.");
             result.AddConfigExtension(mock, candidate.First(), [candidate.First().ReturnType + " returns"], builder =>
@@ -153,9 +152,9 @@ internal static class MethodBuilder
 
                     var str = m.ReturnType.ToString() switch
                     {
-                        "System.Threading.Tasks.Task" => $"config.{m.Name}(({parameterList}) => returns);",
-                        "System.Threading.Tasks.ValueTask" => $"config.{m.Name}(({parameterList}) => returns);",
-                        _ => $"config.{m.Name}(({parameterList}) => returns);"
+                        "System.Threading.Tasks.Task" => $"this.{m.Name}(({parameterList}) => returns);",
+                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(({parameterList}) => returns);",
+                        _ => $"this.{m.Name}(({parameterList}) => returns);"
                     };
 
                     builder.AddLines(str);
@@ -176,7 +175,6 @@ internal static class MethodBuilder
 
             result.AddLineBreak();
             result.AddSummary("Configures the mock to accept any call to methods not returning values.", $"Configures {seeString}");
-            result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddReturns("The updated configuration object.");
             result.AddConfigExtension(mock, candidate.First(), [], builder =>
             {
@@ -186,9 +184,9 @@ internal static class MethodBuilder
 
                     var str = m.ReturnType.ToString() switch
                     {
-                        "void" => $"config.{m.Name}(({parameterList}) => {{}});",
-                        "System.Threading.Tasks.Task" => $"config.{m.Name}(({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
-                        "System.Threading.Tasks.ValueTask" => $"config.{m.Name}(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
+                        "void" => $"this.{m.Name}(({parameterList}) => {{}});",
+                        "System.Threading.Tasks.Task" => $"this.{m.Name}(({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
+                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
                         _ => ""
                     };
 
@@ -208,7 +206,6 @@ internal static class MethodBuilder
 
             result.AddLineBreak();
             result.AddSummary("Configures the mock to throw the specified exception when the method is called.", $"Configures {seeString}");
-            result.AddParameter("config", "The configuration object used to set up the mock.");
             result.AddParameter("throws", "The exception to be thrown when the method is called.");
             result.AddReturns("The updated configuration object.");
             result.AddConfigExtension(mock, methodGroup.First(), ["Exception throws"], builder =>
@@ -216,7 +213,7 @@ internal static class MethodBuilder
                 foreach (var method in methodGroup)
                 {
                     var parameterList = method.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
-                    builder.AddLines($"config.{method.Name}(({parameterList}) => throw throws);");
+                    builder.AddLines($"this.{method.Name}(({parameterList}) => throw throws);");
                 }
             });
         }

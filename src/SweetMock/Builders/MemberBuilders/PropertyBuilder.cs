@@ -111,16 +111,14 @@ internal static class PropertyBuilder
 
             codeBuilder.AddSummary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.",
                 "This method configures the mock to use the specified value when the property is accessed.");
-            codeBuilder.AddParameter("config", "The configuration object used to set up the mock.");
             codeBuilder.AddParameter("returns", "The value to use for mocking the property.");
             codeBuilder.AddReturns("The updated configuration object.");
-
             codeBuilder.AddConfigExtension(mock, property, [$"{property.Type} returns"], builder =>
                 {
                     builder.AddLines($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (returns);");
-                    builder.Add(hasGet && hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
-                    builder.Add(hasGet && !hasSet, () => $"config.{property.Name}(get : () => {property.Name}_value.Value);");
-                    builder.Add(!hasGet && hasSet, () => $"config.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
+                    builder.Add(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
+                    builder.Add(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);");
+                    builder.Add(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
                 }
             );
         }

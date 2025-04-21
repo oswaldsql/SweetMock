@@ -106,14 +106,13 @@ internal static class IndexBuilder
             var typeSymbol = indexer.Parameters[0].Type;
             codeBuilder.AddLineBreak();
             codeBuilder.AddSummary("Gets or sets values in the dictionary when the indexer is called.", $"Configures <see cref=\"{indexer.ToCRef()}\" />");
-            codeBuilder.AddParameter("config", "The configuration object used to set up the mock.");
             codeBuilder.AddParameter("values", "Dictionary containing the values for the indexer.");
             codeBuilder.AddReturns("The updated configuration object.");
             codeBuilder.AddConfigExtension(mock, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
             {
-                builder.Add(hasGet && hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
-                builder.Add(hasGet && !hasSet, () => $"config.Indexer(get: ({typeSymbol} key) => values[key]);");
-                builder.Add(!hasGet && hasSet, () => $"config.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+                builder.Add(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+                builder.Add(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);");
+                builder.Add(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
             });
         }
     }

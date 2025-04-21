@@ -103,14 +103,13 @@ internal static class EventBuilder
 
             codeBuilder.AddLineBreak();
             codeBuilder.AddSummary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.");
-            codeBuilder.AddParameter("config", "The configuration object used to set up the mock.");
             if (types != "System.EventArgs")
             {
                 codeBuilder.AddParameter("eventArgs", "The arguments used in the event.");
                 codeBuilder.AddReturns("The updated configuration object.");
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], builder =>
                 {
-                    builder.AddLines($"config.{eventSymbol.Name}(out var trigger);");
+                    builder.AddLines($"this.{eventSymbol.Name}(out var trigger);");
                     builder.AddLines("trigger.Invoke(eventArgs);");
                 });
             }
@@ -119,7 +118,7 @@ internal static class EventBuilder
                 codeBuilder.AddReturns("The updated configuration object.");
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [], builder =>
                 {
-                    builder.AddLines($"config.{eventSymbol.Name}(out var trigger);");
+                    builder.AddLines($"this.{eventSymbol.Name}(out var trigger);");
                     builder.AddLines("trigger.Invoke();");
                 });
             }
