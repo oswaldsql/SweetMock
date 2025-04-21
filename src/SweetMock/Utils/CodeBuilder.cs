@@ -10,7 +10,7 @@ internal class CodeBuilder
 
     private const int MaxIndent = 50;
     private const int IndentSize = 4;
-    private static readonly string[] IndentCache = new string[MaxIndent];
+    private static readonly string[] IndentCache;
 
     static CodeBuilder()
     {

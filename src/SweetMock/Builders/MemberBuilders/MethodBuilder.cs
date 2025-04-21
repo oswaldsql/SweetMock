@@ -180,7 +180,6 @@ internal static class MethodBuilder
             result.AddReturns("The updated configuration object.");
             result.AddConfigExtension(mock, candidate.First(), [], builder =>
             {
-
                 foreach (var m in candidate)
                 {
                     var parameterList = m.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");

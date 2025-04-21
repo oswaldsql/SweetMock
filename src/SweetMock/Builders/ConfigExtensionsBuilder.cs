@@ -84,11 +84,11 @@ public static class ConfigExtensionsBuilder
             args = ", " + string.Join(" , ", arguments);
         }
 
-        result.AddLines($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args})" + constraints);
-        result.AddLines("{").Indent();
+        result.Add($"public static {mock.MockType}.Config {name}(this {mock.MockType}.Config config{args})" + constraints);
+        result.Add("{").Indent();
         build(result);
-        result.AddLines("return config;");
-        result.Unindent().AddLines("}");
+        result.Add("return config;");
+        result.Unindent().Add("}");
         return result;
     }
 }
