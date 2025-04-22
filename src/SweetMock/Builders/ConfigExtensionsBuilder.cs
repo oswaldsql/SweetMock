@@ -25,7 +25,7 @@ public static class ConfigExtensionsBuilder
             {
                 namespaceScope
 //                    .AddGeneratedCodeAttrib()
-                    .Scope($"internal partial class {mock.MockName}", codeBuilder => codeBuilder
+                    .Scope($"internal partial class {mock.MockType}", codeBuilder => codeBuilder
                     .Scope($"internal partial class Config", classScope =>
                     {
                         BuildMembers(classScope, mock);
@@ -64,7 +64,7 @@ public static class ConfigExtensionsBuilder
             name = "Indexer";
         }
 
-        var constraints = mock.Target.TypeArguments.ToConstraints();
+        var constraints = ""; //symbol.TypeArguments.ToConstraints();
 
         if (symbol is IMethodSymbol method && method.TypeArguments.Length != 0)
         {
