@@ -1,47 +1,53 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>13</LangVersion>
-        <Nullable>enable</Nullable>
-        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-        <IsRoslynComponent>true</IsRoslynComponent>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <RootNamespace>SweetMock</RootNamespace>
-        <PackageId>SweetMock</PackageId>
-        <Version>0.9.14</Version>
-        <Title>Sweet mock</Title>
-        <Authors>Lasse Sjørup</Authors>
-        <Description>A minimalistic source generator for creating mocks for testing is a tool that automatically generates mock implementations of interfaces or classes. This helps in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
-        <Copyright>Copyright (c) 2025 Lasse Sjørup</Copyright>
-        <PackageProjectUrl>https://github.com/oswaldsql/SweetMock</PackageProjectUrl>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
-        <PackageTags>mocking, unit-testing, TDD, mock-objects</PackageTags>
-        <PackageIcon>Icon.jpg</PackageIcon>
-        <PackageReleaseNotes>Initial version of SweetMock supporting Interfaces and a subset of class mocking.</PackageReleaseNotes>
-        <AssemblyVersion>1.0.0</AssemblyVersion>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>13</LangVersion>
+    <Nullable>enable</Nullable>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RootNamespace>SweetMock</RootNamespace>
+    <PackageId>SweetMock</PackageId>
+    <Version>1.0.0</Version>
+    <Title>Sweet mock</Title>
+    <Authors>Lasse Sjørup</Authors>
+    <Description>A minimalistic source generator for creating mocks for testing is a tool that automatically generates mock implementations of interfaces or classes. This helps in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
+    <Copyright>Copyright (c) 2025 Lasse Sjørup</Copyright>
+    <PackageProjectUrl>https://github.com/oswaldsql/SweetMock</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
+    <PackageTags>mocking, unit-testing, TDD, mock-objects</PackageTags>
+    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageReleaseNotes>Initial version of SweetMock supporting Interfaces and a subset of class mocking.</PackageReleaseNotes>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
 
-        <IncludeBuiltOutput>false</IncludeBuiltOutput>
-    </PropertyGroup>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
-    </ItemGroup>
+    <AnalyzerRoslynVersion>4.12.0</AnalyzerRoslynVersion>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-    <ItemGroup>
-        <EmbeddedResource Include="BaseFiles/*"/>
-    </ItemGroup>
-    
-    <ItemGroup>
-        <None Include="..\..\Icon.jpg" Pack="true" Visible="false" PackagePath=""/>
-        <None Include="..\..\LICENSE" Pack="true" PackagePath=""/>
-        <None Include="..\..\README.md" Pack="true" PackagePath=""/>
-    </ItemGroup>
-    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="BaseFiles/*"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Icon.jpg" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath=""/>
+    <None Include="..\..\README.md" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
 </Project>
