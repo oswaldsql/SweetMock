@@ -61,7 +61,7 @@ internal static class IndexBuilder
 
         var argName = symbol.Parameters[0].Name;
 
-        classScope.AddLines($$"""{{overwrites.AccessibilityString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
+        classScope.AddLines($$"""{{overwrites.AccessibilityString}}{{overwrites.OverrideString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
 
         classScope.Condition(hasGet, b => b.AddLines("get {").Indent()
             .BuildLogSegment(symbol.GetMethod)

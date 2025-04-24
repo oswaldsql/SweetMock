@@ -57,12 +57,12 @@ internal static class EventBuilder
 
         var eventFunction = eventCount == 1 ? eventName : $"{eventName}_{eventCount}";
 
-        var (containingSymbol, accessibilityString, _) = symbol.Overwrites();
+        var (containingSymbol, accessibilityString, overrideString) = symbol.Overwrites();
 
         builder.AddLines($$"""
 
                       private event {{typeSymbol}}? _{{eventFunction}};
-                      {{accessibilityString}}event {{typeSymbol}}? {{containingSymbol}}{{eventName}}
+                      {{accessibilityString}}{{overrideString}} event {{typeSymbol}}? {{containingSymbol}}{{eventName}}
                       {
                       """);
 

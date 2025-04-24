@@ -11,11 +11,11 @@ using Utils;
 internal static class ConstructorBuilder {
     public static void Build(CodeBuilder classScope, MockDetails details, IEnumerable<IMethodSymbol> constructors)
     {
-        constructors = constructors.Distinct().ToArray();
+        var distinctConstructors = constructors.Distinct(SymbolEqualityComparer.Default).OfType<IMethodSymbol>().ToArray();
 
-        if (constructors.Any())
+        if (distinctConstructors.Any())
         {
-            BuildConstructors(classScope, details, constructors);
+            BuildConstructors(classScope, details, distinctConstructors);
         }
         else
         {

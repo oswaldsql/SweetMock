@@ -132,7 +132,7 @@ internal static class MethodBuilder
         result.AddThrowExtensions(mock, source);
     }
 
-    private static CodeBuilder AddReturnsValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    private static void AddReturnsValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
     {
         var methodSymbols = source.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
         var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
@@ -161,11 +161,9 @@ internal static class MethodBuilder
                 }
             });
         }
-
-        return result;
     }
 
-    private static CodeBuilder AddNoReturnValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    private static void AddNoReturnValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
     {
         var methodSymbols = source.Where(t => (t.ReturnsVoid || t.ReturnType.ToString() == "System.Threading.Tasks.Task" || t.ReturnType.ToString() == "System.Threading.Tasks.ValueTask") && !t.Parameters.Any(s => s.RefKind == RefKind.Out));
         var candidates = methodSymbols.ToLookup(t => t.Name);
@@ -194,11 +192,9 @@ internal static class MethodBuilder
                 }
             });
         }
-
-        return result;
     }
 
-    private static CodeBuilder AddThrowExtensions(this CodeBuilder result, MockDetails mock, IEnumerable<IMethodSymbol> methods)
+    private static void AddThrowExtensions(this CodeBuilder result, MockDetails mock, IEnumerable<IMethodSymbol> methods)
     {
         foreach (var methodGroup in methods.ToLookup(t => t.Name))
         {
@@ -217,8 +213,6 @@ internal static class MethodBuilder
                 }
             });
         }
-
-        return result;
     }
 }
 /*
