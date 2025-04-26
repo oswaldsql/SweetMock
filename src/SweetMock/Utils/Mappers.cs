@@ -16,14 +16,14 @@ public static class Mappers
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
         memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
-        //miscellaneousOptions: SymbolDisplayMiscellaneousOptions.
+        //, miscellaneousOptions: SymbolDisplayMiscellaneousOptions.
     );
 
     public static string ToCRef(this ISymbol symbol)
     {
         var prefix = symbol.Prefix();
 
-        return $"{prefix}{symbol.ToDisplayString(Format)}".Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
+        return $"{symbol.ToDisplayString(Format)}".Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
     }
 
     private static string Prefix(this ISymbol symbol) =>

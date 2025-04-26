@@ -115,13 +115,6 @@ public class BasicMethodTests
         sut.ReturnWithParameters("dfa3");
         sut.ReturnWithParameters("dfa4");
         sut.ReturnWithParameters(null);
-
-        // Assert
-        foreach (var log in logger.Where(t => t.MethodSignature == "Test.MethodTests.BasicMethodTests.IBasicMethods.ReturnWithParameters(string)" && t.Arguments["name"] != null))
-        {
-            Console.WriteLine(log + "[" + log.Arguments + "]");
-        }
-
     }
 
     public interface IBasicMethods

@@ -30,11 +30,6 @@ public class Tester
         var actual = sut.CurrentVersion;
         var url = sut.DownloadLinkAsync("1,2,3,4");
         
-        foreach (var log in callLog)
-        {
-            Console.WriteLine(log);
-        }
-        
         Action<Version> a = null;
         var newMock = MockOf_IVersionLibrary.Config.CreateNewMock(config => config
             .DownloadExists((string version) => true)

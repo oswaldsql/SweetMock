@@ -9,27 +9,31 @@ public class GenericClassTests
         Action<Guid> trigger = null!;
         // Arrange & Act
         var callLog = new CallLog();
-        var actual = Mock.Repo<Guid>(config => config
+        var sut = Mock.Repo<Guid>(config => config
             .SomeMethod(Guid.NewGuid())
-            .SomeMethod(Guid => Guid)
             .SomeMethod(new ArgumentException())
+            .SomeMethod(Guid => Guid)
             .SomeProperty(Guid.NewGuid())
             .SomeProperty(Guid.NewGuid, _ => { })
             .Indexer(new())
             .Indexer(s => Guid.NewGuid(), (s, guid) => { })
             .SomeEvent(Guid.NewGuid())
-            .SomeEvent(out trigger).LogCallsTo(callLog)
-            .OutMethod((out Guid output) => output = Guid.NewGuid())
+            .SomeEvent(out trigger)
             .OutMethod(throws: new ArgumentException())
+            .OutMethod((out Guid output) => output = Guid.NewGuid())
             .SomeList(() => [Guid.NewGuid()])
             .SomeList(returns: [Guid.NewGuid()])
-            //.ActionMethod()
+            .ActionMethod()
             .SomeMethodAsync(returns: Task.FromResult(Guid.NewGuid()))
+        
+            .LogCallsTo(callLog)
         );
 
+        sut.OutMethod(out var g);
+        
         trigger(Guid.NewGuid());
 
-        Assert.NotNull(actual);
+        Assert.NotNull(sut);
 
         callLog.SomeMethod(args => args.input is Guid);
     }
@@ -49,7 +53,7 @@ public class GenericClassTests
 
         public virtual IEnumerable<T> SomeList() => [];
 
-        //public virtual void ActionMethod(Action<T> action) => action(default);
+        public virtual void ActionMethod(Action<T> action) => action(default);
 
         public virtual Task<T> SomeMethodAsync() => Task.FromResult(new T());
         

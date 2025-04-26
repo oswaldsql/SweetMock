@@ -78,6 +78,7 @@ internal static class EventBuilder
 
         using (builder.AddToConfig())
         {
+            builder.AddSummary($"Returns a action delegate to invoke when <see cref=\"{symbol.ToCRef()}\"/> should be triggered.");
             if (types == "System.EventArgs")
                 builder.AddLines($$"""
                               public Config {{eventName}}(out System.Action trigger) {

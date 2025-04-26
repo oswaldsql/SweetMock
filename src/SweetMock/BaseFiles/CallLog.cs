@@ -69,7 +69,7 @@ namespace SweetMock {
             this.values.Count == 0 ? "" : string.Join(", ", this.values.Select(t => $"{t.Key} : '{t.Value}'"));
     }
 
-    public class CallLog : System.Collections.Generic.IEnumerable<CallLogItem>
+    public class CallLog //: System.Collections.Generic.IEnumerable<CallLogItem>
     {
         private int index;
         private readonly List<CallLogItem> logs = new();
@@ -86,17 +86,17 @@ namespace SweetMock {
             }
         }
 
-        public IEnumerator<CallLogItem> GetEnumerator() => this.logs.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() =>  this.logs.GetEnumerator();
+//        public IEnumerator<CallLogItem> GetEnumerator() => this.logs.GetEnumerator();
+//
+//        IEnumerator IEnumerable.GetEnumerator() =>  this.logs.GetEnumerator();
 
         public IEnumerable<TypedCallLogItem<T>> Matching<T>(string signature, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
-            this.Where(t => t.MethodSignature == signature)
+            logs.Where(t => t.MethodSignature == signature)
                 .Select(t => new TypedCallLogItem<T>(t))
                 .Where(t => predicate == null || predicate(t.TypedArguments));
 
         public IEnumerable<TypedCallLogItem<T>> Matching<T>(HashSet<string> signatures, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
-            this.Where(t => signatures.Contains(t.MethodSignature!))
+            logs.Where(t => signatures.Contains(t.MethodSignature!))
                 .Select(t => new TypedCallLogItem<T>(t))
                 .Where(t => predicate == null || predicate(t.TypedArguments));
     }

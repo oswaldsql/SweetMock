@@ -93,19 +93,7 @@ internal static class LogExtensionsBuilder
     {
         using (result.Region("Property : " + m.Key))
         {
-            if (propertySymbol.GetMethod != null)
-            {
-                RenderArgumentClass(result, propertySymbol.GetMethod, $"{GetMethodName(propertySymbol.GetMethod)}_Args");
-
-                //result.Add(BuildPredicateDocumentation([propertySymbol.GetMethod], propertySymbol));
-
-                result.AddLines($"""
-                             public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{$"{GetMethodName(propertySymbol.GetMethod)}_Args"}>> {GetMethodName(propertySymbol.GetMethod)}(this SweetMock.CallLog log, Func<{$"{GetMethodName(propertySymbol.GetMethod)}_Args"}, bool>? predicate = null) =>
-                                log.Matching<{$"{GetMethodName(propertySymbol.GetMethod)}_Args"}>("{propertySymbol.GetMethod}", predicate);
-
-                             """);
-            }
-
+            BuildLoggingExtension(result, propertySymbol.GetMethod,propertySymbol);
             BuildLoggingExtension(result, propertySymbol.SetMethod,propertySymbol);
         }
     }
@@ -203,12 +191,12 @@ internal static class LogExtensionsBuilder
             {
                 if (l.Count() > 1)
                 {
-                    result.AddSummary("");
+                    result.AddSummary("The argument can be different types", string.Join(", ", l.Select(t => t.ToCRef())));
                     result.AddLines($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
-                else if (l.First() is ITypeParameterSymbol)
+                else if (l.First() is ITypeParameterSymbol || l.First() is INamedTypeSymbol { IsGenericType: true })
                 {
-                    result.AddSummary("The argument is a generic type.")
+                    result.AddSummary("The argument is a generic type. (" + l.First() + ")")
                         .AddLines($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
                 else
@@ -226,26 +214,26 @@ internal static class LogExtensionsBuilder
     {
         result.AddLines("/// <summary>");
         result.AddLines("///     "+ GetArgumentSummery(symbols[0], target));
-        result.AddLines($"/// <see cref=\"{target.ToCRef()}\"/>");
-        foreach (var symbol in symbols)
-        {
-            result.AddLines($"/// <see cref=\"{symbol.ToCRef()}\"/>");
-        }
+//        result.AddLines($"/// <see cref=\"{target.ToCRef()}\"/>");
+//        foreach (var symbol in symbols)
+//        {
+//            result.AddLines($"/// <see cref=\"{symbol.ToCRef()}\"/>");
+//        }
         result.AddLines("/// </summary>");
     }
 
     private static string GetArgumentSummery(IMethodSymbol symbol, ISymbol target) =>
         symbol switch
         {
-            { MethodKind : MethodKind.Constructor } => $"Identifies when the mock object was constructed {symbol.Name}.",
-            { MethodKind : MethodKind.EventAdd } => $"Identifies when the event {target.Name} was subscribed to.",
-            { MethodKind : MethodKind.EventRaise } => $"Identifies when the event {target.Name} was raised.",
-            { MethodKind : MethodKind.EventRemove } => $"Identifies when the event {target.Name} was unsubscribed to.",
-            { MethodKind : MethodKind.Ordinary } => $"Identifying calls to the method {target.Name}.",
-            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property {target.Name} was read.",
-            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property {target.Name} was set.",
-            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for {symbol.Parameters[0].Type} was read.",
-            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for {symbol.Parameters[0].Type} was set.",
+            { MethodKind : MethodKind.Constructor } => $"Identifies when the mock object for <see cref=\"{symbol.ToCRef()}\"/> <see cref=\"{target.ToCRef()}\"/> is created.",
+            { MethodKind : MethodKind.EventAdd } => $"Identifies when the event <see cref=\"{target.ToCRef()}\"/> was subscribed to.",
+            { MethodKind : MethodKind.EventRaise } => $"Identifies when the event <see cref=\"{target.ToCRef()}\"/> was raised.",
+            { MethodKind : MethodKind.EventRemove } => $"Identifies when the event <see cref=\"{target.ToCRef()}\"/> was unsubscribed to.",
+            { MethodKind : MethodKind.Ordinary } => $"Identifying calls to the method <see cref=\"{target.ToCRef()}\"/>.",
+            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property <see cref=\"{target.ToCRef()}\"/> was read.",
+            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property <see cref=\"{target.ToCRef()}\"/> was set.",
+            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> was read.",
+            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> was set.",
             _ => ""
         };
 }

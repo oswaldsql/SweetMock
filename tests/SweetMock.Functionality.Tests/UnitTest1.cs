@@ -31,11 +31,6 @@ public class UnitTest1(ITestOutputHelper testOutputHelper)
         triggerVersionAdded(new Version(1, 2, 3, 4));
         sut.NewVersionAdded -= sutOnNewVersionAdded();
         
-        foreach (var log in callLog)
-        {
-            testOutputHelper.WriteLine(log.ToString() + "[" + log.Arguments + "]");
-        }
-
 //        var sequence = callLog.Sequence(log => log.DownloadExists(), log => log.CurrentVersion_Set(), log => log.CurrentVersion_Get());//,  log => log.CurrentVersion_Get(), log => log.CurrentVersion_Get(), log => log.Item_Set(), log => log.DownloadExists());
 //        foreach (var log in sequence)
 //        {
