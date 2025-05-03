@@ -68,17 +68,10 @@ public static class ConfigExtensionsBuilder
 
         if (symbol is IMethodSymbol method && method.TypeArguments.Length != 0)
         {
-            name = name + "<" + string.Join(", ", method.TypeArguments.Select(t => t.Name)) + ">";
+            name = name; // + "<" + string.Join(", ", method.TypeArguments.Select(t => t.Name)) + ">";
         }
 
-        if (symbol is IMethodSymbol namedTypeSymbol && namedTypeSymbol.TypeArguments.Length != 0)
-        {
-            foreach (var typeArgument in namedTypeSymbol.TypeArguments)
-            {
-                result.AddLines("//" + typeArgument.Name + " : " + ConstraintBuilder.ToConstraints([typeArgument]));
-            }
 
-        }
 
         var args = "";
         if (arguments.Length > 0)

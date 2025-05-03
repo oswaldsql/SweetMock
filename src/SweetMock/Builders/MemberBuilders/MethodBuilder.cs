@@ -93,13 +93,35 @@ internal static class MethodBuilder
         var delegateType = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? "object" : symbol.ReturnType.ToString();
         var delegateContainer = "--MockClass--";
 
-        var parameters = symbol.Parameters.Select(t => new ParameterInfo(t.Type.ToString(), t.Name, t.OutAsString(), t.Name)).ToList();
-
-        if (symbol.IsGenericMethod) parameters.AddRange(symbol.TypeArguments.Select(typeArgument => new ParameterInfo("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")")));
+        var parameters = GetParameterInfos(symbol);
 
         var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} {p.Name}");
 
         return new(delegateName, delegateType, delegateContainer, delegateContainer + delegateName, parameterList);
+    }
+
+    private static List<ParameterInfo> GetParameterInfos(IMethodSymbol symbol)
+    {
+        var parameters = symbol.Parameters.Select(t => new ParameterInfo(t.Type.ToString(), t.Name, t.OutAsString(), t.Name)).ToList();
+
+        if (symbol.IsGenericMethod)
+        {
+            parameters = [];
+            foreach (var parameter in symbol.Parameters)
+            {
+                if(parameter.Type.TypeKind == TypeKind.TypeParameter && parameter.Type.ContainingSymbol is IMethodSymbol)
+                    parameters.Add(new ParameterInfo("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name));
+                //Console.WriteLine(parameter.Name + " " + parameter.Type.TypeKind.ToString());
+                else
+                {
+                    parameters.Add(new ParameterInfo(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name));
+                }
+            }
+
+            parameters.AddRange(symbol.TypeArguments.Select(typeArgument => new ParameterInfo("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")")));
+        }
+
+        return parameters;
     }
 
     private static MethodInfo MethodMetadata(IMethodSymbol method)
@@ -144,17 +166,25 @@ internal static class MethodBuilder
             result.AddSummary("Configures the mock to return a specific value disregarding the arguments.", $"Configures {seeString}");
             result.AddParameter("returns", "The value that should be returned");
             result.AddReturns("The updated configuration object.");
-            result.AddConfigExtension(mock, candidate.First(), [candidate.First().ReturnType + " returns"], builder =>
+            var returnType = candidate.First().ReturnType.ToString();
+            if (candidate.First().ReturnType.TypeKind == TypeKind.TypeParameter && candidate.First().ReturnType.ContainingSymbol is IMethodSymbol)
+            {
+                returnType = "System.Object";
+            }
+
+            result.AddConfigExtension(mock, candidate.First(), [returnType + " returns"], builder =>
             {
                 foreach (var m in candidate)
                 {
-                    var parameterList = m.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
+                    var parameters = GetParameterInfos(m);
+
+                    var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
                     var str = m.ReturnType.ToString() switch
                     {
-                        "System.Threading.Tasks.Task" => $"this.{m.Name}(({parameterList}) => returns);",
-                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(({parameterList}) => returns);",
-                        _ => $"this.{m.Name}(({parameterList}) => returns);"
+                        "System.Threading.Tasks.Task" => $"this.{m.Name}(call: ({parameterList}) => returns);",
+                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({parameterList}) => returns);",
+                        _ => $"this.{m.Name}(call: ({parameterList}) => returns);"
                     };
 
                     builder.AddLines(str);
@@ -178,13 +208,14 @@ internal static class MethodBuilder
             {
                 foreach (var m in candidate)
                 {
-                    var parameterList = m.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
+                    var parameters = GetParameterInfos(m);
+                    var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
                     var str = m.ReturnType.ToString() switch
                     {
-                        "void" => $"this.{m.Name}(({parameterList}) => {{}});",
-                        "System.Threading.Tasks.Task" => $"this.{m.Name}(({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
-                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
+                        "void" => $"this.{m.Name}(call: ({parameterList}) => {{}});",
+                        "System.Threading.Tasks.Task" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
+                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
                         _ => ""
                     };
 
@@ -208,8 +239,11 @@ internal static class MethodBuilder
             {
                 foreach (var method in methodGroup)
                 {
-                    var parameterList = method.Parameters.ToString(p => $"{p.OutAsString()}{p.Type} _");
-                    builder.AddLines($"this.{method.Name}(({parameterList}) => throw throws);");
+                    var parameters = GetParameterInfos(method);
+
+                    var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
+
+                    builder.AddLines($"this.{method.Name}(call: ({parameterList}) => throw throws);");
                 }
             });
         }

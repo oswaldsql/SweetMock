@@ -209,5 +209,4 @@ public class FullTest
                 .NewVersionAdded(out triggerNewVersionAdded) // Provides a trigger for when a new version is added
         );
     }
-
 }

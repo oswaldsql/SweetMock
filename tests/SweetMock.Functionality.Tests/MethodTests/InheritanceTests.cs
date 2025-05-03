@@ -20,7 +20,7 @@ public class InheritanceTests
 //        Assert.True(((IBase)sut).ReturnBool());
     }
 
-    [Fact(Skip = "Waiting for extension methods")]
+    [Fact(Skip = "New keyword nor working right now")]
     //[Mock<IDerived>]
     public void FactMethodName2()
     {

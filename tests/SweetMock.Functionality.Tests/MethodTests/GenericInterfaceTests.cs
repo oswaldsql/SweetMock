@@ -110,7 +110,7 @@ public class GenericInterfaceTests
 public class GenericMethodTest
 {
     //[Mock<IGenericMethod>]
-    [Fact(Skip = "Generic Method does not work right now")]
+    [Fact]
     public void MockCallFunctionGetTheTypeOfTheGenericAsParameter()
     {
 //        var sut = Mock.IGenericMethod(config => config.ReturnGeneric(ReturnGeneric));

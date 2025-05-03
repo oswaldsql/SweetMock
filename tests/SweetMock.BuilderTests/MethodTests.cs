@@ -51,7 +51,7 @@ public class MethodTests(ITestOutputHelper testOutputHelper)
         Assert.Empty(generate.GetErrors());
     }
 
-    [Fact(Skip = "Generic not supported right now")]
+    [Fact]
     public void GenericTests()
     {
         var source = @"namespace Demo;
@@ -86,6 +86,19 @@ public class TestClass{
     public void InterfaceWithOverloadsTests()
     {
         var source = Build.TestClass<IWithOverloads>();
+
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        testOutputHelper.DumpResult(generate);
+
+        Assert.Empty(generate.GetErrors());
+    }
+    
+    
+    [Fact]
+    public void InterfaceWithOverloadsTests2()
+    {
+        var source = Build.TestClass<IGenericMethods>();
 
         var generate = new SweetMockSourceGenerator().Generate(source);
 
@@ -128,5 +141,10 @@ public class TestClass{
         public Task<int> Method(int i, CancellationToken token);
         public Task MethodAsync();
         public Task MethodAsync(int i);
+    }
+    
+    public interface IGenericMethods
+    {
+        public T EmptyGeneric<T>(string str, T name) where T : new();
     }
 }

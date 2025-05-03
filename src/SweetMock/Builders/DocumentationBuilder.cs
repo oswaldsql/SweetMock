@@ -8,7 +8,7 @@ using Utils;
 
 internal static class DocumentationBuilder
 {
-    private const bool Disable = false;
+    private const bool Disable = true;
 
     public static CodeBuilder AddSummary(this CodeBuilder source, params string[] summaries)
     {

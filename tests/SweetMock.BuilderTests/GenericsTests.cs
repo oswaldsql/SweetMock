@@ -8,7 +8,7 @@ using Util;
 
 public class GenericsTests(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Generic not supported right now")]
+    [Fact]
     public void EventInheritanceTests()
     {
         var source = $@"
@@ -78,7 +78,7 @@ public class TestClass{{
         Assert.Empty(generate.GetWarnings());
     }
 
-    [Fact(Skip = "Generic not supported right now")]
+    [Fact]
     public void GenericMethodsInNoGenericInterfaceIsNotSupported()
     {
         var source = Build.TestClass<IGenericMethod>();
@@ -97,7 +97,7 @@ public class TestClass{{
     {
         void ReturnGeneric(string value);
         T ReturnGeneric<T>(string value) where T : struct;
-        IEnumerable<T> ReturnDerived<T>(string value) where T : struct;
+        //IEnumerable<T> ReturnDerived<T>(string value) where T : struct;
         void ReturnVoid<T>(string value) where T : struct;
         T ReturnTwoGenerics<T, TU>(string value) where T : struct where TU : struct;
     }

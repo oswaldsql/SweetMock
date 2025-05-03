@@ -46,7 +46,7 @@ public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact(Skip = "Diagnostics not working yet")]
-    public void MockingSealedClasesWillRaiseTheMm0006Error()
+    public void MockingSealedClassesWillRaiseTheMm0006Error()
     {
         var source = Build.TestClass<SealedClass>();
 
