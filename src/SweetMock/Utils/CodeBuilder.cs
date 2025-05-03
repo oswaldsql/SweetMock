@@ -12,12 +12,10 @@ internal class CodeBuilder
     private const int IndentSize = 4;
     private static readonly string[] IndentCache;
 
-    static CodeBuilder()
-    {
+    static CodeBuilder() =>
         IndentCache = Enumerable.Range(0, MaxIndent)
             .Select(i => new string(' ', i * IndentSize))
             .ToArray();
-    }
 
     public int Indentation { get; private set; }
 
@@ -80,7 +78,7 @@ internal class CodeBuilder
         return this;
     }
 
-    public CodeBuilder Add(bool condition, Func<string> add) => condition ? this.AddLines(add()) : this;
+    public CodeBuilder Add(bool condition, Func<string> add) => condition ? this.Add(add()) : this;
 
     public CodeBuilder Condition(bool condition, Action<CodeBuilder> add)
     {

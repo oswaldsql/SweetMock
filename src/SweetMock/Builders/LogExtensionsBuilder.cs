@@ -64,7 +64,6 @@ internal static class LogExtensionsBuilder
                     BuildEvent(builder, m, eventSymbol);
                     break;
                 default:
-                    builder.AddLines("//" + f);
                     break;
             }
         }
@@ -161,7 +160,7 @@ internal static class LogExtensionsBuilder
 
         var signatures = string.Join(", ", symbols.Select(t => $"\"{t}\""));
 
-        result.AddLines($"private static System.Collections.Generic.HashSet<string> {propertyName}_Signatures = new System.Collections.Generic.HashSet<string> {{{signatures}}};").AddLineBreak();
+        result.Add($"private static System.Collections.Generic.HashSet<string> {propertyName}_Signatures = new System.Collections.Generic.HashSet<string> {{{signatures}}};").AddLineBreak();
 
         BuildPredicateDocumentation(result, symbols, symbols[0]);
 
@@ -180,11 +179,11 @@ internal static class LogExtensionsBuilder
         var lookup = symbols.SelectMany(t => t.Parameters).ToLookup(t => t.Name, t => t.Type);
         if (lookup.Count == 0 || ignoreArguments)
         {
-            result.AddLines($"public class {argsClass} : SweetMock.TypedArguments {{ }}").AddLineBreak();
+            result.Add($"public class {argsClass} : SweetMock.TypedArguments {{ }}").AddLineBreak();
             return;
         }
 
-        result.AddLines($"public class {argsClass} : SweetMock.TypedArguments {{").Indent();
+        result.Add($"public class {argsClass} : SweetMock.TypedArguments {{").Indent();
         if (!ignoreArguments)
         {
             foreach (var l in lookup)
@@ -192,34 +191,29 @@ internal static class LogExtensionsBuilder
                 if (l.Count() > 1)
                 {
                     result.AddSummary("The argument can be different types", string.Join(", ", l.Select(t => t.ToCRef())));
-                    result.AddLines($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                    result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
                 else if (l.First() is ITypeParameterSymbol || l.First() is INamedTypeSymbol { IsGenericType: true })
                 {
                     result.AddSummary("The argument is a generic type. (" + l.First() + ")")
-                        .AddLines($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                        .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
                 else
                 {
                     var p = l.First();
-                    result.AddLines($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
+                    result.Add($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
                 }
             }
         }
 
-        result.Unindent().AddLines("}");
+        result.Unindent().Add("}");
     }
 
     private static void BuildPredicateDocumentation(CodeBuilder result, IMethodSymbol[] symbols, ISymbol target)
     {
-        result.AddLines("/// <summary>");
-        result.AddLines("///     "+ GetArgumentSummery(symbols[0], target));
-//        result.AddLines($"/// <see cref=\"{target.ToCRef()}\"/>");
-//        foreach (var symbol in symbols)
-//        {
-//            result.AddLines($"/// <see cref=\"{symbol.ToCRef()}\"/>");
-//        }
-        result.AddLines("/// </summary>");
+        result.Add("/// <summary>");
+        result.Add("///     "+ GetArgumentSummery(symbols[0], target));
+        result.Add("/// </summary>");
     }
 
     private static string GetArgumentSummery(IMethodSymbol symbol, ISymbol target) =>

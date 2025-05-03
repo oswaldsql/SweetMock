@@ -1,6 +1,5 @@
 namespace SweetMock.Builders.MemberBuilders;
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -68,13 +67,13 @@ internal static class EventBuilder
 
         builder.Scope("add", b => b
             .BuildLogSegment(symbol.AddMethod, true)
-            .AddLines($"this._{eventFunction} += value;"));
+            .Add($"this._{eventFunction} += value;"));
 
         builder.Scope("remove", b => b
             .BuildLogSegment(symbol.RemoveMethod, true)
-            .AddLines($"this._{eventFunction} -= value;"));
+            .Add($"this._{eventFunction} -= value;"));
 
-        builder.AddLines("}");
+        builder.Add("}");
 
         using (builder.AddToConfig())
         {
@@ -110,8 +109,8 @@ internal static class EventBuilder
                 codeBuilder.AddReturns("The updated configuration object.");
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], builder =>
                 {
-                    builder.AddLines($"this.{eventSymbol.Name}(out var trigger);");
-                    builder.AddLines("trigger.Invoke(eventArgs);");
+                    builder.Add($"this.{eventSymbol.Name}(out var trigger);");
+                    builder.Add("trigger.Invoke(eventArgs);");
                 });
             }
             else
@@ -119,8 +118,8 @@ internal static class EventBuilder
                 codeBuilder.AddReturns("The updated configuration object.");
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [], builder =>
                 {
-                    builder.AddLines($"this.{eventSymbol.Name}(out var trigger);");
-                    builder.AddLines("trigger.Invoke();");
+                    builder.Add($"this.{eventSymbol.Name}(out var trigger);");
+                    builder.Add("trigger.Invoke();");
                 });
             }
         }

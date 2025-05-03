@@ -16,7 +16,6 @@ public static class Mappers
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
         memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
-        //, miscellaneousOptions: SymbolDisplayMiscellaneousOptions.
     );
 
     public static string ToCRef(this ISymbol symbol)

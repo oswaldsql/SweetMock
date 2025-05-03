@@ -32,6 +32,7 @@ public static class LogBuilder
         return source;
     }
 
+    // TODO : Send codebuild as parameter instead.
     public static string BuildLogSegment(IMethodSymbol? symbol, bool skipParameters = false)
     {
         if (symbol == null) { return ""; }
@@ -48,11 +49,11 @@ public static class LogBuilder
         if (!skipParameters && symbol.Parameters.Any(t => t.RefKind == RefKind.None))
         {
             var LogArgumentsValue = symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(Argument);
-            builder.Scope("if(_hasLog)", b => b.AddLines($"_log.Add(\"{symbol}\", SweetMock.Arguments{string.Join("", LogArgumentsValue)});"));
+            builder.Scope("if(_hasLog)", b => b.Add($"_log.Add(\"{symbol}\", SweetMock.Arguments{string.Join("", LogArgumentsValue)});"));
         }
         else
         {
-            builder.Scope("if(_hasLog)", b => b.AddLines($"_log.Add(\"{symbol}\");"));
+            builder.Scope("if(_hasLog)", b => b.Add($"_log.Add(\"{symbol}\");"));
         }
 
         return builder;

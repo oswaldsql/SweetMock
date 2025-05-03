@@ -14,19 +14,18 @@ public static class ConfigExtensionsBuilder
 
         builder.AddFileHeader();
 
-        builder.AddLines($"""
-                     #nullable enable
-                     using System.Linq;
+        builder.AddLines("""
+                         #nullable enable
+                         using System.Linq;
 
-                     using System;
-                     """);
+                         using System;
+                         """);
 
         builder.Scope($"namespace {mock.Namespace}", namespaceScope =>
             {
                 namespaceScope
-//                    .AddGeneratedCodeAttrib()
                     .Scope($"internal partial class {mock.MockType}", codeBuilder => codeBuilder
-                    .Scope($"internal partial class Config", classScope =>
+                    .Scope("internal partial class Config", classScope =>
                     {
                         BuildMembers(classScope, mock);
                     }));
@@ -38,10 +37,7 @@ public static class ConfigExtensionsBuilder
 
     private static void BuildMembers(CodeBuilder builder, MockDetails mock)
     {
-        var candidates = mock.GetCandidates();
-
-//        var constructors = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Constructor);
-//        result.Add(ConstructorBuilder.BuildConfigExtensions(details, constructors));
+        var candidates = mock.GetCandidates().Distinct(SymbolEqualityComparer.Default).ToArray();
 
         var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
         MethodBuilder.BuildConfigExtensions(builder, mock, methods);
@@ -56,7 +52,7 @@ public static class ConfigExtensionsBuilder
         EventBuilder.BuildConfigExtensions(builder, mock, events);
     }
 
-    internal static CodeBuilder AddConfigExtension(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
+    internal static void AddConfigExtension(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
     {
         var name = symbol.Name;
         if (name == "this[]")
@@ -64,26 +60,12 @@ public static class ConfigExtensionsBuilder
             name = "Indexer";
         }
 
-        var constraints = ""; //symbol.TypeArguments.ToConstraints();
+        var args = string.Join(" , ", arguments);
 
-        if (symbol is IMethodSymbol method && method.TypeArguments.Length != 0)
-        {
-            name = name; // + "<" + string.Join(", ", method.TypeArguments.Select(t => t.Name)) + ">";
-        }
-
-
-
-        var args = "";
-        if (arguments.Length > 0)
-        {
-            args = string.Join(" , ", arguments);
-        }
-
-        result.Add($"public Config {name}({args})" + constraints);
+        result.Add($"public Config {name}({args})");
         result.Add("{").Indent();
         build(result);
         result.Add("return this;");
         result.Unindent().Add("}");
-        return result;
     }
 }

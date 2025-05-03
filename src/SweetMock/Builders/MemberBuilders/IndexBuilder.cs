@@ -61,19 +61,21 @@ internal static class IndexBuilder
 
         var argName = symbol.Parameters[0].Name;
 
-        classScope.AddLines($$"""{{overwrites.AccessibilityString}}{{overwrites.OverrideString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
+        classScope.Add($$"""{{overwrites.AccessibilityString}}{{overwrites.OverrideString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
 
-        classScope.Condition(hasGet, b => b.AddLines("get {").Indent()
+        classScope.Condition(hasGet, b => b
+            .Add("get {").Indent()
             .BuildLogSegment(symbol.GetMethod)
-            .AddLines($"return this.{internalName}_get({argName});")
-            .Unindent().AddLines("}"));
+            .Add($"return this.{internalName}_get({argName});")
+            .Unindent().Add("}"));
 
-        classScope.Condition(hasSet, b => b.AddLines("set {").Indent()
+        classScope.Condition(hasSet, b => b
+            .Add("set {").Indent()
             .BuildLogSegment(symbol.SetMethod)
-            .AddLines($"this.{internalName}_set({argName}, value);")
-            .Unindent().AddLines("}"));
+            .Add($"this.{internalName}_set({argName}, value);")
+            .Unindent().Add("}"));
 
-        classScope.Unindent().AddLines("}");
+        classScope.Unindent().Add("}");
 
         classScope.AddLines($$"""
                          private System.Func<{{indexType}}, {{returnType}}> {{internalName}}_get { get; set; } = (_) => {{exception}}
@@ -88,11 +90,11 @@ internal static class IndexBuilder
                 .AddParameter("get", "Function to call when the property is read.", hasGet)
                 .AddParameter("set", "Function to call when the property is set.", hasGet)
                 .AddReturns("The configuration object.")
-                .AddLines($$"""public Config Indexer({{p}}) {""").Indent()
+                .Add($$"""public Config Indexer({{p}}) {""").Indent()
                 .Add(hasGet, () => $"target.{internalName}_get = get;")
                 .Add(hasSet, () => $"target.{internalName}_set = set;")
-                .AddLines("return this;")
-                .Unindent().AddLines("}");
+                .Add("return this;")
+                .Unindent().Add("}");
         }
     }
 

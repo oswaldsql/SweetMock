@@ -78,7 +78,7 @@ internal static class PropertyBuilder
                                         this._{{internalName}}_set(value);
                                     }
                                     """);
-        builder.Unindent().AddLines("}").AddLineBreak();
+        builder.Unindent().Add("}").AddLineBreak();
 
         builder.AddLines($$"""
                       private System.Func<{{type}}> _{{internalName}}_get { get; set; } = () => {{symbol.BuildNotMockedException()}}
@@ -94,11 +94,11 @@ internal static class PropertyBuilder
             builder.AddParameter("get", "Function to call when the property is read.", hasGet);
             builder.AddParameter("set", "Function to call when the property is set.", hasGet);
             builder.AddReturns("The updated configuration object.");
-            builder.AddLines($$"""public Config {{internalName}}({{p}}) {""").Indent();
+            builder.Add($$"""public Config {{internalName}}({{p}}) {""").Indent();
             builder.Add(hasGet, () => $"target._{internalName}_get = get;");
             builder.Add(hasSet, () => $"target._{internalName}_set = set;");
-            builder.AddLines("return this;");
-            builder.Unindent().AddLines("}");
+            builder.Add("return this;");
+            builder.Unindent().Add("}");
         }
     }
 
@@ -115,7 +115,7 @@ internal static class PropertyBuilder
             codeBuilder.AddReturns("The updated configuration object.");
             codeBuilder.AddConfigExtension(mock, property, [$"{property.Type} value"], builder =>
                 {
-                    builder.AddLines($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
+                    builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
                     builder.Add(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
                     builder.Add(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);");
                     builder.Add(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");

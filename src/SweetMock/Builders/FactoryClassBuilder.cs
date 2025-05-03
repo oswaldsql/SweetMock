@@ -23,15 +23,17 @@ public class FactoryClassBuilder
                     namespace SweetMock {
                     """).Indent();
         builder.AddSummary("Factory for creating mock objects.");
-        builder.AddLines("internal static partial class Mock {").Indent();
+        builder.Add("internal static partial class Mock {").Indent();
 
         if (!details.Target.Constructors.Any(t => !t.IsStatic))
             BuildFactoryMethod(details, builder);
         else
             foreach (var constructor in details.Target.Constructors.Where(Include))
+            {
                 BuildFactoryMethod(details, builder, constructor);
+            }
 
-        builder.Unindent().AddLines("}").Unindent().AddLines("}");
+        builder.Unindent().Add("}").Unindent().Add("}");
 
         return builder.ToString();
     }

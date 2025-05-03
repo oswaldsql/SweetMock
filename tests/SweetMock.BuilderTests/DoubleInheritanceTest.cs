@@ -4,7 +4,7 @@ using Util;
 
 public class DoubleInheritanceTest(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Multiple inheritance does not work right now")]
+    [Fact]
     public void MethodsInheritedFromMultipleSourcesShouldOnlyBeWrittenOnce()
     {
         var source = Build.TestClass<IDoubleInheritance>();

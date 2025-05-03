@@ -32,7 +32,6 @@ public static class MockDetailsExtensions
     private static bool IsCandidate(ISymbol symbol)
     {
         if (symbol is not (IMethodSymbol or IPropertySymbol or IEventSymbol)) return false;
-
         if (symbol.IsSealed || symbol.IsStatic) return false;
         if (symbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Protected)) return false;
         if (symbol is IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.EventAdd or MethodKind.EventRaise or MethodKind.EventRemove }) return false;

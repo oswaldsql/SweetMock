@@ -5,28 +5,13 @@ using SweetMock;
 public class UnitTest1
 {
     [Fact]
-    [Mock<Source>]
+    [Mock<IDoubleInheritance>]
     public void Test1()
     {
-        var sut = Mock.Source(config => config.SomeValue(returnValues: ["1","2"]));
-
-        sut.SomeValue();
-        sut.SomeValue();
-//        sut.SomeValue();
-
+        var sut = Mock.IDoubleInheritance();
     }
 }
 
-public interface Source
+internal interface IDoubleInheritance : ICollection<string>, IList<string>
 {
-//    public T EmptyGeneric<T>(T name) where T : new();
-//    
-//    public T ReturnGeneric<T>() where T : new();
-//    
-//    public void ParameterGeneric<T>(T name); //where T : new();
-//
-//    public T FullGeneric<T>(T name) where T : new();
-//
-    //public IEnumerable<T> GenericEnumerable<T>(T name) where T : new();
-    public string SomeValue();
 }

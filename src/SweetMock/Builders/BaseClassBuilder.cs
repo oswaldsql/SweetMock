@@ -15,8 +15,9 @@ internal static class BaseClassBuilder
         fileScope.Add("#nullable enable");
         fileScope.Scope($"namespace {details.Namespace}", namespaceScope =>
         {
-            namespaceScope.AddSummary($"Mock implementation of <see cref=\"{details.Target.ToCRef()}\"/>.", "Should only be used for testing purposes.");
-            namespaceScope.AddGeneratedCodeAttrib();
+            namespaceScope
+                .AddSummary($"Mock implementation of <see cref=\"{details.Target.ToCRef()}\"/>.", "Should only be used for testing purposes.")
+                .AddGeneratedCodeAttrib();
             namespaceScope.Scope($"internal partial class {details.MockType} : {details.SourceName}{details.Constraints}", classScope =>
             {
                 classScope.InitializeConfig(details);
@@ -35,7 +36,7 @@ internal static class BaseClassBuilder
             result.AddSummary("Configuration class for the mock.");
             using (result.AddToConfig())
             {
-                result.AddLines($"private readonly {details.MockType} target;");
+                result.Add($"private readonly {details.MockType} target;");
                 result.AddSummary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class");
                 result.AddParameter("target", "The target mock class.");
                 result.AddParameter("config", "Optional configuration method.");
@@ -52,7 +53,7 @@ internal static class BaseClassBuilder
 
     private static void BuildMembers(CodeBuilder classScope, MockDetails details)
     {
-        var candidates = details.GetCandidates();
+        var candidates = details.GetCandidates().Distinct(SymbolEqualityComparer.Default).ToArray();
 
         var constructors = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Constructor);
         ConstructorBuilder.Build(classScope, details, constructors);

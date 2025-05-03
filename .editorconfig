@@ -164,7 +164,7 @@ csharp_style_throw_expression = true:warning
 csharp_style_conditional_delegate_call = true:warning
 # Code block preferences
 # https://docs.microsoft.com/visualstudio/ide/editorconfig-language-conventions#code-block-preferences
-csharp_prefer_braces = true:warning
+csharp_prefer_braces = true:suggestion
 # Unused value preferences
 # https://docs.microsoft.com/visualstudio/ide/editorconfig-language-conventions#unused-value-preferences
 csharp_style_unused_value_expression_statement_preference = discard_variable:suggestion

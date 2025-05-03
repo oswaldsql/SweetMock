@@ -23,6 +23,7 @@ internal static class MethodBuilder
     /// <summary>
     ///     Builds methods from the provided method symbols and adds them to the code builder.
     /// </summary>
+    /// <param name="classScope">The code builder for the class scope.</param>
     /// <param name="methodSymbols">The method symbols to build methods from.</param>
     /// <returns>True if at least one method was built; otherwise, false.</returns>
     private static void BuildMethods(CodeBuilder classScope, IMethodSymbol[] methodSymbols)
@@ -43,6 +44,7 @@ internal static class MethodBuilder
     /// <summary>
     ///     Builds a method and adds it to the code builder.
     /// </summary>
+    /// <param name="classScope">The code builder for the class scope.</param>
     /// <param name="symbol">The method symbol to build the method from.</param>
     /// <param name="methodCount">The count of methods built so far.</param>
     /// <returns>True if the method was built; otherwise, false.</returns>
@@ -66,15 +68,15 @@ internal static class MethodBuilder
         classScope.Scope($"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})", b =>
         {
             b.AddLines(LogBuilder.BuildLogSegment(symbol));
-            b.AddLines($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
+            b.Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
         });
 
-        classScope.AddLines($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
+        classScope.Add($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
 
         using (classScope.AddToConfig())
         {
             classScope.AddSummary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>");
-            classScope.AddLines($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
+            classScope.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
             classScope.AddSummary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.");
             classScope.AddParameter("call", "The action or function to execute when the method is called.");
             classScope.AddReturns("The updated configuration object.");
@@ -100,28 +102,30 @@ internal static class MethodBuilder
         return new(delegateName, delegateType, delegateContainer, delegateContainer + delegateName, parameterList);
     }
 
+    // TODO : Review if this can be a ienumerable
     private static List<ParameterInfo> GetParameterInfos(IMethodSymbol symbol)
     {
-        var parameters = symbol.Parameters.Select(t => new ParameterInfo(t.Type.ToString(), t.Name, t.OutAsString(), t.Name)).ToList();
-
-        if (symbol.IsGenericMethod)
+        if (!symbol.IsGenericMethod)
         {
-            parameters = [];
-            foreach (var parameter in symbol.Parameters)
-            {
-                if(parameter.Type.TypeKind == TypeKind.TypeParameter && parameter.Type.ContainingSymbol is IMethodSymbol)
-                    parameters.Add(new ParameterInfo("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name));
-                //Console.WriteLine(parameter.Name + " " + parameter.Type.TypeKind.ToString());
-                else
-                {
-                    parameters.Add(new ParameterInfo(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name));
-                }
-            }
-
-            parameters.AddRange(symbol.TypeArguments.Select(typeArgument => new ParameterInfo("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")")));
+            return symbol.Parameters.Select(t => new ParameterInfo(t.Type.ToString(), t.Name, t.OutAsString(), t.Name)).ToList();
         }
 
+        var parameters = new List<ParameterInfo>();
+        foreach (var parameter in symbol.Parameters)
+        {
+            if(parameter.Type.TypeKind == TypeKind.TypeParameter && parameter.Type.ContainingSymbol is IMethodSymbol)
+            {
+                parameters.Add(new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name));
+            }
+            else
+            {
+                parameters.Add(new(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name));
+            }
+        }
+
+        parameters.AddRange(symbol.TypeArguments.Select(typeArgument => new ParameterInfo("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")")));
         return parameters;
+
     }
 
     private static MethodInfo MethodMetadata(IMethodSymbol method)
@@ -182,12 +186,7 @@ internal static class MethodBuilder
 
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    var str = m.ReturnType.ToString() switch
-                    {
-                        "System.Threading.Tasks.Task" => $"this.{m.Name}(call: ({parameterList}) => returns);",
-                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({parameterList}) => returns);",
-                        _ => $"this.{m.Name}(call: ({parameterList}) => returns);"
-                    };
+                    var str = $"this.{m.Name}(call: ({parameterList}) => returns);";
 
                     builder.AddLines(str);
                 }
@@ -293,7 +292,7 @@ internal static class MethodBuilder
 
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    builder.AddLines($"this.{method.Name}(call: ({parameterList}) => throw throws);");
+                    builder.Add($"this.{method.Name}(call: ({parameterList}) => throw throws);");
                 }
             });
         }
