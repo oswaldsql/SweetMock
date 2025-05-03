@@ -2,6 +2,7 @@ namespace SweetMock.Builders.MemberBuilders;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Utils;
@@ -61,44 +62,33 @@ internal static class PropertyBuilder
         var hasGet = symbol.GetMethod != null;
         var hasSet = symbol.SetMethod != null;
 
-        builder.AddLines($$"""
+        builder.Scope($"{overwriteString.AccessibilityString}{overwriteString.OverrideString}{type} {overwriteString.ContainingSymbol}{propertyName}", b => b
+                .Add(hasGet, get => get.Scope("get", getScope => getScope
+                    .BuildLogSegment(symbol.GetMethod)
+                    .Add($"return this._{internalName}_get();")))
+                .Add(hasSet, set => set.Scope(setType, serScope => serScope
+                    .BuildLogSegment(symbol.SetMethod)
+                    .Add($"this._{internalName}_set(value);"))));
 
-                      {{overwriteString.AccessibilityString}}{{overwriteString.OverrideString}}{{type}} {{overwriteString.ContainingSymbol}}{{propertyName}}
-                      {
-                      """).Indent();
-        builder.Add(hasGet, () => $$"""
-                                    get {
-                                        {{LogBuilder.BuildLogSegment(symbol.GetMethod)}}
-                                        return this._{{internalName}}_get();
-                                    }
-                                    """);
-        builder.Add(hasSet, () => $$"""
-                                    {{setType}} {
-                                        {{LogBuilder.BuildLogSegment(symbol.SetMethod)}}
-                                        this._{{internalName}}_set(value);
-                                    }
-                                    """);
-        builder.Unindent().Add("}").AddLineBreak();
-
-        builder.AddLines($$"""
-                      private System.Func<{{type}}> _{{internalName}}_get { get; set; } = () => {{symbol.BuildNotMockedException()}}
-                      private System.Action<{{type}}> _{{internalName}}_set { get; set; } = s => {{symbol.BuildNotMockedException()}}
-
-                      """);
+        builder
+            .Add($"private System.Func<{type}> _{internalName}_get {{ get; set; }} = () => {symbol.BuildNotMockedException()}")
+            .Add($"private System.Action<{type}> _{internalName}_set {{ get; set; }} = s => {symbol.BuildNotMockedException()}")
+            .AddLineBreak();
 
         using (builder.AddToConfig())
         {
             var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{type}> set" : "");
 
-            builder.AddSummary($"Configures <see cref=\"{symbol.ToCRef()}\"/> by specifying methods to call when the property is accessed.");
-            builder.AddParameter("get", "Function to call when the property is read.", hasGet);
-            builder.AddParameter("set", "Function to call when the property is set.", hasGet);
-            builder.AddReturns("The updated configuration object.");
-            builder.Add($$"""public Config {{internalName}}({{p}}) {""").Indent();
-            builder.Add(hasGet, () => $"target._{internalName}_get = get;");
-            builder.Add(hasSet, () => $"target._{internalName}_set = set;");
-            builder.Add("return this;");
-            builder.Unindent().Add("}");
+            builder
+                .AddSummary($"Configures <see cref=\"{symbol.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
+                .AddParameter("get", "Function to call when the property is read.", hasGet)
+                .AddParameter("set", "Function to call when the property is set.", hasGet)
+                .AddReturns("The updated configuration object.")
+                .Add($$"""public Config {{internalName}}({{p}}) {""").Indent()
+                .Add(hasGet, () => $"target._{internalName}_get = get;")
+                .Add(hasSet, () => $"target._{internalName}_set = set;")
+                .Add("return this;")
+                .Unindent().Add("}");
         }
     }
 

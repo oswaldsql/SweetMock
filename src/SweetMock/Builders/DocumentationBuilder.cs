@@ -6,7 +6,7 @@ using System;
 using Microsoft.CodeAnalysis;
 using Utils;
 
-internal static class DocumentationBuilder
+internal static class DocumentationBuilderExtensions
 {
     private const bool Disable = false;
 

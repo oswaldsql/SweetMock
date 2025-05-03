@@ -1,6 +1,5 @@
 namespace SweetMock.Builders.MemberBuilders;
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -50,7 +49,10 @@ internal static class MethodBuilder
     /// <returns>True if the method was built; otherwise, false.</returns>
     private static void Build(CodeBuilder classScope, IMethodSymbol symbol, int methodCount)
     {
-        if(symbol.ReturnsByRef) throw new Exception("Property has returns byref");
+        if (symbol.ReturnsByRef)
+        {
+            throw new("Property has returns byref");
+        }
 
         var parameters = symbol.ParameterStrings();
 
@@ -67,7 +69,7 @@ internal static class MethodBuilder
 
         classScope.Scope($"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})", b =>
         {
-            b.AddLines(LogBuilder.BuildLogSegment(symbol));
+            b.BuildLogSegment(symbol);
             b.Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
         });
 
@@ -81,11 +83,11 @@ internal static class MethodBuilder
             classScope.AddParameter("call", "The action or function to execute when the method is called.");
             classScope.AddReturns("The updated configuration object.");
             classScope.AddLines($$"""
-                             public Config {{method.Name}}({{delegateInfo.Name}} call){
-                                 target.{{functionPointer}} = call;
-                                 return this;
-                             }
-                             """);
+                                  public Config {{method.Name}}({{delegateInfo.Name}} call){
+                                      target.{{functionPointer}} = call;
+                                      return this;
+                                  }
+                                  """);
         }
     }
 
@@ -102,30 +104,34 @@ internal static class MethodBuilder
         return new(delegateName, delegateType, delegateContainer, delegateContainer + delegateName, parameterList);
     }
 
-    // TODO : Review if this can be a ienumerable
-    private static List<ParameterInfo> GetParameterInfos(IMethodSymbol symbol)
+    private static IEnumerable<ParameterInfo> GetParameterInfos(IMethodSymbol symbol)
     {
         if (!symbol.IsGenericMethod)
         {
-            return symbol.Parameters.Select(t => new ParameterInfo(t.Type.ToString(), t.Name, t.OutAsString(), t.Name)).ToList();
+            foreach (var t in symbol.Parameters)
+            {
+                yield return new(t.Type.ToString(), t.Name, t.OutAsString(), t.Name);
+            }
+
+            yield break;
         }
 
-        var parameters = new List<ParameterInfo>();
         foreach (var parameter in symbol.Parameters)
         {
-            if(parameter.Type.TypeKind == TypeKind.TypeParameter && parameter.Type.ContainingSymbol is IMethodSymbol)
+            if (parameter.Type.TypeKind == TypeKind.TypeParameter && parameter.Type.ContainingSymbol is IMethodSymbol)
             {
-                parameters.Add(new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name));
+                yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
             }
             else
             {
-                parameters.Add(new(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name));
+                yield return new(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name);
             }
         }
 
-        parameters.AddRange(symbol.TypeArguments.Select(typeArgument => new ParameterInfo("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")")));
-        return parameters;
-
+        foreach (var typeArgument in symbol.TypeArguments)
+        {
+            yield return new("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")");
+        }
     }
 
     private static MethodInfo MethodMetadata(IMethodSymbol method)
@@ -139,7 +145,10 @@ internal static class MethodBuilder
 
     private static string GenericString(IMethodSymbol symbol)
     {
-        if (!symbol.IsGenericMethod) return "";
+        if (!symbol.IsGenericMethod)
+        {
+            return "";
+        }
 
         var typeArguments = symbol.TypeArguments;
         var types = string.Join(", ", typeArguments.Select(t => t.Name));
@@ -212,6 +221,7 @@ internal static class MethodBuilder
             {
                 returnType = "System.Object";
             }
+
             returnType = "System.Collections.Generic.IEnumerable<" + returnType + ">";
 
             result.AddConfigExtension(mock, candidate.First(), [returnType + " returnValues"], builder =>
@@ -225,16 +235,16 @@ internal static class MethodBuilder
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
                     var str = $$"""
-                               var {{m.Name}}{{index}}_Values = returnValues.GetEnumerator();
-                               this.{{m.Name}}(call: ({{parameterList}}) =>
-                               {
-                                    if({{m.Name}}{{index}}_Values.MoveNext())
-                                    {
-                                        return {{m.Name}}{{index}}_Values.Current;
-                                    }
-                                    {{m.BuildNotMockedException()}}
-                               });
-                               """;
+                                var {{m.Name}}{{index}}_Values = returnValues.GetEnumerator();
+                                this.{{m.Name}}(call: ({{parameterList}}) =>
+                                {
+                                     if({{m.Name}}{{index}}_Values.MoveNext())
+                                     {
+                                         return {{m.Name}}{{index}}_Values.Current;
+                                     }
+                                     {{m.BuildNotMockedException()}}
+                                });
+                                """;
 
                     builder.AddLines(str);
                 }
@@ -298,6 +308,7 @@ internal static class MethodBuilder
         }
     }
 }
+
 /*
     private static IEnumerable<HelperMethod> AddHelpers(IMethodSymbol symbol, string functionPointer, string parameterList, string delegateType, string typeList, string nameList)
     {

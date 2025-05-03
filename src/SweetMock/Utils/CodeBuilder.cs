@@ -80,6 +80,16 @@ internal class CodeBuilder
 
     public CodeBuilder Add(bool condition, Func<string> add) => condition ? this.Add(add()) : this;
 
+    public CodeBuilder Add(bool condition, Action<CodeBuilder> builder)
+    {
+        if (condition)
+        {
+            builder(this);
+        }
+
+        return this;
+    }
+
     public CodeBuilder Condition(bool condition, Action<CodeBuilder> add)
     {
         if (condition)
@@ -96,7 +106,7 @@ internal class CodeBuilder
 
     public CodeBuilder Scope(string prefix, Action<CodeBuilder> body)
     {
-        this.Add(prefix + "{").Indent();
+        this.Add(prefix + " {").Indent();
 
         body(this);
 

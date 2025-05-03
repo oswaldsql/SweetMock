@@ -33,12 +33,12 @@ internal static class ConstructorBuilder {
                 var baseArguments = constructor.Parameters.ToString(p => p.Name);
                 var argumentList = constructor.Parameters.ToString(p => $"{p.Name}, ", "");
 
-                classScope.AddLines($$"""
-                                 internal protected {{details.MockName}}({{parameterList}}System.Action<Config>? config = null) : base({{baseArguments}}) {
-                                     var result = new Config(this, config);
-                                     {{LogBuilder.BuildLogSegment(constructor)}}
-                                 }
-                                 """);
+                var constructorSignature = $"internal protected {details.MockName}({parameterList}System.Action<Config>? config = null) : base({baseArguments})";
+
+                classScope.Scope(constructorSignature, b => b
+                    .Add("var result = new Config(this, config);")
+                    .BuildLogSegment(constructor)
+                );
 
                 using (classScope.AddToConfig())
                 {

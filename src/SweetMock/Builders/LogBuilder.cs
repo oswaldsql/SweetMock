@@ -32,16 +32,6 @@ public static class LogBuilder
         return source;
     }
 
-    // TODO : Send codebuild as parameter instead.
-    public static string BuildLogSegment(IMethodSymbol? symbol, bool skipParameters = false)
-    {
-        if (symbol == null) { return ""; }
-
-        CodeBuilder result = new();
-        BuildLogSegment(result, symbol, skipParameters);
-        return result.ToString();
-    }
-
     internal static CodeBuilder BuildLogSegment(this CodeBuilder builder, IMethodSymbol? symbol, bool skipParameters = false)
     {
         if (symbol == null) { return builder; }
