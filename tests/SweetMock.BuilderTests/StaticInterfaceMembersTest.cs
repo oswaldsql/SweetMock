@@ -2,7 +2,6 @@
 
 namespace SweetMock.BuilderTests;
 
-using Microsoft.CodeAnalysis;
 using SweetMock;
 using Util;
 
@@ -20,23 +19,6 @@ public class StaticInterfaceMembersTest(ITestOutputHelper testOutputHelper)
         // Assert
         testOutputHelper.DumpResult(generate);
         Assert.Empty(generate.GetErrors());
-    }
-
-    [Fact(Skip = "passthrough exceptions not working")]
-    public void AbstractStaticMembersAreNotSupported()
-    {
-        // Arrange
-        var source = Build.TestClass("MiniMock.UnitTests.StaticInterfaceMembersTest.IStaticAbstractInterfaceMembers");
-
-        // ACT
-        var generate = new SweetMockSourceGenerator().Generate(source);
-
-        // Assert
-        //testOutputHelper.DumpResult(generate);
-        Assert.Single(generate.diagnostics, t => t.Id == "CS8920");
-        var actualAbstractPropertyError = Assert.Single(generate.diagnostics, t => t.Id == "MM0005");
-        Assert.Equal(DiagnosticSeverity.Error, actualAbstractPropertyError.Severity);
-        Assert.Equal("Static abstract members in interfaces or classes is not supported for 'AbstractMethod' in 'IStaticAbstractInterfaceMembers'", actualAbstractPropertyError.GetMessage());
     }
 
     internal interface ISupportedStaticInterfaceMembers

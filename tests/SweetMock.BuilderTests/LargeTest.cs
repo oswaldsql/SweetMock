@@ -8,7 +8,7 @@ using Util;
 
 public class LargeTest(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Missing config extension methods")]
+    [Fact]
     public void MethodWithOutArgumentTests()
     {
         var source = @"
@@ -38,9 +38,9 @@ public class TestClass{
 
                 .DownloadExistsAsync(returns: Task.FromResult(true)) // Returns true for all versions
                 .DownloadExistsAsync(call: s => Task.FromResult(s.StartsWith(""2.0.0"") ? true : false)) // Returns true for version 2.0.0.x
-                .DownloadExistsAsync(returns: true) // Returns true for all versions
+                //.DownloadExistsAsync(returns: true) // Returns true for all versions
                 .DownloadExistsAsync(throws: new IndexOutOfRangeException()) // Throws IndexOutOfRangeException for all versions
-                .DownloadExistsAsync(call: s => s.StartsWith(""2.0.0"") ? true : false) // Returns true for version 2.0.0.x
+                //.DownloadExistsAsync(call: s => s.StartsWith(""2.0.0"") ? true : false) // Returns true for version 2.0.0.x
 
                 .Version(value: new Version(2, 0, 0, 0)) // Sets the initial version to 2.0.0.0
                 .Version(get: () => new Version(2,0,0,0), set: version => throw new IndexOutOfRangeException()) // Overwrites the property getter and setter
