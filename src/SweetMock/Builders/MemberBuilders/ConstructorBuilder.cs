@@ -42,7 +42,9 @@ internal static class ConstructorBuilder {
 
                 using (classScope.AddToConfig())
                 {
-                    classScope.AddSummary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>");
+                    classScope.Documentation(doc => doc
+                        .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>"));
+
                     classScope.Add($"public static {details.SourceName} CreateNewMock({parameterList}System.Action<Config>? config = null) => new {details.MockType}({argumentList}config);");
                 }
             }
@@ -63,7 +65,9 @@ internal static class ConstructorBuilder {
                              """);
             using (classScope.AddToConfig())
             {
-                classScope.AddSummary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>");
+                classScope.Documentation(doc => doc
+                    .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>"));
+
                 classScope.Add($"public static {details.SourceName} CreateNewMock(System.Action<Config>? config = null) => new {details.MockType}(config);");
             }
         }

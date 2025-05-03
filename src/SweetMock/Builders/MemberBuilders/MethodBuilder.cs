@@ -77,11 +77,14 @@ internal static class MethodBuilder
 
         using (classScope.AddToConfig())
         {
-            classScope.AddSummary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>");
+            classScope.Documentation(doc => doc
+                .Summary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>"));
             classScope.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
-            classScope.AddSummary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.");
-            classScope.AddParameter("call", "The action or function to execute when the method is called.");
-            classScope.AddReturns("The updated configuration object.");
+
+            classScope.Documentation(doc => doc
+                .Summary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.")
+                .Parameter("call", "The action or function to execute when the method is called.")
+                .Returns("The updated configuration object."));
             classScope.AddLines($$"""
                                   public Config {{method.Name}}({{delegateInfo.Name}} call){
                                       target.{{functionPointer}} = call;
@@ -178,9 +181,11 @@ internal static class MethodBuilder
             var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
 
             result.AddLineBreak();
-            result.AddSummary("Configures the mock to return a specific value disregarding the arguments.", $"Configures {seeString}");
-            result.AddParameter("returns", "The value that should be returned");
-            result.AddReturns("The updated configuration object.");
+            result.Documentation(doc => doc
+                .Summary("Configures the mock to return a specific value disregarding the arguments.", $"Configures {seeString}")
+                .Parameter("returns", "The value that should be returned")
+                .Returns("The updated configuration object."));
+
             var returnType = candidate.First().ReturnType.ToString();
             if (candidate.First().ReturnType.TypeKind == TypeKind.TypeParameter && candidate.First().ReturnType.ContainingSymbol is IMethodSymbol)
             {
@@ -212,9 +217,10 @@ internal static class MethodBuilder
             var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
 
             result.AddLineBreak();
-            result.AddSummary("Configures the mock to return a one of the specific value disregarding the arguments.", $"Configures {seeString}");
-            result.AddParameter("returns", "The values that should be returned");
-            result.AddReturns("The updated configuration object.");
+            result.Documentation(doc => doc
+                .Summary("Configures the mock to return a one of the specific value disregarding the arguments.", $"Configures {seeString}")
+                .Parameter("returns", "The values that should be returned")
+                .Returns("The updated configuration object."));
 
             var returnType = candidate.First().ReturnType.ToString();
             if (candidate.First().ReturnType.TypeKind == TypeKind.TypeParameter && candidate.First().ReturnType.ContainingSymbol is IMethodSymbol)
@@ -261,8 +267,10 @@ internal static class MethodBuilder
             var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
 
             result.AddLineBreak();
-            result.AddSummary("Configures the mock to accept any call to methods not returning values.", $"Configures {seeString}");
-            result.AddReturns("The updated configuration object.");
+            result.Documentation(doc => doc
+                .Summary("Configures the mock to accept any call to methods not returning values.", $"Configures {seeString}")
+                .Returns("The updated configuration object."));
+
             result.AddConfigExtension(mock, candidate.First(), [], builder =>
             {
                 foreach (var m in candidate)
@@ -291,9 +299,11 @@ internal static class MethodBuilder
             var seeString = string.Join(", ", methodGroup.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
 
             result.AddLineBreak();
-            result.AddSummary("Configures the mock to throw the specified exception when the method is called.", $"Configures {seeString}");
-            result.AddParameter("throws", "The exception to be thrown when the method is called.");
-            result.AddReturns("The updated configuration object.");
+            result.Documentation(doc => doc
+                .Summary("Configures the mock to throw the specified exception when the method is called.", $"Configures {seeString}")
+                .Parameter("throws", "The exception to be thrown when the method is called.")
+                .Returns("The updated configuration object."));
+
             result.AddConfigExtension(mock, methodGroup.First(), ["Exception throws"], builder =>
             {
                 foreach (var method in methodGroup)

@@ -79,11 +79,13 @@ internal static class PropertyBuilder
         {
             var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{type}> set" : "");
 
+            builder.Documentation(doc => doc
+                .Summary($"Configures <see cref=\"{symbol.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
+                .Parameter("get", "Function to call when the property is read.", hasGet)
+                .Parameter("set", "Function to call when the property is set.", hasGet)
+                .Returns("The updated configuration object."));
+
             builder
-                .AddSummary($"Configures <see cref=\"{symbol.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
-                .AddParameter("get", "Function to call when the property is read.", hasGet)
-                .AddParameter("set", "Function to call when the property is set.", hasGet)
-                .AddReturns("The updated configuration object.")
                 .Add($$"""public Config {{internalName}}({{p}}) {""").Indent()
                 .Add(hasGet, () => $"target._{internalName}_get = get;")
                 .Add(hasSet, () => $"target._{internalName}_set = set;")
@@ -99,10 +101,12 @@ internal static class PropertyBuilder
             var hasGet = property.GetMethod != null;
             var hasSet = property.SetMethod != null;
 
-            codeBuilder.AddSummary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.",
-                "This method configures the mock to use the specified value when the property is accessed.");
-            codeBuilder.AddParameter("value", "The value to use for the initial value of the property.");
-            codeBuilder.AddReturns("The updated configuration object.");
+            codeBuilder.Documentation(doc => doc
+                .Summary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.",
+                    "This method configures the mock to use the specified value when the property is accessed.")
+                .Parameter("value", "The value to use for the initial value of the property.")
+                .Returns("The updated configuration object."));
+
             codeBuilder.AddConfigExtension(mock, property, [$"{property.Type} value"], builder =>
                 {
                     builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");

@@ -15,6 +15,7 @@ public class FactoryClassBuilder
     /// <returns>A string containing the generated mock classes.</returns>
     public static string Build(MockDetails details)
     {
+        // TODO : Rewrite to use scope
         var builder = new CodeBuilder();
 
         builder.AddFileHeader();
@@ -22,7 +23,10 @@ public class FactoryClassBuilder
                     #nullable enable
                     namespace SweetMock {
                     """).Indent();
-        builder.AddSummary("Factory for creating mock objects.");
+
+        builder.Documentation(doc => doc
+            .Summary("Factory for creating mock objects."));
+
         builder.Add("internal static partial class Mock {").Indent();
 
         if (!details.Target.Constructors.Any(t => !t.IsStatic))
@@ -77,26 +81,25 @@ public class FactoryClassBuilder
 
         var cref = details.Target.ToCRef();
 
-        builder.AddSummary($"Creates a mock object for <see cref=\"{cref}\"/>.");
-        foreach (var parameter in constructorParameters)
-        {
-            builder.AddParameter(parameter.Name, $"Base constructor parameter {parameter.Name}.");
-        }
-        builder.AddParameter("config", "Optional configuration for the mock object.");
-        builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
+        builder.Documentation(doc => doc
+            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
+            .Parameter("config", "Optional configuration for the mock object.")
+            .Returns($"The mock object for <see cref=\"{cref}\"/>.")
+        );
+
         builder.AddLines($"""
                       internal static {details.SourceName} {symbolName}
                           ({parameters}System.Action<{details.Namespace}.{details.MockType}.Config>? config = null)
                           => new {details.Namespace}.{details.MockName}({names}config);
                       """);
 
-        builder.AddSummary($"Creates a mock object for <see cref=\"{cref}\"/>.");
-        foreach (var parameter in constructorParameters)
-        {
-            builder.AddParameter(parameter.Name, $"Base constructor parameter {parameter.Name}.");
-        }
-        builder.AddParameter($"config{symbolName}", "Outputs configuration for the mock object.");
-        builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
+        builder.Documentation(doc => doc
+            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
+            .Parameter($"config{symbolName}", "Outputs configuration for the mock object.")
+            .Returns($"The mock object for <see cref=\"{cref}\"/>."));
+
         builder.AddLines($$"""
                       internal static {{details.SourceName}} {{symbolName}}
                           ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{symbolName}})
@@ -127,13 +130,11 @@ public class FactoryClassBuilder
         var types = details.Target.TypeArguments.ToString(t => t.Name);
         var constraints = details.Target.TypeArguments.ToConstraints();
 
-        builder.AddSummary($"Creates a mock object for <see cref=\"{cref}\"/>.");
-        foreach (var parameter in constructorParameters)
-        {
-            builder.AddParameter(parameter.Name, $"Base constructor parameter {parameter.Name}.");
-        }
-        builder.AddParameter("config", "Optional configuration for the mock object.");
-        builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
+        builder.Documentation(doc => doc
+            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
+            .Parameter("config", "Optional configuration for the mock object.")
+            .Returns($"The mock object for <see cref=\"{cref}\"/>."));
 
         builder.AddLines($"""
                       internal static {details.SourceName} {details.Target.Name}<{types}>
@@ -141,13 +142,12 @@ public class FactoryClassBuilder
                           => new {details.Namespace}.{details.MockType}({arguments}config);
                       """);
 
-        builder.AddSummary($"Creates a mock object for <see cref=\"{cref}\"/>.");
-        foreach (var parameter in constructorParameters)
-        {
-            builder.AddParameter(parameter.Name, $"Base constructor parameter {parameter.Name}.");
-        }
-        builder.AddParameter("config", "Outputs configuration for the mock object.");
-        builder.AddReturns($"The mock object for <see cref=\"{cref}\"/>.");
+        builder.Documentation(doc => doc
+            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
+            .Parameter("config", "Outputs configuration for the mock object.")
+            .Returns($"The mock object for <see cref=\"{cref}\"/>."));
+
         builder.AddLines($$"""
                       internal static {{details.SourceName}} {{details.Target.Name}}<{{types}}>
                           ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{details.Target.Name}}) {{constraints}}

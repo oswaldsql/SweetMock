@@ -77,7 +77,9 @@ internal static class EventBuilder
 
         using (builder.AddToConfig())
         {
-            builder.AddSummary($"Returns a action delegate to invoke when <see cref=\"{symbol.ToCRef()}\"/> should be triggered.");
+            builder.Documentation(doc => doc
+                .Summary($"Returns a action delegate to invoke when <see cref=\"{symbol.ToCRef()}\"/> should be triggered."));
+
             if (types == "System.EventArgs")
                 builder.AddLines($$"""
                               public Config {{eventName}}(out System.Action trigger) {
@@ -102,11 +104,14 @@ internal static class EventBuilder
             var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type));
 
             codeBuilder.AddLineBreak();
-            codeBuilder.AddSummary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.");
+
             if (types != "System.EventArgs")
             {
-                codeBuilder.AddParameter("eventArgs", "The arguments used in the event.");
-                codeBuilder.AddReturns("The updated configuration object.");
+                codeBuilder.Documentation(doc => doc
+                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.")
+                    .Parameter("eventArgs", "The arguments used in the event.")
+                    .Returns("The updated configuration object."));
+
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], builder =>
                 {
                     builder.Add($"this.{eventSymbol.Name}(out var trigger);");
@@ -115,7 +120,10 @@ internal static class EventBuilder
             }
             else
             {
-                codeBuilder.AddReturns("The updated configuration object.");
+                codeBuilder.Documentation(doc => doc
+                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.")
+                    .Returns("The updated configuration object."));
+
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [], builder =>
                 {
                     builder.Add($"this.{eventSymbol.Name}(out var trigger);");

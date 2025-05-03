@@ -16,9 +16,11 @@ public static class LogBuilder
                        """);
             using (source.AddToConfig())
             {
-                source.AddSummary("Add logging to the configuration.");
-                source.AddParameter("callLog", "CallLog to use for logging.");
-                source.AddReturns("The configuration object.");
+                source.Documentation(doc => doc
+                    .Summary("Add logging to the configuration.")
+                    .Parameter("callLog", "CallLog to use for logging.")
+                    .Returns("The configuration object."));
+
                 source.AddLines("""
                            public Config LogCallsTo(SweetMock.CallLog callLog) {
                                  target._log = callLog;

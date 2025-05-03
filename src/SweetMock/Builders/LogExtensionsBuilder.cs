@@ -190,13 +190,17 @@ internal static class LogExtensionsBuilder
             {
                 if (l.Count() > 1)
                 {
-                    result.AddSummary("The argument can be different types", string.Join(", ", l.Select(t => t.ToCRef())));
+                    result.Documentation(doc => doc
+                        .Summary("The argument can be different types", string.Join(", ", l.Select(t => t.ToCRef()))));
+
                     result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
                 else if (l.First() is ITypeParameterSymbol || l.First() is INamedTypeSymbol { IsGenericType: true })
                 {
-                    result.AddSummary("The argument is a generic type. (" + l.First() + ")")
-                        .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                    result.Documentation(doc => doc
+                        .Summary("The argument is a generic type. (" + l.First() + ")"));
+
+                    result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
                 else
                 {
@@ -211,9 +215,8 @@ internal static class LogExtensionsBuilder
 
     private static void BuildPredicateDocumentation(CodeBuilder result, IMethodSymbol[] symbols, ISymbol target)
     {
-        result.Add("/// <summary>");
-        result.Add("///     "+ GetArgumentSummery(symbols[0], target));
-        result.Add("/// </summary>");
+        result.Documentation(doc => doc
+            .Summary(GetArgumentSummery(symbols[0], target)));
     }
 
     private static string GetArgumentSummery(IMethodSymbol symbol, ISymbol target) =>

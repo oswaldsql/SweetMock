@@ -15,9 +15,10 @@ internal static class BaseClassBuilder
         fileScope.Add("#nullable enable");
         fileScope.Scope($"namespace {details.Namespace}", namespaceScope =>
         {
-            namespaceScope
-                .AddSummary($"Mock implementation of <see cref=\"{details.Target.ToCRef()}\"/>.", "Should only be used for testing purposes.")
-                .AddGeneratedCodeAttrib();
+            namespaceScope.Documentation(doc => doc
+                .Summary($"Mock implementation of <see cref=\"{details.Target.ToCRef()}\"/>.", "Should only be used for testing purposes."));
+
+            namespaceScope.AddGeneratedCodeAttrib();
             namespaceScope.Scope($"internal partial class {details.MockType} : {details.SourceName}{details.Constraints}", classScope =>
             {
                 classScope.InitializeConfig(details);
@@ -33,13 +34,16 @@ internal static class BaseClassBuilder
     {
         using (result.Region("Configuration"))
         {
-            result.AddSummary("Configuration class for the mock.");
+            result.Documentation(doc => doc.Summary("Configuration class for the mock."));
             using (result.AddToConfig())
             {
                 result.Add($"private readonly {details.MockType} target;");
-                result.AddSummary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class");
-                result.AddParameter("target", "The target mock class.");
-                result.AddParameter("config", "Optional configuration method.");
+
+                result.Documentation(doc => doc
+                    .Summary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class")
+                    .Parameter("target", "The target mock class.")
+                    .Parameter("config", "Optional configuration method."));
+
                 result.AddLines($$"""
                               public Config({{details.MockType}} target, System.Action<Config>? config = null)
                               {

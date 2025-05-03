@@ -86,10 +86,13 @@ internal static class IndexBuilder
         {
             var p = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
 
-            classScope.AddSummary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
-                .AddParameter("get", "Function to call when the property is read.", hasGet)
-                .AddParameter("set", "Function to call when the property is set.", hasGet)
-                .AddReturns("The configuration object.")
+            classScope.Documentation(doc => doc
+                .Summary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
+                .Parameter("get", "Function to call when the property is read.", hasGet)
+                .Parameter("set", "Function to call when the property is set.", hasSet)
+                .Returns("The configuration object."));
+
+            classScope
                 .Add($$"""public Config Indexer({{p}}) {""").Indent()
                 .Add(hasGet, () => $"target.{internalName}_get = get;")
                 .Add(hasSet, () => $"target.{internalName}_set = set;")
@@ -107,9 +110,12 @@ internal static class IndexBuilder
 
             var typeSymbol = indexer.Parameters[0].Type;
             codeBuilder.AddLineBreak();
-            codeBuilder.AddSummary("Gets or sets values in the dictionary when the indexer is called.", $"Configures <see cref=\"{indexer.ToCRef()}\" />");
-            codeBuilder.AddParameter("values", "Dictionary containing the values for the indexer.");
-            codeBuilder.AddReturns("The updated configuration object.");
+
+            codeBuilder.Documentation(doc => doc
+                .Summary("Gets or sets values in the dictionary when the indexer is called.", $"Configures <see cref=\"{indexer.ToCRef()}\" />")
+                .Parameter("values", "Dictionary containing the values for the indexer.")
+                .Returns("The updated configuration object."));
+
             codeBuilder.AddConfigExtension(mock, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
             {
                 builder.Add(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");

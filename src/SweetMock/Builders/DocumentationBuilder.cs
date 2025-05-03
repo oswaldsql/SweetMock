@@ -1,56 +1,67 @@
 ﻿// ReSharper disable EnforceIfStatementBraces
 // ReSharper disable HeuristicUnreachableCode
+
 namespace SweetMock.Builders;
 
 using System;
-using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 using Utils;
+
+internal class DocumentationBuilder(CodeBuilder builder)
+{
+    public CodeBuilder Builder { get; } = builder;
+}
 
 internal static class DocumentationBuilderExtensions
 {
     private const bool Disable = false;
 
-    public static CodeBuilder AddSummary(this CodeBuilder source, params string[] summaries)
+    public static CodeBuilder Documentation(this CodeBuilder builder, Action<DocumentationBuilder> build)
     {
         if (!Disable)
         {
-            source.Add("/// <summary>");
-            foreach (var summary in summaries)
-            {
-                source.Add("///    " + summary);
-            }
-            source.Add("/// </summary>");
+            var t = new DocumentationBuilder(builder);
+            build(t);
         }
+
+        return builder;
+    }
+
+    public static DocumentationBuilder Summary(this DocumentationBuilder source, params string[] summaries)
+    {
+        source.Builder.Add("/// <summary>");
+        foreach (var summary in summaries)
+        {
+            source.Builder.Add("///    " + summary);
+        }
+
+        source.Builder.Add("/// </summary>");
 
         return source;
     }
 
-    public static CodeBuilder AddParameter(this CodeBuilder source, string name, string description, bool condition = true)
+    public static DocumentationBuilder Parameter(this DocumentationBuilder source, string name, string description, bool condition = true)
     {
-        if (Disable || !condition) return source;
-
-        return source.Add($"/// <param name=\"{name}\">{description}</param>");
-    }
-
-    public static CodeBuilder AddReturns(this CodeBuilder source, string description)
-    {
-        if (!Disable)
-        {
-            source.Add($"/// <returns>{description}</returns>");
-        }
-
+        if (condition)
+            source.Builder.Add($"/// <param name=\"{name}\">{description}</param>");
         return source;
     }
 
-    public static CodeBuilder AddReturns(this CodeBuilder source, ISymbol returnType)
+    public static DocumentationBuilder Parameter<T>(this DocumentationBuilder builder, IEnumerable<T> source, Func<T, string> name, Func<T, string> description)
     {
-        if (!Disable)
+        foreach (var s in source)
         {
-            source.Add($"/// <returns>{returnType.ToCRef()}</returns>");
+            builder.Parameter(name(s), description(s));
         }
 
-        return source;
+        return builder;
+    }
 
+    public static DocumentationBuilder Returns(this DocumentationBuilder source, string description)
+    {
+        source.Builder.Add($"/// <returns>{description}</returns>");
+
+        return source;
     }
 
     public static CodeBuilder AddFileHeader(this CodeBuilder source)
