@@ -29,15 +29,15 @@ internal static class EventBuilder
     {
         var name = eventSymbols.First().Name;
 
-        using (classScope.Region($"Event : {name}"))
+        classScope.Region($"Event : {name}", builder =>
         {
             var eventCount = 1;
             foreach (var symbol in eventSymbols)
             {
-                BuildEvent(classScope, symbol, eventCount);
+                BuildEvent(builder, symbol, eventCount);
                 eventCount++;
             }
-        }
+        });
     }
 
     /// <summary>
@@ -75,26 +75,26 @@ internal static class EventBuilder
 
         builder.Add("}");
 
-        using (builder.AddToConfig())
+        builder.AddToConfig(config =>
         {
-            builder.Documentation(doc => doc
+            config.Documentation(doc => doc
                 .Summary($"Returns a action delegate to invoke when <see cref=\"{symbol.ToCRef()}\"/> should be triggered."));
 
             if (types == "System.EventArgs")
-                builder.AddLines($$"""
-                              public Config {{eventName}}(out System.Action trigger) {
-                                  trigger = () => target._{{eventName}}?.Invoke(target, System.EventArgs.Empty);
-                                  return this;
-                              }
-                              """);
+                config.AddLines($$"""
+                                   public Config {{eventName}}(out System.Action trigger) {
+                                       trigger = () => target._{{eventName}}?.Invoke(target, System.EventArgs.Empty);
+                                       return this;
+                                   }
+                                   """);
             else
-                builder.AddLines($$"""
-                              public Config {{eventName}}(out System.Action<{{types}}> trigger) {
-                                  trigger = args => target._{{eventName}}?.Invoke(target, args);
-                                  return this;
-                              }
-                              """);
-        }
+                config.AddLines($$"""
+                                   public Config {{eventName}}(out System.Action<{{types}}> trigger) {
+                                       trigger = args => target._{{eventName}}?.Invoke(target, args);
+                                       return this;
+                                   }
+                                   """);
+        });
     }
 
     public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IEventSymbol> events)

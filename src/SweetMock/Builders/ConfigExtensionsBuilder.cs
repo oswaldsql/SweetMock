@@ -25,10 +25,10 @@ public static class ConfigExtensionsBuilder
             {
                 namespaceScope
                     .Scope($"internal partial class {mock.MockType}", codeBuilder => codeBuilder
-                    .Scope("internal partial class Config", classScope =>
-                    {
-                        BuildMembers(classScope, mock);
-                    }));
+                        .Scope("internal partial class Config", classScope =>
+                        {
+                            BuildMembers(classScope, mock);
+                        }));
             }
         );
 

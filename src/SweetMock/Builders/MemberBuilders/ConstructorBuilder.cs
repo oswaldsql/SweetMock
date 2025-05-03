@@ -25,7 +25,7 @@ internal static class ConstructorBuilder {
 
     private static void BuildConstructors(CodeBuilder classScope, MockDetails details, IEnumerable<IMethodSymbol> constructors)
     {
-        using (classScope.Region("Constructors"))
+        classScope.Region("Constructors", builder =>
         {
             foreach (var constructor in constructors)
             {
@@ -35,41 +35,42 @@ internal static class ConstructorBuilder {
 
                 var constructorSignature = $"internal protected {details.MockName}({parameterList}System.Action<Config>? config = null) : base({baseArguments})";
 
-                classScope.Scope(constructorSignature, b => b
+                builder.Scope(constructorSignature, b => b
                     .Add("var result = new Config(this, config);")
                     .BuildLogSegment(constructor)
                 );
 
-                using (classScope.AddToConfig())
+                builder.AddToConfig(config =>
                 {
-                    classScope.Documentation(doc => doc
+                    config.Documentation(doc => doc
                         .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>"));
 
-                    classScope.Add($"public static {details.SourceName} CreateNewMock({parameterList}System.Action<Config>? config = null) => new {details.MockType}({argumentList}config);");
-                }
+                    config.Add($"public static {details.SourceName} CreateNewMock({parameterList}System.Action<Config>? config = null) => new {details.MockType}({argumentList}config);");
+                });
             }
-        }
+        });
     }
 
     private static void BuildEmptyConstructor(CodeBuilder classScope, MockDetails details)
     {
-        using (classScope.Region("Constructors"))
+        classScope.Region("Constructors", builder =>
         {
-            classScope.AddLines($$"""
-                             internal protected MockOf_{{details.Target.Name}}(System.Action<Config>? config = null) {
-                                 var result = new Config(this, config);
-                                 if(_hasLog) {
-                                    _log.Add("{{details.Target}}.{{details.Target.Name}}()");
-                                 }
-                             }
-                             """);
-            using (classScope.AddToConfig())
+            builder.AddLines($$"""
+                               internal protected MockOf_{{details.Target.Name}}(System.Action<Config>? config = null) {
+                                   var result = new Config(this, config);
+                                   if(_hasLog) {
+                                      _log.Add("{{details.Target}}.{{details.Target.Name}}()");
+                                   }
+                               }
+                               """);
+
+            builder.AddToConfig(config =>
             {
-                classScope.Documentation(doc => doc
+                config.Documentation(doc => doc
                     .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>"));
 
-                classScope.Add($"public static {details.SourceName} CreateNewMock(System.Action<Config>? config = null) => new {details.MockType}(config);");
-            }
-        }
+                config.Add($"public static {details.SourceName} CreateNewMock(System.Action<Config>? config = null) => new {details.MockType}(config);");
+            });
+        });
     }
 }

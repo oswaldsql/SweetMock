@@ -28,16 +28,15 @@ internal static class MethodBuilder
     private static void BuildMethods(CodeBuilder classScope, IMethodSymbol[] methodSymbols)
     {
         var name = methodSymbols.First().Name;
-
-        using (classScope.Region($"Method : {name}"))
+        classScope.Region($"Method : {name}", builder =>
         {
             var methodCount = 1;
             foreach (var symbol in methodSymbols)
             {
-                Build(classScope, symbol, methodCount);
+                Build(builder, symbol, methodCount);
                 methodCount++;
             }
-        }
+        });
     }
 
     /// <summary>
@@ -75,23 +74,24 @@ internal static class MethodBuilder
 
         classScope.Add($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
 
-        using (classScope.AddToConfig())
+        classScope.AddToConfig(config =>
         {
-            classScope.Documentation(doc => doc
+            config.Documentation(doc => doc
                 .Summary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>"));
-            classScope.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
+            config.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
 
-            classScope.Documentation(doc => doc
+            config.Documentation(doc => doc
                 .Summary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.")
                 .Parameter("call", "The action or function to execute when the method is called.")
                 .Returns("The updated configuration object."));
-            classScope.AddLines($$"""
-                                  public Config {{method.Name}}({{delegateInfo.Name}} call){
-                                      target.{{functionPointer}} = call;
-                                      return this;
-                                  }
-                                  """);
-        }
+            config.AddLines($$"""
+                              public Config {{method.Name}}({{delegateInfo.Name}} call){
+                                  target.{{functionPointer}} = call;
+                                  return this;
+                              }
+                              """);
+        });
+
     }
 
     private static DelegateInfo DelegateInfo(IMethodSymbol symbol, int methodCount)
@@ -160,16 +160,15 @@ internal static class MethodBuilder
 
     public static void BuildConfigExtensions(CodeBuilder builder, MockDetails mock, IEnumerable<IMethodSymbol> methods)
     {
-        var result = builder;
         var source = methods.ToArray();
 
-        result.AddReturnsValueExtensions(mock, source);
+        builder.AddReturnsValueExtensions(mock, source);
 
-        result.AddReturnValuesExtensions(mock, source);
+        builder.AddReturnValuesExtensions(mock, source);
 
-        result.AddNoReturnValueExtensions(mock, source);
+        builder.AddNoReturnValueExtensions(mock, source);
 
-        result.AddThrowExtensions(mock, source);
+        builder.AddThrowExtensions(mock, source);
     }
 
     private static void AddReturnsValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)

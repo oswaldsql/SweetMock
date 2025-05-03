@@ -32,27 +32,29 @@ internal static class BaseClassBuilder
 
     private static void InitializeConfig(this CodeBuilder result, MockDetails details)
     {
-        using (result.Region("Configuration"))
+        result.Region("Configuration", builder =>
         {
-            result.Documentation(doc => doc.Summary("Configuration class for the mock."));
-            using (result.AddToConfig())
-            {
-                result.Add($"private readonly {details.MockType} target;");
+            builder.Documentation(doc => doc
+                .Summary("Configuration class for the mock."));
 
-                result.Documentation(doc => doc
+            builder.AddToConfig(c =>
+            {
+                c.Add($"private readonly {details.MockType} target;");
+
+                c.Documentation(doc => doc
                     .Summary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class")
                     .Parameter("target", "The target mock class.")
                     .Parameter("config", "Optional configuration method."));
 
-                result.AddLines($$"""
+                c.AddLines($$"""
                               public Config({{details.MockType}} target, System.Action<Config>? config = null)
                               {
                                   this.target = target;
                                   config?.Invoke(this);
                               }
                              """);
-            }
-        }
+            });
+        });
     }
 
     private static void BuildMembers(CodeBuilder classScope, MockDetails details)

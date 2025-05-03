@@ -8,28 +8,29 @@ public static class LogBuilder
 {
     internal static CodeBuilder InitializeLogging(this CodeBuilder source)
     {
-        using (source.Region("Logging"))
+        source.Region("Logging", builder =>
         {
-            source.AddLines("""
-                       private bool _hasLog = false;
-                       private SweetMock.CallLog _log = new SweetMock.CallLog();
-                       """);
-            using (source.AddToConfig())
+            builder.AddLines("""
+                             private bool _hasLog = false;
+                             private SweetMock.CallLog _log = new SweetMock.CallLog();
+                             """);
+
+            builder.AddToConfig(config =>
             {
-                source.Documentation(doc => doc
+                config.Documentation(doc => doc
                     .Summary("Add logging to the configuration.")
                     .Parameter("callLog", "CallLog to use for logging.")
                     .Returns("The configuration object."));
 
-                source.AddLines("""
-                           public Config LogCallsTo(SweetMock.CallLog callLog) {
-                                 target._log = callLog;
-                                 target._hasLog = true;
-                                 return this;
-                           }
-                           """);
-            }
-        }
+                config.AddLines("""
+                                public Config LogCallsTo(SweetMock.CallLog callLog) {
+                                      target._log = callLog;
+                                      target._hasLog = true;
+                                      return this;
+                                }
+                                """);
+            });
+        });
 
         return source;
     }

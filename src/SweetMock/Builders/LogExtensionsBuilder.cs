@@ -69,62 +69,42 @@ internal static class LogExtensionsBuilder
         }
     }
 
-    private static void BuildEvent(CodeBuilder result, IGrouping<string, ISymbol> m, IEventSymbol eventSymbol)
-    {
-        using (result.Region("Event : " + m.Key))
-        {
-            BuildLoggingExtension(result, eventSymbol.AddMethod, eventSymbol, true);
-            BuildLoggingExtension(result, eventSymbol.RemoveMethod, eventSymbol, true);
-            BuildLoggingExtension(result, eventSymbol.RaiseMethod, eventSymbol, true);
-        }
-    }
+    private static void BuildEvent(CodeBuilder result, IGrouping<string, ISymbol> m, IEventSymbol eventSymbol) =>
+        result.Region("Event : " + m.Key, builder => builder
+            .BuildLoggingExtension(eventSymbol.AddMethod, eventSymbol, true)
+            .BuildLoggingExtension(eventSymbol.RemoveMethod, eventSymbol, true)
+            .BuildLoggingExtension(eventSymbol.RaiseMethod, eventSymbol, true));
 
-    private static void BuildIndexer(CodeBuilder result, IGrouping<string, ISymbol> m, IPropertySymbol indexerSymbol)
-    {
-        using (result.Region("Indexer : " + m.First()))
-        {
-            BuildLoggingExtension(result, indexerSymbol.GetMethod, indexerSymbol );
-            BuildLoggingExtension(result, indexerSymbol.SetMethod, indexerSymbol);
-        }
-    }
+    private static void BuildIndexer(CodeBuilder result, IGrouping<string, ISymbol> m, IPropertySymbol indexerSymbol) =>
+        result.Region("Indexer : " + m.First(), builder => builder
+            .BuildLoggingExtension(indexerSymbol.GetMethod, indexerSymbol)
+            .BuildLoggingExtension(indexerSymbol.SetMethod, indexerSymbol));
 
-    private static void BuildProperties(CodeBuilder result, IGrouping<string, ISymbol> m, IPropertySymbol propertySymbol)
-    {
-        using (result.Region("Property : " + m.Key))
-        {
-            BuildLoggingExtension(result, propertySymbol.GetMethod,propertySymbol);
-            BuildLoggingExtension(result, propertySymbol.SetMethod,propertySymbol);
-        }
-    }
+    private static void BuildProperties(CodeBuilder result, IGrouping<string, ISymbol> m, IPropertySymbol propertySymbol) =>
+        result.Region("Property : " + m.Key, builder => builder
+            .BuildLoggingExtension(propertySymbol.GetMethod, propertySymbol)
+            .BuildLoggingExtension(propertySymbol.SetMethod, propertySymbol));
 
-    private static void BuildMethods(CodeBuilder result, IGrouping<string, ISymbol> m)
-    {
-        using (result.Region("Method : " + m.Key))
-        {
-            BuildOverwrittenLoggingExtension(result, m.OfType<IMethodSymbol>().ToArray());
-        }
-    }
+    private static void BuildMethods(CodeBuilder result, IGrouping<string, ISymbol> m) =>
+        result.Region("Method : " + m.Key, builder => builder
+            .BuildOverwrittenLoggingExtension(m.OfType<IMethodSymbol>().ToArray()));
 
-    private static void BuildConstructors(CodeBuilder result, IGrouping<string, ISymbol> m)
-    {
-        using (result.Region("Constructors"))
-        {
-            BuildOverwrittenLoggingExtension(result, m.OfType<IMethodSymbol>().ToArray());
-        }
-    }
+    private static void BuildConstructors(CodeBuilder result, IGrouping<string, ISymbol> m) =>
+        result.Region("Constructors", builder => builder
+            .BuildOverwrittenLoggingExtension(m.OfType<IMethodSymbol>().ToArray()));
 
-    private static void BuildLoggingExtension(CodeBuilder result, IMethodSymbol? methodSymbol, ISymbol target, bool ignoreArguments = false)
+    private static CodeBuilder BuildLoggingExtension(this CodeBuilder result, IMethodSymbol? methodSymbol, ISymbol target, bool ignoreArguments = false)
     {
         if (methodSymbol == null)
         {
-            return;
+            return result;
         }
 
         RenderArgumentClass(result, methodSymbol, $"{GetMethodName(methodSymbol)}_Args", ignoreArguments);
 
         BuildPredicateDocumentation(result, [methodSymbol], target);
 
-        result.AddLines($"""
+        return result.AddLines($"""
                     public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{$"{GetMethodName(methodSymbol)}_Args"}>> {GetMethodName(methodSymbol)}(this SweetMock.CallLog log, Func<{$"{GetMethodName(methodSymbol)}_Args"}, bool>? predicate = null) =>
                        log.Matching<{$"{GetMethodName(methodSymbol)}_Args"}>("{methodSymbol}", predicate);
 
@@ -144,11 +124,11 @@ internal static class LogExtensionsBuilder
             _ => methodSymbol.Name
         };
 
-    private static void BuildOverwrittenLoggingExtension(CodeBuilder result, IMethodSymbol[] symbols)
+    private static void BuildOverwrittenLoggingExtension(this CodeBuilder result, IMethodSymbol[] symbols)
     {
         if (symbols.Length == 1)
         {
-            BuildLoggingExtension(result, symbols[0], symbols[0]);
+            result.BuildLoggingExtension(symbols[0], symbols[0]);
             return;
         }
 
@@ -213,11 +193,9 @@ internal static class LogExtensionsBuilder
         result.Unindent().Add("}");
     }
 
-    private static void BuildPredicateDocumentation(CodeBuilder result, IMethodSymbol[] symbols, ISymbol target)
-    {
+    private static void BuildPredicateDocumentation(CodeBuilder result, IMethodSymbol[] symbols, ISymbol target) =>
         result.Documentation(doc => doc
             .Summary(GetArgumentSummery(symbols[0], target)));
-    }
 
     private static string GetArgumentSummery(IMethodSymbol symbol, ISymbol target) =>
         symbol switch

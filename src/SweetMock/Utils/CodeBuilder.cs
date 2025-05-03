@@ -102,11 +102,21 @@ internal class CodeBuilder
 
     public override string ToString() => string.Join("\r\n", this.result);
 
-    public SurroundingCodeBuilder Region(string region) => new(this, "#region " + region, "#endregion");
+    public CodeBuilder Region(string region, Action<CodeBuilder> action)
+    {
+        this.Add("#region " + region);
+
+        action(this);
+
+        this.Add("#endregion");
+
+        return this;
+    }
+
 
     public CodeBuilder Scope(string prefix, Action<CodeBuilder> body)
     {
-        this.Add(prefix + " {").Indent();
+        this.Add(prefix + "{").Indent();
 
         body(this);
 

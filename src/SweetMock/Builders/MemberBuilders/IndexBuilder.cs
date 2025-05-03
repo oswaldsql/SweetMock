@@ -30,15 +30,15 @@ internal static class IndexBuilder
         var symbols = indexerSymbols as IPropertySymbol[] ?? indexerSymbols.ToArray();
         var indexType = symbols.First().Parameters[0].Type.ToString();
 
-        using (classScope.Region($"Index : this[{indexType}]"))
+        classScope.Region($"Index : this[{indexType}]", builder =>
         {
             var indexerCount = 0;
             foreach (var symbol in symbols)
             {
                 indexerCount++;
-                BuildIndex(classScope, symbol, indexerCount);
+                BuildIndex(builder, symbol, indexerCount);
             }
-        }
+        });
     }
 
     /// <summary>
@@ -82,23 +82,23 @@ internal static class IndexBuilder
                          private System.Action<{{indexType}}, {{returnType}}> {{internalName}}_set { get; set; } = (_, _) => {{exception}}
                          """);
 
-        using (classScope.AddToConfig())
+        classScope.AddToConfig(config =>
         {
-            var p = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
+            var p = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
 
-            classScope.Documentation(doc => doc
+            config.Documentation(doc => doc
                 .Summary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
                 .Parameter("get", "Function to call when the property is read.", hasGet)
                 .Parameter("set", "Function to call when the property is set.", hasSet)
                 .Returns("The configuration object."));
 
-            classScope
+            config
                 .Add($$"""public Config Indexer({{p}}) {""").Indent()
                 .Add(hasGet, () => $"target.{internalName}_get = get;")
                 .Add(hasSet, () => $"target.{internalName}_set = set;")
                 .Add("return this;")
                 .Unindent().Add("}");
-        }
+        });
     }
 
     public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IPropertySymbol> indexers)

@@ -31,15 +31,15 @@ internal static class PropertyBuilder
     {
         var name = symbols.First().Name;
 
-        using (classScope.Region($"#region Property : {name}"))
+        classScope.Region($"#region Property : {name}", builder =>
         {
             var index = 0;
             foreach (var symbol in symbols)
             {
                 index++;
-                BuildProperty(classScope, symbol, index);
+                BuildProperty(builder, symbol, index);
             }
-        }
+        });
     }
 
     /// <summary>
@@ -75,23 +75,23 @@ internal static class PropertyBuilder
             .Add($"private System.Action<{type}> _{internalName}_set {{ get; set; }} = s => {symbol.BuildNotMockedException()}")
             .AddLineBreak();
 
-        using (builder.AddToConfig())
+        builder.AddToConfig(config =>
         {
-            var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", ":"") + (hasSet ? $"System.Action<{type}> set" : "");
+            var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{type}> set" : "");
 
-            builder.Documentation(doc => doc
+            config.Documentation(doc => doc
                 .Summary($"Configures <see cref=\"{symbol.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
                 .Parameter("get", "Function to call when the property is read.", hasGet)
                 .Parameter("set", "Function to call when the property is set.", hasGet)
                 .Returns("The updated configuration object."));
 
-            builder
+            config
                 .Add($$"""public Config {{internalName}}({{p}}) {""").Indent()
                 .Add(hasGet, () => $"target._{internalName}_get = get;")
                 .Add(hasSet, () => $"target._{internalName}_set = set;")
                 .Add("return this;")
                 .Unindent().Add("}");
-        }
+        });
     }
 
     public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IPropertySymbol> properties)
