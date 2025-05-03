@@ -8,8 +8,12 @@ public class UnitTest1
     [Mock<Source>]
     public void Test1()
     {
-        var sut = Mock.Source();
-        
+        var sut = Mock.Source(config => config.SomeValue(returnValues: ["1","2"]));
+
+        sut.SomeValue();
+        sut.SomeValue();
+//        sut.SomeValue();
+
     }
 }
 
@@ -24,5 +28,5 @@ public interface Source
 //    public T FullGeneric<T>(T name) where T : new();
 //
     //public IEnumerable<T> GenericEnumerable<T>(T name) where T : new();
-    
+    public string SomeValue();
 }

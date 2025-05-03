@@ -149,6 +149,8 @@ internal static class MethodBuilder
 
         result.AddReturnsValueExtensions(mock, source);
 
+        result.AddReturnValuesExtensions(mock, source);
+
         result.AddNoReturnValueExtensions(mock, source);
 
         result.AddThrowExtensions(mock, source);
@@ -186,6 +188,54 @@ internal static class MethodBuilder
                         "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({parameterList}) => returns);",
                         _ => $"this.{m.Name}(call: ({parameterList}) => returns);"
                     };
+
+                    builder.AddLines(str);
+                }
+            });
+        }
+    }
+
+    private static void AddReturnValuesExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    {
+        var methodSymbols = source.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
+        var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
+        foreach (var candidate in candidates)
+        {
+            var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+
+            result.AddLineBreak();
+            result.AddSummary("Configures the mock to return a one of the specific value disregarding the arguments.", $"Configures {seeString}");
+            result.AddParameter("returns", "The values that should be returned");
+            result.AddReturns("The updated configuration object.");
+
+            var returnType = candidate.First().ReturnType.ToString();
+            if (candidate.First().ReturnType.TypeKind == TypeKind.TypeParameter && candidate.First().ReturnType.ContainingSymbol is IMethodSymbol)
+            {
+                returnType = "System.Object";
+            }
+            returnType = "System.Collections.Generic.IEnumerable<" + returnType + ">";
+
+            result.AddConfigExtension(mock, candidate.First(), [returnType + " returnValues"], builder =>
+            {
+                var index = 0;
+                foreach (var m in candidate)
+                {
+                    index++;
+                    var parameters = GetParameterInfos(m);
+
+                    var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
+
+                    var str = $$"""
+                               var {{m.Name}}{{index}}_Values = returnValues.GetEnumerator();
+                               this.{{m.Name}}(call: ({{parameterList}}) =>
+                               {
+                                    if({{m.Name}}{{index}}_Values.MoveNext())
+                                    {
+                                        return {{m.Name}}{{index}}_Values.Current;
+                                    }
+                                    {{m.BuildNotMockedException()}}
+                               });
+                               """;
 
                     builder.AddLines(str);
                 }
