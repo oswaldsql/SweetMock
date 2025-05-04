@@ -196,9 +196,7 @@ internal static class MethodBuilder
 
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    var str = $"this.{m.Name}(call: ({parameterList}) => returns);";
-
-                    builder.AddLines(str);
+                    builder.Add($"this.{m.Name}(call: ({parameterList}) => returns);");
                 }
             });
         }
@@ -236,19 +234,13 @@ internal static class MethodBuilder
 
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    var str = $$"""
-                                var {{m.Name}}{{index}}_Values = returnValues.GetEnumerator();
-                                this.{{m.Name}}(call: ({{parameterList}}) =>
-                                {
-                                     if({{m.Name}}{{index}}_Values.MoveNext())
-                                     {
-                                         return {{m.Name}}{{index}}_Values.Current;
-                                     }
-                                     {{m.BuildNotMockedException()}}
-                                });
-                                """;
-
-                    builder.AddLines(str);
+                    builder.Add($"var {m.Name}{index}_Values = returnValues.GetEnumerator();");
+                    builder.Scope($"this.{m.Name}(call: ({parameterList}) => ", b =>
+                    {
+                        b.Scope($"if({m.Name}{index}_Values.MoveNext())", c => c
+                            .Add($"return {m.Name}{index}_Values.Current;"));
+                        b.Add(m.BuildNotMockedException());
+                    }).Add(");");
                 }
             });
         }
@@ -282,7 +274,7 @@ internal static class MethodBuilder
                         _ => ""
                     };
 
-                    builder.AddLines(str);
+                    builder.Add(str);
                 }
             });
         }

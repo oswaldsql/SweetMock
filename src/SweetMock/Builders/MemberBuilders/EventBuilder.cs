@@ -58,22 +58,18 @@ internal static class EventBuilder
 
         var (containingSymbol, accessibilityString, overrideString) = symbol.Overwrites();
 
-        builder.AddLines($$"""
+        builder.Add($"private event {typeSymbol}? _{eventFunction};");
 
-                      private event {{typeSymbol}}? _{{eventFunction}};
-                      {{accessibilityString}}{{overrideString}} event {{typeSymbol}}? {{containingSymbol}}{{eventName}}
-                      {
-                      """);
+        builder.Scope($"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}", c =>
+        {
+            c.Scope("add", b => b
+                .BuildLogSegment(symbol.AddMethod, true)
+                .Add($"this._{eventFunction} += value;"));
 
-        builder.Scope("add", b => b
-            .BuildLogSegment(symbol.AddMethod, true)
-            .Add($"this._{eventFunction} += value;"));
-
-        builder.Scope("remove", b => b
-            .BuildLogSegment(symbol.RemoveMethod, true)
-            .Add($"this._{eventFunction} -= value;"));
-
-        builder.Add("}");
+            c.Scope("remove", b => b
+                .BuildLogSegment(symbol.RemoveMethod, true)
+                .Add($"this._{eventFunction} -= value;"));
+        });
 
         builder.AddToConfig(config =>
             {

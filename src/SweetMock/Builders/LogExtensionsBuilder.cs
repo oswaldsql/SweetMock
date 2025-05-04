@@ -12,27 +12,16 @@ internal static class LogExtensionsBuilder
 
         builder.AddFileHeader();
 
-        builder.AddLines($$"""
-                      #nullable enable
-                      using System.Linq;
-                      using System;
+        builder
+            .Add("#nullable enable")
+            .Add("using System.Linq;")
+            .Add("using System;")
+            .AddLineBreak();
 
-                      namespace {{details.Namespace}} {
-                      ->
-                      [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SourceGeneratorMetadata.Version}}")]
-                      internal static class {{details.MockName}}_LogExtensions {
-                      ->
-                      """);
-
-        BuildMembers(builder, details);
-
-        builder.AddLines("""
-                    <-
-                    }
-                    <-
-                    }
-
-                    """);
+        builder.Scope($"namespace {details.Namespace}", b => b
+            .AddGeneratedCodeAttrib()
+            .Scope($"internal static class {details.MockName}_LogExtensions", c =>
+                BuildMembers(c, details)));
 
         return builder.ToString();
     }

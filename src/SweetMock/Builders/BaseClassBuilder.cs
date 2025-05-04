@@ -46,13 +46,9 @@ internal static class BaseClassBuilder
                     .Parameter("target", "The target mock class.")
                     .Parameter("config", "Optional configuration method."));
 
-                c.AddLines($$"""
-                              public Config({{details.MockType}} target, System.Action<Config>? config = null)
-                              {
-                                  this.target = target;
-                                  config?.Invoke(this);
-                              }
-                             """);
+                c.Scope($"public Config({details.MockType} target, System.Action<Config>? config = null)", b => b
+                    .Add("this.target = target;")
+                    .Add("config?.Invoke(this);"));
             });
         });
     }

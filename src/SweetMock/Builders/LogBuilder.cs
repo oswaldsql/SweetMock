@@ -10,10 +10,8 @@ public static class LogBuilder
     {
         source.Region("Logging", builder =>
         {
-            builder.AddLines("""
-                             private bool _hasLog = false;
-                             private SweetMock.CallLog _log = new SweetMock.CallLog();
-                             """);
+            builder.Add("private bool _hasLog = false;")
+                .Add("private SweetMock.CallLog _log = new SweetMock.CallLog();");
 
             builder.AddToConfig(config =>
             {
@@ -22,13 +20,10 @@ public static class LogBuilder
                     .Parameter("callLog", "CallLog to use for logging.")
                     .Returns("The configuration object."));
 
-                config.AddLines("""
-                                public Config LogCallsTo(SweetMock.CallLog callLog) {
-                                      target._log = callLog;
-                                      target._hasLog = true;
-                                      return this;
-                                }
-                                """);
+                config.AddConfigMethod("LogCallsTo", ["SweetMock.CallLog callLog"], codeBuilder => codeBuilder
+                    .Add("target._log = callLog;")
+                    .Add("target._hasLog = true;")
+                );
             });
         });
 

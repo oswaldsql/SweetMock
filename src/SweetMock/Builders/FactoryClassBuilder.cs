@@ -7,7 +7,7 @@ using Utils;
 /// <summary>
 ///     Provides methods to build mock classes.
 /// </summary>
-public class FactoryClassBuilder
+public static class FactoryClassBuilder
 {
     /// <summary>
     ///     Builds the mock classes based on the provided type symbols.
@@ -15,29 +15,28 @@ public class FactoryClassBuilder
     /// <returns>A string containing the generated mock classes.</returns>
     public static string Build(MockDetails details)
     {
-        // TODO : Rewrite to use scope
         var builder = new CodeBuilder();
 
-        builder.AddFileHeader();
-        builder.AddLines("""
-                    #nullable enable
-                    namespace SweetMock {
-                    """).Indent();
+        builder.AddFileHeader().Add("#nullable enable");
+        builder.Scope("namespace SweetMock", b =>
+        {
+            b.Documentation(doc => doc
+                .Summary("Factory for creating mock objects."));
 
-        builder.Documentation(doc => doc
-            .Summary("Factory for creating mock objects."));
-
-        builder.Add("internal static partial class Mock {").Indent();
-
-        if (!details.Target.Constructors.Any(t => !t.IsStatic))
-            BuildFactoryMethod(details, builder);
-        else
-            foreach (var constructor in details.Target.Constructors.Where(Include))
+            b.Scope("internal static partial class Mock", c =>
             {
-                BuildFactoryMethod(details, builder, constructor);
-            }
+                var constructors = details.Target.Constructors.Where(Include).ToArray();
+                foreach (var constructor in constructors)
+                {
+                    c.BuildFactoryMethod(details, constructor);
+                }
 
-        builder.Unindent().Add("}").Unindent().Add("}");
+                if (constructors.Length == 0)
+                {
+                    c.BuildFactoryMethod(details);
+                }
+            });
+        });
 
         return builder.ToString();
     }
@@ -53,10 +52,10 @@ public class FactoryClassBuilder
     /// <summary>
     ///     Builds the factory method for the specified symbol.
     /// </summary>
-    /// <param name="details">Details on the mock to build.</param>
     /// <param name="builder">The code builder.</param>
+    /// <param name="details">Details on the mock to build.</param>
     /// <param name="constructor">The constructor symbol, if any.</param>
-    private static void BuildFactoryMethod(MockDetails details, CodeBuilder builder, IMethodSymbol? constructor = null)
+    private static void BuildFactoryMethod(this CodeBuilder builder, MockDetails details, IMethodSymbol? constructor = null)
     {
         if (details.Target.TypeArguments.Length > 0)
             BuildGenericFactoryMethod(details, builder, constructor);

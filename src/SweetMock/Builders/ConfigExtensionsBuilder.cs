@@ -14,12 +14,11 @@ public static class ConfigExtensionsBuilder
 
         builder.AddFileHeader();
 
-        builder.AddLines("""
-                         #nullable enable
-                         using System.Linq;
-
-                         using System;
-                         """);
+        builder
+            .Add("#nullable enable")
+            .Add("using System.Linq;")
+            .Add("using System;")
+            .AddLineBreak();
 
         builder.Scope($"namespace {mock.Namespace}", namespaceScope =>
             {

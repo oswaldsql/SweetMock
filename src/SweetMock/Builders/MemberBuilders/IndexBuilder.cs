@@ -77,10 +77,8 @@ internal static class IndexBuilder
 
         classScope.Unindent().Add("}");
 
-        classScope.AddLines($$"""
-                         private System.Func<{{indexType}}, {{returnType}}> {{internalName}}_get { get; set; } = (_) => {{exception}}
-                         private System.Action<{{indexType}}, {{returnType}}> {{internalName}}_set { get; set; } = (_, _) => {{exception}}
-                         """);
+        classScope.Add($"private System.Func<{indexType}, {returnType}> {internalName}_get {{ get; set; }} = (_) => {exception}");
+        classScope.Add($"private System.Action<{indexType}, {returnType}> {internalName}_set {{ get; set; }} = (_, _) => {exception}");
 
         classScope.AddToConfig(config =>
         {
