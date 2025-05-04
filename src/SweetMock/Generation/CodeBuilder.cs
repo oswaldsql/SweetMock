@@ -1,4 +1,4 @@
-namespace SweetMock.Utils;
+namespace SweetMock.Generation;
 
 using System;
 using System.Linq;

@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 
 public class MockBuilder
 {
-
     public IEnumerable<BuildResult> BuildFiles(INamedTypeSymbol target)
     {
         try
@@ -66,7 +65,3 @@ public class MockBuilder
         return new(target, interfaceNamespace, sourceName, mockType, mockName, constraints);
     }
 }
-
-public record MockDetails(INamedTypeSymbol Target, string Namespace, string SourceName, string MockType, string MockName, string Constraints);
-
-public record BuildResult(string Name, string Content);

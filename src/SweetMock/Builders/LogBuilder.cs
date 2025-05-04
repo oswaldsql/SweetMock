@@ -1,13 +1,12 @@
 ﻿namespace SweetMock.Builders;
 
 using System.Linq;
+using Generation;
 using Microsoft.CodeAnalysis;
-using Utils;
 
 public static class LogBuilder
 {
-    internal static CodeBuilder InitializeLogging(this CodeBuilder source)
-    {
+    internal static void InitializeLogging(this CodeBuilder source) =>
         source.Region("Logging", builder =>
         {
             builder.Add("private bool _hasLog = false;")
@@ -26,9 +25,6 @@ public static class LogBuilder
                 );
             });
         });
-
-        return source;
-    }
 
     internal static CodeBuilder BuildLogSegment(this CodeBuilder builder, IMethodSymbol? symbol, bool skipParameters = false)
     {

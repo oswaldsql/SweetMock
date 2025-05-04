@@ -1,6 +1,5 @@
 namespace SweetMock.Utils;
 
-using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -54,14 +53,4 @@ public static class ISymbolExtensions
 
         return new ParameterStrings (methodParameters, parameterList, typeList, nameList);
     }
-}
-
-public record OverwriteString(string ContainingSymbol, string AccessibilityString, string OverrideString);
-internal record ParameterStrings(string MethodParameters, string ParameterList, string TypeList, string NameList);
-
-public record ParameterInfo(string Type, string Name, string OutString, string Function);
-
-internal class UnsupportedAccessibilityException(Accessibility accessibility) : Exception($"Unsupported accessibility type '{accessibility}'")
-{
-    public Accessibility Accessibility => accessibility;
 }

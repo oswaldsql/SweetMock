@@ -2,6 +2,7 @@ namespace SweetMock.Builders.MemberBuilders;
 
 using System.Collections.Generic;
 using System.Linq;
+using Generation;
 using Microsoft.CodeAnalysis;
 using Utils;
 
@@ -90,7 +91,6 @@ internal static class MethodBuilder
         });
 
     }
-
     private static DelegateInfo DelegateInfo(IMethodSymbol symbol, int methodCount)
     {
         var delegateName = methodCount == 1 ? $"DelegateFor_{symbol.Name}" : $"DelegateFor_{symbol.Name}_{methodCount}";
@@ -370,6 +370,3 @@ internal static class MethodBuilder
             }
         }
  */
-public record DelegateInfo(string Name, string Type, string Container, string FullName, string Parameters);
-
-public record MethodInfo(string Name, string ReturnType, string ReturnString);

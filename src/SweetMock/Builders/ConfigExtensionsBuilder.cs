@@ -2,9 +2,9 @@ namespace SweetMock.Builders;
 
 using System;
 using System.Linq;
+using Generation;
 using MemberBuilders;
 using Microsoft.CodeAnalysis;
-using Utils;
 
 public static class ConfigExtensionsBuilder
 {

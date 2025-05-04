@@ -1,7 +1,6 @@
-namespace SweetMock.Builders;
+namespace SweetMock.Generation;
 
 using System;
-using Utils;
 
 internal static class CodeBuilderExtensions
 {

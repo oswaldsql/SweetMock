@@ -1,16 +1,9 @@
-﻿// ReSharper disable EnforceIfStatementBraces
-// ReSharper disable HeuristicUnreachableCode
-
-namespace SweetMock.Builders;
+﻿namespace SweetMock.Generation;
 
 using System;
 using System.Collections.Generic;
+using Builders;
 using Utils;
-
-internal class DocumentationBuilder(CodeBuilder builder)
-{
-    public CodeBuilder Builder { get; } = builder;
-}
 
 internal static class DocumentationBuilderExtensions
 {

@@ -1,6 +1,7 @@
 ﻿namespace SweetMock.Builders;
 
 using System.Linq;
+using Generation;
 using MemberBuilders;
 using Microsoft.CodeAnalysis;
 using Utils;
@@ -30,28 +31,26 @@ internal static class BaseClassBuilder
         return fileScope;
     }
 
-    private static void InitializeConfig(this CodeBuilder result, MockDetails details)
-    {
+    private static void InitializeConfig(this CodeBuilder result, MockDetails details) =>
         result.Region("Configuration", builder =>
         {
-            builder.Documentation(doc => doc
-                .Summary("Configuration class for the mock."));
+            builder
+                .Documentation(doc => doc
+                    .Summary("Configuration class for the mock."))
+                .AddToConfig(c =>
+                {
+                    c.Add($"private readonly {details.MockType} target;");
 
-            builder.AddToConfig(c =>
-            {
-                c.Add($"private readonly {details.MockType} target;");
+                    c.Documentation(doc => doc
+                        .Summary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class")
+                        .Parameter("target", "The target mock class.")
+                        .Parameter("config", "Optional configuration method."));
 
-                c.Documentation(doc => doc
-                    .Summary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class")
-                    .Parameter("target", "The target mock class.")
-                    .Parameter("config", "Optional configuration method."));
-
-                c.Scope($"public Config({details.MockType} target, System.Action<Config>? config = null)", b => b
-                    .Add("this.target = target;")
-                    .Add("config?.Invoke(this);"));
-            });
+                    c.Scope($"public Config({details.MockType} target, System.Action<Config>? config = null)", b => b
+                        .Add("this.target = target;")
+                        .Add("config?.Invoke(this);"));
+                });
         });
-    }
 
     private static void BuildMembers(CodeBuilder classScope, MockDetails details)
     {

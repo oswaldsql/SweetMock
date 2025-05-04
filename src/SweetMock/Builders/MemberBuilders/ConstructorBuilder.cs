@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Generation;
 using Microsoft.CodeAnalysis;
 using Utils;
 
@@ -23,8 +24,7 @@ internal static class ConstructorBuilder {
         }
     }
 
-    private static void BuildConstructors(CodeBuilder classScope, MockDetails details, IEnumerable<IMethodSymbol> constructors)
-    {
+    private static void BuildConstructors(CodeBuilder classScope, MockDetails details, IEnumerable<IMethodSymbol> constructors) =>
         classScope.Region("Constructors", builder =>
         {
             foreach (var constructor in constructors)
@@ -49,10 +49,8 @@ internal static class ConstructorBuilder {
                 });
             }
         });
-    }
 
-    private static void BuildEmptyConstructor(CodeBuilder classScope, MockDetails details)
-    {
+    private static void BuildEmptyConstructor(CodeBuilder classScope, MockDetails details) =>
         classScope.Region("Constructors", builder =>
         {
             builder.AddLines($$"""
@@ -72,5 +70,4 @@ internal static class ConstructorBuilder {
                 config.Add($"public static {details.SourceName} CreateNewMock(System.Action<Config>? config = null) => new {details.MockType}(config);");
             });
         });
-    }
 }
