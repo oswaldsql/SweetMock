@@ -85,12 +85,10 @@ internal static class PropertyBuilder
                 .Parameter("set", "Function to call when the property is set.", hasGet)
                 .Returns("The updated configuration object."));
 
-            config
-                .Add($$"""public Config {{internalName}}({{p}}) {""").Indent()
+            config.AddConfigMethod(internalName, [p], codeBuilder => codeBuilder
                 .Add(hasGet, () => $"target._{internalName}_get = get;")
                 .Add(hasSet, () => $"target._{internalName}_set = set;")
-                .Add("return this;")
-                .Unindent().Add("}");
+            );
         });
     }
 

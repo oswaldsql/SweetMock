@@ -84,12 +84,9 @@ internal static class MethodBuilder
                 .Summary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.")
                 .Parameter("call", "The action or function to execute when the method is called.")
                 .Returns("The updated configuration object."));
-            config.AddLines($$"""
-                              public Config {{method.Name}}({{delegateInfo.Name}} call){
-                                  target.{{functionPointer}} = call;
-                                  return this;
-                              }
-                              """);
+
+            config.AddConfigMethod(method.Name, [$"{delegateInfo.Name} call"], builder => builder
+                .Add($"target.{functionPointer} = call;"));
         });
 
     }

@@ -113,7 +113,6 @@ internal class CodeBuilder
         return this;
     }
 
-
     public CodeBuilder Scope(string prefix, Action<CodeBuilder> body)
     {
         this.Add(prefix + "{").Indent();
@@ -121,6 +120,16 @@ internal class CodeBuilder
         body(this);
 
         this.Unindent().Add("}");
+        return this;
+    }
+
+    public CodeBuilder AddConfigMethod(string name, string[] parameters, Action<CodeBuilder> action)
+    {
+        this.Add($$"""public Config {{name}}({{string.Join(", ", parameters)}}) {""").Indent();
+        action(this);
+        this.Add("return this;");
+        this.Unindent().Add("}");
+
         return this;
     }
 }

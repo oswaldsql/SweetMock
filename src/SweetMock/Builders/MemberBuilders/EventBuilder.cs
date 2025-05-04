@@ -76,25 +76,19 @@ internal static class EventBuilder
         builder.Add("}");
 
         builder.AddToConfig(config =>
-        {
-            config.Documentation(doc => doc
-                .Summary($"Returns a action delegate to invoke when <see cref=\"{symbol.ToCRef()}\"/> should be triggered."));
+            {
+                config.Documentation(doc => doc
+                    .Summary($"Returns a action delegate to invoke when <see cref=\"{symbol.ToCRef()}\"/> should be triggered."));
 
-            if (types == "System.EventArgs")
-                config.AddLines($$"""
-                                   public Config {{eventName}}(out System.Action trigger) {
-                                       trigger = () => target._{{eventName}}?.Invoke(target, System.EventArgs.Empty);
-                                       return this;
-                                   }
-                                   """);
-            else
-                config.AddLines($$"""
-                                   public Config {{eventName}}(out System.Action<{{types}}> trigger) {
-                                       trigger = args => target._{{eventName}}?.Invoke(target, args);
-                                       return this;
-                                   }
-                                   """);
-        });
+                if (types == "System.EventArgs")
+                    config.AddConfigMethod(eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
+                        .Add($"trigger = () => target._{eventName}?.Invoke(target, System.EventArgs.Empty);"));
+                else
+                    config.AddConfigMethod(eventName, [$"out System.Action<{types}> trigger"], codeBuilder => codeBuilder
+                        .Add($"trigger = args => target._{eventName}?.Invoke(target, args);")
+                    );
+            }
+        );
     }
 
     public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IEventSymbol> events)

@@ -92,12 +92,10 @@ internal static class IndexBuilder
                 .Parameter("set", "Function to call when the property is set.", hasSet)
                 .Returns("The configuration object."));
 
-            config
-                .Add($$"""public Config Indexer({{p}}) {""").Indent()
+            config.AddConfigMethod("Indexer", [p], builder => builder
                 .Add(hasGet, () => $"target.{internalName}_get = get;")
                 .Add(hasSet, () => $"target.{internalName}_set = set;")
-                .Add("return this;")
-                .Unindent().Add("}");
+            );
         });
     }
 
