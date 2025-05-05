@@ -60,7 +60,7 @@ internal static class MethodBuilder
 
         var overwrites = symbol.Overwrites();
 
-        var delegateInfo = DelegateInfo(symbol, methodCount);
+        var delegateInfo = GetDelegateInfo(symbol, methodCount);
 
         var functionPointer = methodCount == 1 ? $"_{method.Name}" : $"_{method.Name}_{methodCount}";
 
@@ -92,7 +92,7 @@ internal static class MethodBuilder
         });
 
     }
-    private static DelegateInfo DelegateInfo(IMethodSymbol symbol, int methodCount)
+    private static DelegateInfo GetDelegateInfo(IMethodSymbol symbol, int methodCount)
     {
         var delegateName = methodCount == 1 ? $"DelegateFor_{symbol.Name}" : $"DelegateFor_{symbol.Name}_{methodCount}";
         var delegateType = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? "object" : symbol.ReturnType.ToString();
@@ -304,6 +304,10 @@ internal static class MethodBuilder
             });
         }
     }
+
+    private record DelegateInfo(string Name, string Type, string Container, string FullName, string Parameters);
+
+    private record MethodInfo(string Name, string ReturnType, string ReturnString);
 }
 
 /*

@@ -64,4 +64,6 @@ public class MockBuilder
 
         return new(target, interfaceNamespace, sourceName, mockType, mockName, constraints);
     }
+
+    public record BuildResult(string Name, string Content);
 }
