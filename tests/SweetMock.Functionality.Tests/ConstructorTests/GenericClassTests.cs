@@ -12,7 +12,7 @@ public class GenericClassTests
         var sut = Mock.Repo<Guid>(config => config
             .SomeMethod(Guid.NewGuid())
             .SomeMethod(new ArgumentException())
-            .SomeMethod(Guid => Guid)
+            .SomeMethod(guid => guid)
             .SomeProperty(Guid.NewGuid())
             .SomeProperty(Guid.NewGuid, _ => { })
             .Indexer(new())

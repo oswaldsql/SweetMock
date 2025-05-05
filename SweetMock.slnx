@@ -5,7 +5,6 @@
   <Folder Name="/tests/">
     <Project Path="tests\SweetMock.BuilderTests\SweetMock.BuilderTests.csproj" Type="Classic C#" />
     <Project Path="tests\SweetMock.Functionality.Tests\SweetMock.Functionality.Tests.csproj" Type="Classic C#" />
-    <Project Path="tests\SweetMock.UnitTest\SweetMock.UnitTest.csproj" Type="Classic C#" />
     <Project Path="tests\TestSandbox\TestSandbox.csproj" Type="Classic C#" />
   </Folder>
 </Solution>

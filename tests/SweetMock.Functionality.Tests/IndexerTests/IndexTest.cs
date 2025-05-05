@@ -50,13 +50,11 @@ public class IndexTest
     public void GetterOnlyIndexerCanBeConfigured()
     {
         // Arrange
-        var source = new Dictionary<int, int> { { 10, 100 } };
-        //var sut = Mock.IIndexRepository(config => config.Indexer(source));
-        var sut2 = Mock.IIndexRepository(config => config.Indexer(i => i * 10));
+        var sut = Mock.IIndexRepository(config => config.Indexer(i => i * 10));
 
         // Act
         //var actualFromDictionary = sut[10];
-        var actualFromFunction = sut2[10];
+        var actualFromFunction = sut[10];
 
         // Assert
         //Assert.Equal(100, actualFromDictionary);

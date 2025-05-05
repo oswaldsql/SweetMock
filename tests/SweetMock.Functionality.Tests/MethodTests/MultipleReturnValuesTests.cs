@@ -80,12 +80,12 @@ public class MultipleReturnValuesTests
         var sut = Mock.IMultipleReturnValues(config => config.Method(["1", "2", "3"]));
 
         // ACT
-        var first = sut.Method();
-        var CallToMethodWithParameter = sut.Method("test");
+        var callToMethodWithoutParameter = sut.Method();
+        var callToMethodWithParameter = sut.Method("test");
 
         // Assert
-        Assert.Equal("1", first);
-        Assert.Equal("1", CallToMethodWithParameter);
+        Assert.Equal("1", callToMethodWithoutParameter);
+        Assert.Equal("1", callToMethodWithParameter);
     }
 
     [Fact]

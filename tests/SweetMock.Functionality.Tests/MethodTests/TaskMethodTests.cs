@@ -25,7 +25,7 @@ public class TaskMethodTests
     public async Task SimpleTask_WhenMockInitializedWithException_ShouldThrowException()
     {
         // Arrange
-        var sut = Mock.IAsyncTaskMethods(mock => mock.SimpleTask(name => throw new ArgumentException("Test Exception")));
+        var sut = Mock.IAsyncTaskMethods(mock => mock.SimpleTask(_ => throw new ArgumentException("Test Exception")));
 
         // Act and Assert
         var actual = await Assert.ThrowsAsync<ArgumentException>(() => sut.SimpleTask("Whats in a name"));
@@ -39,7 +39,7 @@ public class TaskMethodTests
     public async Task SimpleTask_WhenMockInitializedWithAction_ShouldCallAction()
     {
         // Arrange
-        string actual = null;
+        var actual = "";
         var sut = Mock.IAsyncTaskMethods(mock => mock.SimpleTask(name =>
         {
             actual = name;
@@ -75,7 +75,7 @@ public class TaskMethodTests
     public async Task SimpleTask_WhenMockInitializedWithTaskCompleted_ShouldNotFail()
     {
         // Arrange
-        var sut = Mock.IAsyncTaskMethods(mock => mock.SimpleTask(name => Task.CompletedTask));
+        var sut = Mock.IAsyncTaskMethods(mock => mock.SimpleTask(_ => Task.CompletedTask));
 
         // Act and Assert
         await sut.SimpleTask("Whats in a name");
@@ -102,7 +102,7 @@ public class TaskMethodTests
     public async Task TaskWithResult_WhenMockInitializedWithException_ShouldThrowException()
     {
         // Arrange
-        var sut = Mock.IAsyncTaskMethods(mock => mock.TaskWithResult(name => throw new ArgumentException("Test Exception")));
+        var sut = Mock.IAsyncTaskMethods(mock => mock.TaskWithResult(_ => throw new ArgumentException("Test Exception")));
 
         // Act and Assert
         var actual = await Assert.ThrowsAsync<ArgumentException>(() => sut.TaskWithResult("Whats in a name"));
@@ -153,7 +153,7 @@ public class TaskMethodTests
     public async Task TaskWithResult_WhenMockInitializedWithTaskCompleted_ShouldNotFail()
     {
         // Arrange
-        var sut = Mock.IAsyncTaskMethods(mock => mock.TaskWithResult(name => Task.FromResult("Return")));
+        var sut = Mock.IAsyncTaskMethods(mock => mock.TaskWithResult(_ => Task.FromResult("Return")));
 
         // Act
         var actual = await sut.TaskWithResult("Whats in a name");

@@ -46,6 +46,9 @@ public class Source<T> where T : new(){{
         
         output.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        if(sucess)
+            Assert.Empty(generate.GetErrors());
+        else
+            Assert.NotEmpty(generate.GetErrors());
     }
 }

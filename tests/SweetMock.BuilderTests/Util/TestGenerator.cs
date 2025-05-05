@@ -16,7 +16,7 @@ public static class TestGenerator
     {
         var references = AppDomain.CurrentDomain.GetAssemblies()
             .Where(assembly => !assembly.IsDynamic)
-            .Where(assembly => !assembly.FullName.StartsWith("SweetMock,"))
+            .Where(assembly => !assembly.FullName!.StartsWith("SweetMock,"))
             .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
             .Cast<MetadataReference>();
 

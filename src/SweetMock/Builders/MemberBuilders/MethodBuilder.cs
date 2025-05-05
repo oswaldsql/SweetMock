@@ -97,14 +97,12 @@ internal static class MethodBuilder
         var delegateType = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? "object" : symbol.ReturnType.ToString();
         var delegateContainer = "--MockClass--";
 
-        var parameters = GetParameterInfos(symbol);
-
-        var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} {p.Name}");
+        var parameterList = symbol.GetParameterInfos().ToString(p => $"{p.OutString}{p.Type} {p.Name}");
 
         return new(delegateName, delegateType, delegateContainer, delegateContainer + delegateName, parameterList);
     }
 
-    private static IEnumerable<ParameterInfo> GetParameterInfos(IMethodSymbol symbol)
+    private static IEnumerable<ParameterInfo> GetParameterInfos(this IMethodSymbol symbol)
     {
         if (!symbol.IsGenericMethod)
         {
@@ -230,15 +228,15 @@ internal static class MethodBuilder
                 foreach (var m in candidate)
                 {
                     index++;
+                    var index1 = index;
                     var parameters = GetParameterInfos(m);
-
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    builder.Add($"var {m.Name}{index}_Values = returnValues.GetEnumerator();");
+                    builder.Add($"var {m.Name}{index1}_Values = returnValues.GetEnumerator();");
                     builder.Scope($"this.{m.Name}(call: ({parameterList}) => ", b =>
                     {
-                        b.Scope($"if({m.Name}{index}_Values.MoveNext())", c => c
-                            .Add($"return {m.Name}{index}_Values.Current;"));
+                        b.Scope($"if({m.Name}{index1}_Values.MoveNext())", c => c
+                            .Add($"return {m.Name}{index1}_Values.Current;"));
                         b.Add(m.BuildNotMockedException());
                     }).Add(");");
                 }

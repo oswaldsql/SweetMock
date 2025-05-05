@@ -53,8 +53,6 @@ internal static class LogExtensionsBuilder
                 case IEventSymbol eventSymbol:
                     BuildEvent(builder, m, eventSymbol);
                     break;
-                default:
-                    break;
             }
         }
     }

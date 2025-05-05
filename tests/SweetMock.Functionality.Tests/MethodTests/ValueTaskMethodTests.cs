@@ -166,7 +166,7 @@ public class ValueTaskMethodTests
         );
         
         // ACT
-        var result = await sut.TaskWithResultWithArgs("name");
+        var result = await sut.TaskWithResultWithArgs("name", CancellationToken.None);
 
         // Assert
         Assert.NotNull(sut);

@@ -80,7 +80,7 @@ public class BasicMethodTests
     public void ReturnWithParameters_WhenMockInitializedWithValue_ShouldReturnValue()
     {
         // Arrange
-        var sut = Mock.IBasicMethods(mock => mock.ReturnWithParameters(name => "Value"));
+        var sut = Mock.IBasicMethods(mock => mock.ReturnWithParameters(_ => "Value"));
 
         // Act
         var actual = sut.ReturnWithParameters("Whats in a name");
@@ -107,14 +107,17 @@ public class BasicMethodTests
     {
         // Arrange
         var logger = new CallLog();
-        var sut = Mock.IBasicMethods(c => c.ReturnWithParameters(name =>  "test").LogCallsTo(logger));
+        var sut = Mock.IBasicMethods(c => c.ReturnWithParameters(_ =>  "test").LogCallsTo(logger));
 
-        // ACT
+        // Act
         sut.ReturnWithParameters("dfa1");
         sut.ReturnWithParameters("dfa2");
         sut.ReturnWithParameters("dfa3");
         sut.ReturnWithParameters("dfa4");
-        sut.ReturnWithParameters(null);
+        
+        // Assert
+        Assert.Equal(4, logger.ReturnWithParameters().Count());
+        Assert.Empty(logger.ReturnWithoutParameters());
     }
 
     public interface IBasicMethods

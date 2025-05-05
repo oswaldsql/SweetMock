@@ -26,7 +26,7 @@ public class TriggerEventFromConfiguration
     }
 
     [Fact]
-    [Mock<INotifyDto>]
+    [Mock<IVersionLibrary>]
     public void ItShouldBePossibleToTriggerEventsFromAExposedConfiguration()
     {
         // Arrange

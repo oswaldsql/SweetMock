@@ -7,7 +7,6 @@
 namespace Test.ConstructorTests;
 
 using System.Reflection;
-using Microsoft.Testing.Platform.Logging;
 
 public class AccessLevelTests
 {
