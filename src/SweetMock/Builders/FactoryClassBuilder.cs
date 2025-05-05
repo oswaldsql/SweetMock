@@ -19,22 +19,22 @@ public static class FactoryClassBuilder
         var builder = new CodeBuilder();
 
         builder.AddFileHeader().Add("#nullable enable");
-        builder.Scope("namespace SweetMock", b =>
+        builder.Scope("namespace SweetMock", namespaceScope =>
         {
-            b.Documentation(doc => doc
+            namespaceScope.Documentation(doc => doc
                 .Summary("Factory for creating mock objects."));
 
-            b.Scope("internal static partial class Mock", c =>
+            namespaceScope.Scope("internal static partial class Mock", mockScope =>
             {
                 var constructors = details.Target.Constructors.Where(Include).ToArray();
                 foreach (var constructor in constructors)
                 {
-                    c.BuildFactoryMethod(details, constructor);
+                    mockScope.BuildFactoryMethod(details, constructor);
                 }
 
                 if (constructors.Length == 0)
                 {
-                    c.BuildFactoryMethod(details);
+                    mockScope.BuildFactoryMethod(details);
                 }
             });
         });

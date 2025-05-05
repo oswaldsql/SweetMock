@@ -67,10 +67,11 @@ internal static class MethodBuilder
         var genericString = GenericString(symbol);
         var castString = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + method.ReturnType + ") " : "";
 
-        classScope.Scope($"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})", b =>
+        var signature = $"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})";
+        classScope.Scope(signature, methodScope =>
         {
-            b.BuildLogSegment(symbol);
-            b.Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
+            methodScope.BuildLogSegment(symbol);
+            methodScope.Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
         });
 
         classScope.Add($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
@@ -233,11 +234,11 @@ internal static class MethodBuilder
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
                     builder.Add($"var {m.Name}{index1}_Values = returnValues.GetEnumerator();");
-                    builder.Scope($"this.{m.Name}(call: ({parameterList}) => ", b =>
+                    builder.Scope($"this.{m.Name}(call: ({parameterList}) => ", lambdaScope =>
                     {
-                        b.Scope($"if({m.Name}{index1}_Values.MoveNext())", c => c
+                        lambdaScope.Scope($"if({m.Name}{index1}_Values.MoveNext())", conditionScope => conditionScope
                             .Add($"return {m.Name}{index1}_Values.Current;"));
-                        b.Add(m.BuildNotMockedException());
+                        lambdaScope.Add(m.BuildNotMockedException());
                     }).Add(");");
                 }
             });

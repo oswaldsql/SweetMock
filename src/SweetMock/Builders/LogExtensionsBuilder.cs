@@ -19,10 +19,10 @@ internal static class LogExtensionsBuilder
             .Add("using System;")
             .AddLineBreak();
 
-        builder.Scope($"namespace {details.Namespace}", b => b
+        builder.Scope($"namespace {details.Namespace}", namespaceScope => namespaceScope
             .AddGeneratedCodeAttrib()
-            .Scope($"internal static class {details.MockName}_LogExtensions", c =>
-                BuildMembers(c, details)));
+            .Scope($"internal static class {details.MockName}_LogExtensions", config =>
+                BuildMembers(config, details)));
 
         return builder.ToString();
     }

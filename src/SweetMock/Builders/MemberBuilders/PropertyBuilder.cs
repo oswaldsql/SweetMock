@@ -62,11 +62,11 @@ internal static class PropertyBuilder
         var hasGet = symbol.GetMethod != null;
         var hasSet = symbol.SetMethod != null;
 
-        builder.Scope($"{overwriteString.AccessibilityString}{overwriteString.OverrideString}{type} {overwriteString.ContainingSymbol}{propertyName}", b => b
+        builder.Scope($"{overwriteString.AccessibilityString}{overwriteString.OverrideString}{type} {overwriteString.ContainingSymbol}{propertyName}", propertyScope => propertyScope
                 .Add(hasGet, get => get.Scope("get", getScope => getScope
                     .BuildLogSegment(symbol.GetMethod)
                     .Add($"return this._{internalName}_get();")))
-                .Add(hasSet, set => set.Scope(setType, serScope => serScope
+                .Add(hasSet, set => set.Scope(setType, setScope => setScope
                     .BuildLogSegment(symbol.SetMethod)
                     .Add($"this._{internalName}_set(value);"))));
 

@@ -37,16 +37,16 @@ internal static class BaseClassBuilder
             builder
                 .Documentation(doc => doc
                     .Summary("Configuration class for the mock."))
-                .AddToConfig(c =>
+                .AddToConfig(config =>
                 {
-                    c.Add($"private readonly {details.MockType} target;");
+                    config.Add($"private readonly {details.MockType} target;");
 
-                    c.Documentation(doc => doc
+                    config.Documentation(doc => doc
                         .Summary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class")
                         .Parameter("target", "The target mock class.")
                         .Parameter("config", "Optional configuration method."));
 
-                    c.Scope($"public Config({details.MockType} target, System.Action<Config>? config = null)", b => b
+                    config.Scope($"public Config({details.MockType} target, System.Action<Config>? config = null)", methodScope => methodScope
                         .Add("this.target = target;")
                         .Add("config?.Invoke(this);"));
                 });

@@ -35,7 +35,7 @@ internal static class ConstructorBuilder {
 
                 var constructorSignature = $"internal protected {details.MockName}({parameterList}System.Action<Config>? config = null) : base({baseArguments})";
 
-                builder.Scope(constructorSignature, b => b
+                builder.Scope(constructorSignature, ctor => ctor
                     .Add("var result = new Config(this, config);")
                     .BuildLogSegment(constructor)
                 );

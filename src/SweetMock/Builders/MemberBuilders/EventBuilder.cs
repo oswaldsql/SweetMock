@@ -61,13 +61,13 @@ internal static class EventBuilder
 
         builder.Add($"private event {typeSymbol}? _{eventFunction};");
 
-        builder.Scope($"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}", c =>
+        builder.Scope($"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}", eventScope =>
         {
-            c.Scope("add", b => b
+            eventScope.Scope("add", addScope => addScope
                 .BuildLogSegment(symbol.AddMethod, true)
                 .Add($"this._{eventFunction} += value;"));
 
-            c.Scope("remove", b => b
+            eventScope.Scope("remove", removeScope => removeScope
                 .BuildLogSegment(symbol.RemoveMethod, true)
                 .Add($"this._{eventFunction} -= value;"));
         });
@@ -103,10 +103,10 @@ internal static class EventBuilder
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."));
 
-                codeBuilder.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], builder =>
+                codeBuilder.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], config =>
                 {
-                    builder.Add($"this.{eventSymbol.Name}(out var trigger);");
-                    builder.Add("trigger.Invoke(eventArgs);");
+                    config.Add($"this.{eventSymbol.Name}(out var trigger);");
+                    config.Add("trigger.Invoke(eventArgs);");
                 });
             }
             else
@@ -115,10 +115,10 @@ internal static class EventBuilder
                     .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.")
                     .Returns("The updated configuration object."));
 
-                codeBuilder.AddConfigExtension(mock, eventSymbol, [], builder =>
+                codeBuilder.AddConfigExtension(mock, eventSymbol, [], config =>
                 {
-                    builder.Add($"this.{eventSymbol.Name}(out var trigger);");
-                    builder.Add("trigger.Invoke();");
+                    config.Add($"this.{eventSymbol.Name}(out var trigger);");
+                    config.Add("trigger.Invoke();");
                 });
             }
         }
