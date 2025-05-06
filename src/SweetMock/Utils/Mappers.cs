@@ -62,4 +62,32 @@ public static class Mappers
             RefKind.RefReadOnlyParameter => "ref readonly ",
             _ => ""
         };
+
+    internal static ParameterStrings ParameterStrings(this IMethodSymbol method)
+    {
+        var parameters = method.Parameters.Select(t => new ParameterInfo(t.Type.ToString(), t.Name, t.OutAsString(), t.Name)).ToList();
+
+        var methodParameters = parameters.ToString(p => $"{p.OutString}{p.Type} {p.Name}");
+
+        if (method.IsGenericMethod)
+        {
+            parameters.AddRange(method.TypeArguments.Select(typeArgument => new ParameterInfo("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")")));
+        }
+
+        var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} {p.Name}");
+        var typeList = parameters.ToString(p => $"{p.Type}");
+        var nameList = parameters.ToString(p => $"{p.OutString}{p.Function}");
+
+        return new ParameterStrings (methodParameters, parameterList, typeList, nameList);
+    }
+
+    internal static OverwriteString Overwrites(this ISymbol symbol)
+    {
+        if (symbol.ContainingType.TypeKind == TypeKind.Interface)
+        {
+            return new(symbol.ContainingSymbol + ".", "", "");
+        }
+
+        return new("", symbol.AccessibilityString() + " ", "override ");
+    }
 }

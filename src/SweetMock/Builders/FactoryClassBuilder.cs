@@ -18,7 +18,10 @@ public static class FactoryClassBuilder
     {
         var builder = new CodeBuilder();
 
-        builder.AddFileHeader().Add("#nullable enable");
+        builder
+            .AddFileHeader()
+            .Add("#nullable enable");
+
         builder.Scope("namespace SweetMock", namespaceScope =>
         {
             namespaceScope.Documentation(doc => doc

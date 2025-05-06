@@ -157,7 +157,7 @@ internal static class MethodBuilder
     {
         var source = methods.ToArray();
 
-        builder.AddReturnsValueExtensions(mock, source);
+        builder.AddReturnsExtensions(mock, source);
 
         builder.AddReturnValuesExtensions(mock, source);
 
@@ -166,7 +166,7 @@ internal static class MethodBuilder
         builder.AddThrowExtensions(mock, source);
     }
 
-    private static void AddReturnsValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    private static void AddReturnsExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
     {
         var methodSymbols = source.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
         var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
@@ -313,23 +313,6 @@ internal static class MethodBuilder
     private static IEnumerable<HelperMethod> AddHelpers(IMethodSymbol symbol, string functionPointer, string parameterList, string delegateType, string typeList, string nameList)
     {
         var seeCref = symbol.ToString();
-
-        if (!HasOutOrRef(symbol) && !symbol.ReturnsVoid)
-        {
-            var code = $$"""
-                         var {{functionPointer}}_Values = returnValues.GetEnumerator();
-                         this.{{functionPointer}}(({{parameterList}}) =>
-                         {
-                             if ({{functionPointer}}_Values.MoveNext())
-                             {
-                                 return {{functionPointer}}_Values.Current;
-                             }
-
-                             {{symbol.BuildNotMockedException()}}
-                             });
-                         """;
-            yield return new HelperMethod($"System.Collections.Generic.IEnumerable<{delegateType}> returnValues", code, Documentation.SpecificValueList, seeCref);
-        }
 
         if (symbol.IsReturningTask())
         {

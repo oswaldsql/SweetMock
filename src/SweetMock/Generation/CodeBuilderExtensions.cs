@@ -18,4 +18,26 @@ internal static class CodeBuilderExtensions
 
         return source;
     }
+
+    public static CodeBuilder Region(this CodeBuilder source, string region, Action<CodeBuilder> action)
+    {
+        source.Add("#region " + region);
+
+        action(source);
+
+        source.Add("#endregion");
+
+        return source;
+    }
+
+    public static CodeBuilder Scope(this CodeBuilder source, string prefix, Action<CodeBuilder> body)
+    {
+        source.Add(prefix + "{").Indent();
+
+        body(source);
+
+        source.Unindent().Add("}");
+
+        return source;
+    }
 }

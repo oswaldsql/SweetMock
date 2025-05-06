@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Utils;
 
 public class MockBuilder
 {
@@ -23,9 +24,11 @@ public class MockBuilder
         }
     }
 
+    private static readonly HashSet<TypeKind> validKinds = [TypeKind.Class, TypeKind.Interface, TypeKind.Struct];
     private static void ValidateTargetIsValid(INamedTypeSymbol target)
     {
-        if(target.DeclaredAccessibility == Accessibility.Private) throw new Exception("Class must not be private");
+        if(!validKinds.Contains(target.TypeKind)) throw new InvalidTargetTypeException(target.TypeKind);
+        if(target.DeclaredAccessibility == Accessibility.Private) throw new InvalidAccessibilityException(target.DeclaredAccessibility);
         if (target.IsSealed) throw new Exception("Target must be not be sealed");
         if (target.IsStatic) throw new Exception("Target must be not be static");
         if(target.IsAnonymousType) throw new Exception("Target must not be an anonymous type");
@@ -36,14 +39,14 @@ public class MockBuilder
         var code = BaseClassBuilder.Build(mockDetails);
         yield return new("Base", code.ToString());
 
-        var factories = FactoryClassBuilder.Build(mockDetails);
-        yield return new("Factory", factories);
+        var configFiles = ConfigExtensionsBuilder.Build(mockDetails);
+        yield return new("Config", configFiles);
 
         var logFilters = LogExtensionsBuilder.BuildLogExtensions(mockDetails);
         yield return new("Logging", logFilters);
 
-        var configFiles = ConfigExtensionsBuilder.Build(mockDetails);
-        yield return new("Config", configFiles);
+        var factories = FactoryClassBuilder.Build(mockDetails);
+        yield return new("Factory", factories);
     }
 
     private static MockDetails GetMockDetails(INamedTypeSymbol target)
@@ -67,3 +70,4 @@ public class MockBuilder
 
     public record BuildResult(string Name, string Content);
 }
+
