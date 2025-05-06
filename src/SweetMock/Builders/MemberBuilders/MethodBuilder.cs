@@ -68,11 +68,10 @@ internal static class MethodBuilder
         var castString = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + method.ReturnType + ") " : "";
 
         var signature = $"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})";
-        classScope.Scope(signature, methodScope =>
-        {
-            methodScope.BuildLogSegment(symbol);
-            methodScope.Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});");
-        });
+        classScope.Scope(signature, methodScope => methodScope
+            .BuildLogSegment(symbol)
+            .Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});")
+        );
 
         classScope.Add($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
 
@@ -234,12 +233,12 @@ internal static class MethodBuilder
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
                     builder.Add($"var {m.Name}{index1}_Values = returnValues.GetEnumerator();");
-                    builder.Scope($"this.{m.Name}(call: ({parameterList}) => ", lambdaScope =>
-                    {
-                        lambdaScope.Scope($"if({m.Name}{index1}_Values.MoveNext())", conditionScope => conditionScope
-                            .Add($"return {m.Name}{index1}_Values.Current;"));
-                        lambdaScope.Add(m.BuildNotMockedException());
-                    }).Add(");");
+                    builder.Scope($"this.{m.Name}(call: ({parameterList}) => ", lambdaScope => lambdaScope
+                            .Scope($"if({m.Name}{index1}_Values.MoveNext())", conditionScope => conditionScope
+                                .Add($"return {m.Name}{index1}_Values.Current;")
+                            )
+                            .Add(m.BuildNotMockedException()))
+                        .Add(");");
                 }
             });
         }

@@ -62,11 +62,14 @@ internal static class PropertyBuilder
         var hasGet = symbol.GetMethod != null;
         var hasSet = symbol.SetMethod != null;
 
-        builder.Scope($"{overwriteString.AccessibilityString}{overwriteString.OverrideString}{type} {overwriteString.ContainingSymbol}{propertyName}", propertyScope => propertyScope
-                .Add(hasGet, get => get.Scope("get", getScope => getScope
+        var signature = $"{overwriteString.AccessibilityString}{overwriteString.OverrideString}{type} {overwriteString.ContainingSymbol}{propertyName}";
+        builder.Scope(signature, propertyScope => propertyScope
+            .AddIf(hasGet, get => get
+                .Scope("get", getScope => getScope
                     .BuildLogSegment(symbol.GetMethod)
                     .Add($"return this._{internalName}_get();")))
-                .Add(hasSet, set => set.Scope(setType, setScope => setScope
+            .AddIf(hasSet, set => set
+                .Scope(setType, setScope => setScope
                     .BuildLogSegment(symbol.SetMethod)
                     .Add($"this._{internalName}_set(value);"))));
 
@@ -86,8 +89,8 @@ internal static class PropertyBuilder
                 .Returns("The updated configuration object."));
 
             config.AddConfigMethod(internalName, [p], codeBuilder => codeBuilder
-                .Add(hasGet, () => $"target._{internalName}_get = get;")
-                .Add(hasSet, () => $"target._{internalName}_set = set;")
+                .AddIf(hasGet, () => $"target._{internalName}_get = get;")
+                .AddIf(hasSet, () => $"target._{internalName}_set = set;")
             );
         });
     }
@@ -108,9 +111,9 @@ internal static class PropertyBuilder
             codeBuilder.AddConfigExtension(mock, property, [$"{property.Type} value"], builder =>
                 {
                     builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
-                    builder.Add(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
-                    builder.Add(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);");
-                    builder.Add(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
+                    builder.AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
+                    builder.AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);");
+                    builder.AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
                 }
             );
         }

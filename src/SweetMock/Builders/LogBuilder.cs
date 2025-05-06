@@ -9,7 +9,8 @@ public static class LogBuilder
     internal static void InitializeLogging(this CodeBuilder source) =>
         source.Region("Logging", builder =>
         {
-            builder.Add("private bool _hasLog = false;")
+            builder
+                .Add("private bool _hasLog = false;")
                 .Add("private SweetMock.CallLog _log = new SweetMock.CallLog();");
 
             builder.AddToConfig(config =>

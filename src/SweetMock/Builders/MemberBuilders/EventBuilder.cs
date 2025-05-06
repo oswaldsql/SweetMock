@@ -61,16 +61,15 @@ internal static class EventBuilder
 
         builder.Add($"private event {typeSymbol}? _{eventFunction};");
 
-        builder.Scope($"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}", eventScope =>
-        {
-            eventScope.Scope("add", addScope => addScope
+        var signature = $"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}";
+        builder.Scope(signature, eventScope => eventScope
+            .Scope("add", addScope => addScope
                 .BuildLogSegment(symbol.AddMethod, true)
-                .Add($"this._{eventFunction} += value;"));
-
-            eventScope.Scope("remove", removeScope => removeScope
+                .Add($"this._{eventFunction} += value;"))
+            .Scope("remove", removeScope => removeScope
                 .BuildLogSegment(symbol.RemoveMethod, true)
-                .Add($"this._{eventFunction} -= value;"));
-        });
+                .Add($"this._{eventFunction} -= value;"))
+        );
 
         builder.AddToConfig(config =>
             {

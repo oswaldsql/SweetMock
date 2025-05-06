@@ -10,28 +10,26 @@ public static class ConfigExtensionsBuilder
 {
     public static string Build(MockDetails mock)
     {
-        var builder = new CodeBuilder();
+        var result = new CodeBuilder();
 
-        builder.AddFileHeader();
+        result.AddFileHeader();
 
-        builder
+        result
             .Add("#nullable enable")
             .Add("using System.Linq;")
             .Add("using System;")
             .AddLineBreak();
 
-        builder.Scope($"namespace {mock.Namespace}", namespaceScope =>
-            {
-                namespaceScope
-                    .Scope($"internal partial class {mock.MockType}", mockScope => mockScope
-                        .Scope("internal partial class Config", configScope =>
-                        {
-                            BuildMembers(configScope, mock);
-                        }));
-            }
-        );
+        result
+            .Scope($"namespace {mock.Namespace}", namespaceScope => namespaceScope
+                .Scope($"internal partial class {mock.MockType}", mockScope => mockScope
+                    .Scope("internal partial class Config", configScope =>
+                    {
+                        BuildMembers(configScope, mock);
+                    }))
+            );
 
-        return builder.ToString();
+        return result.ToString();
     }
 
     private static void BuildMembers(CodeBuilder builder, MockDetails mock)

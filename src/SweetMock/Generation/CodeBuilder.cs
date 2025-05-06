@@ -11,62 +11,31 @@ internal class CodeBuilder
     private const int MaxIndent = 50;
     private const int IndentSize = 4;
     private static readonly string[] IndentCache;
+    private int indentation;
 
     static CodeBuilder() =>
         IndentCache = Enumerable.Range(0, MaxIndent)
             .Select(i => new string(' ', i * IndentSize))
             .ToArray();
 
-    public int Indentation { get; private set; }
-
     private string GetIndentation =>
-        this.Indentation < MaxIndent
-            ? IndentCache[this.Indentation]
-            : new(' ', this.Indentation * 4);
+        this.indentation < MaxIndent
+            ? IndentCache[this.indentation]
+            : new(' ', this.indentation * 4);
 
     public CodeBuilder Indent()
     {
-        this.Indentation += 1;
+        this.indentation += 1;
         return this;
     }
 
     public CodeBuilder Unindent()
     {
-        this.Indentation -= 1;
+        this.indentation -= 1;
 
-        if (this.Indentation < 0)
+        if (this.indentation < 0)
         {
             throw new("Indentation can not be less than 0");
-        }
-
-        return this;
-    }
-
-    public CodeBuilder AddLineBreak()
-    {
-        this.result.AppendLine();
-        return this;
-    }
-
-    public CodeBuilder AddLines(string text)
-    {
-        var strings = text.Split(["\r\n", "\n"], StringSplitOptions.None);
-        foreach (var s in strings)
-        {
-            switch (s)
-            {
-                case "->":
-                    this.Indentation += 1;
-                    continue;
-                case "<-":
-                    this.Indentation -= 1;
-                    continue;
-                case "--":
-                    continue;
-                default:
-                    this.result.Append(this.GetIndentation).AppendLine(s);
-                    break;
-            }
         }
 
         return this;
@@ -78,23 +47,44 @@ internal class CodeBuilder
         return this;
     }
 
-    public CodeBuilder Add(bool condition, Func<string> add) => condition ? this.Add(add()) : this;
-
-    public CodeBuilder Add(bool condition, Action<CodeBuilder> builder)
+    public CodeBuilder AddLines(string text)
     {
-        if (condition)
+        var strings = text.Split(["\r\n", "\n"], StringSplitOptions.None);
+        foreach (var s in strings)
         {
-            builder(this);
+            switch (s)
+            {
+                case "->":
+                    this.indentation += 1;
+                    continue;
+                case "<-":
+                    this.indentation -= 1;
+                    continue;
+                case "--":
+                    continue;
+                default:
+                    Add(s);
+                    break;
+            }
         }
 
         return this;
     }
 
-    public CodeBuilder Condition(bool condition, Action<CodeBuilder> add)
+
+    public CodeBuilder AddLineBreak()
+    {
+        this.result.AppendLine();
+        return this;
+    }
+
+    public CodeBuilder AddIf(bool condition, Func<string> add) => condition ? this.Add(add()) : this;
+
+    public CodeBuilder AddIf(bool condition, Action<CodeBuilder> builder)
     {
         if (condition)
         {
-            add(this);
+            builder(this);
         }
 
         return this;
@@ -120,16 +110,6 @@ internal class CodeBuilder
         body(this);
 
         this.Unindent().Add("}");
-        return this;
-    }
-
-    public CodeBuilder AddConfigMethod(string name, string[] parameters, Action<CodeBuilder> action)
-    {
-        this.Add($$"""public Config {{name}}({{string.Join(", ", parameters)}}) {""").Indent();
-        action(this);
-        this.Add("return this;");
-        this.Unindent().Add("}");
-
         return this;
     }
 }

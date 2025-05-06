@@ -62,28 +62,27 @@ internal static class IndexBuilder
 
         var argName = symbol.Parameters[0].Name;
 
-        classScope.Add($$"""{{overwrites.AccessibilityString}}{{overwrites.OverrideString}}{{returnType}} {{overwrites.ContainingSymbol}}this[{{indexType}} {{argName}}] {""").Indent();
+        var signature = $"{overwrites.AccessibilityString}{overwrites.OverrideString}{returnType} {overwrites.ContainingSymbol}this[{indexType} {argName}]";
+        classScope.Scope(signature, indexerScope => indexerScope
+            .AddIf(hasGet, get => get
+                .Scope("get", getScope => getScope
+                    .BuildLogSegment(symbol.GetMethod)
+                    .Add($"return this.{internalName}_get({argName});")
+                ))
+            .AddIf(hasSet, set => set
+                .Scope("set", setScope => setScope
+                    .BuildLogSegment(symbol.SetMethod)
+                    .Add($"this.{internalName}_set({argName}, value);")
+                )));
 
-        classScope.Condition(hasGet, b => b
-            .Add("get {").Indent()
-            .BuildLogSegment(symbol.GetMethod)
-            .Add($"return this.{internalName}_get({argName});")
-            .Unindent().Add("}"));
-
-        classScope.Condition(hasSet, b => b
-            .Add("set {").Indent()
-            .BuildLogSegment(symbol.SetMethod)
-            .Add($"this.{internalName}_set({argName}, value);")
-            .Unindent().Add("}"));
-
-        classScope.Unindent().Add("}");
-
-        classScope.Add($"private System.Func<{indexType}, {returnType}> {internalName}_get {{ get; set; }} = (_) => {exception}");
-        classScope.Add($"private System.Action<{indexType}, {returnType}> {internalName}_set {{ get; set; }} = (_, _) => {exception}");
+        classScope
+            .Add($"private System.Func<{indexType}, {returnType}> {internalName}_get {{ get; set; }} = (_) => {exception}")
+            .Add($"private System.Action<{indexType}, {returnType}> {internalName}_set {{ get; set; }} = (_, _) => {exception}")
+            .AddLineBreak();
 
         classScope.AddToConfig(config =>
         {
-            var p = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
+            var indexerParameters = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
 
             config.Documentation(doc => doc
                 .Summary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
@@ -91,9 +90,9 @@ internal static class IndexBuilder
                 .Parameter("set", "Function to call when the property is set.", hasSet)
                 .Returns("The configuration object."));
 
-            config.AddConfigMethod("Indexer", [p], builder => builder
-                .Add(hasGet, () => $"target.{internalName}_get = get;")
-                .Add(hasSet, () => $"target.{internalName}_set = set;")
+            config.AddConfigMethod("Indexer", [indexerParameters], builder => builder
+                .AddIf(hasGet, () => $"target.{internalName}_get = get;")
+                .AddIf(hasSet, () => $"target.{internalName}_set = set;")
             );
         });
     }
@@ -115,9 +114,9 @@ internal static class IndexBuilder
 
             codeBuilder.AddConfigExtension(mock, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
             {
-                builder.Add(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
-                builder.Add(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);");
-                builder.Add(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+                builder.AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
+                builder.AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);");
+                builder.AddIf(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
             });
         }
     }
