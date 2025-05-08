@@ -1,5 +1,10 @@
 ﻿namespace SweetMock;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.CodeAnalysis;
+
 /// <summary>
 /// Factory for creating mock objects.
 /// </summary>
