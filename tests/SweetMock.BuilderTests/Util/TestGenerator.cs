@@ -1,6 +1,5 @@
 namespace SweetMock.BuilderTests.Util;
 
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 

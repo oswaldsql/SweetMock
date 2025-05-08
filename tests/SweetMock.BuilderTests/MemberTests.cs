@@ -1,7 +1,5 @@
 namespace SweetMock.BuilderTests;
 
-using Util;
-
 public class MemberTests(ITestOutputHelper output)
 {
     [Theory]

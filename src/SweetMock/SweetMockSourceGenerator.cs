@@ -60,12 +60,12 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         }
     }
 
-    private static readonly HashSet<TypeKind> validKinds = [TypeKind.Class, TypeKind.Interface];
+    private static readonly HashSet<TypeKind> ValidKinds = [TypeKind.Class, TypeKind.Interface];
     private static bool ValidateType(ISymbol? symbol, SourceProductionContext context, IEnumerable<AttributeData> attributes)
     {
         if (symbol is INamedTypeSymbol target)
         {
-            if (!validKinds.Contains(target.TypeKind))
+            if (!ValidKinds.Contains(target.TypeKind))
             {
                 context.AddUnsupportedTargetDiagnostic(attributes, "Mocking target must be a class or interface.");
                 return false;

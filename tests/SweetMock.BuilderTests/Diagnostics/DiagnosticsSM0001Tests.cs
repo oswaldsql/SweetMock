@@ -1,10 +1,8 @@
 ﻿namespace SweetMock.BuilderTests.Diagnostics;
 
 using JetBrains.Annotations;
-using Microsoft.CodeAnalysis;
-using Util;
 
-public class DiagnosticsSM0001Tests(ITestOutputHelper testOutputHelper) {
+public class DiagnosticsSm0001Tests(ITestOutputHelper testOutputHelper) {
 
     [Fact]
     public void MockingSealedClassesWillRaiseTheSm0001Error()
@@ -22,13 +20,13 @@ public class DiagnosticsSM0001Tests(ITestOutputHelper testOutputHelper) {
         Assert.Equal("SM0001", actual.Id);
         Assert.Equal("Mocking target must not be a sealed class.", actual.GetMessage());
 
-        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSM0001Tests.SealedClass>", actual.Location.GetCode());
+        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0001Tests.SealedClass>", actual.Location.GetCode());
     }
     
     [Fact]
     public void MockingEnumShouldRaiseTheSm0001Error()
     {
-        var source = Build.TestClass<System.DayOfWeek>();
+        var source = Build.TestClass<DayOfWeek>();
 
         var generate = new SweetMockSourceGenerator().Generate(source);
 
@@ -47,7 +45,7 @@ public class DiagnosticsSM0001Tests(ITestOutputHelper testOutputHelper) {
     [Fact]
     public void MockingStaticClassWillRaiseTheSm0001Error()
     {
-        var source = Build.TestClass("SweetMock.BuilderTests.Diagnostics.DiagnosticsSM0001Tests.StaticClass");
+        var source = Build.TestClass("SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0001Tests.StaticClass");
 
         var generate = new SweetMockSourceGenerator().Generate(source);
 
@@ -60,7 +58,7 @@ public class DiagnosticsSM0001Tests(ITestOutputHelper testOutputHelper) {
         Assert.Equal("SM0001", actual.Id);
         Assert.Equal("Mocking target must not be a static class.", actual.GetMessage());
 
-        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSM0001Tests.StaticClass>", actual.Location.GetCode());
+        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0001Tests.StaticClass>", actual.Location.GetCode());
     }
         
     [Fact]
@@ -98,7 +96,7 @@ public class DiagnosticsSM0001Tests(ITestOutputHelper testOutputHelper) {
         Assert.Equal("SM0001", actual.Id);
         Assert.Equal("Mocking target must not be a record type.", actual.GetMessage());
 
-        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSM0001Tests.RecordType>", actual.Location.GetCode());
+        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0001Tests.RecordType>", actual.Location.GetCode());
     }
     
     internal interface IEmptyInterface { }
@@ -111,6 +109,4 @@ public class DiagnosticsSM0001Tests(ITestOutputHelper testOutputHelper) {
     internal static class StaticClass { }
     
     internal record RecordType(string name);
-
-
 }

@@ -3,10 +3,6 @@
 
 namespace SweetMock.BuilderTests;
 
-using System.ComponentModel;
-using SweetMock;
-using Util;
-
 public class AsyncMethodTests(ITestOutputHelper testOutputHelper)
 {
     [Fact]

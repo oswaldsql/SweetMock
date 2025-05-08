@@ -3,9 +3,6 @@
 
 namespace SweetMock.BuilderTests;
 
-using SweetMock;
-using Util;
-
 public class LargeTest(ITestOutputHelper testOutputHelper)
 {
     [Fact]

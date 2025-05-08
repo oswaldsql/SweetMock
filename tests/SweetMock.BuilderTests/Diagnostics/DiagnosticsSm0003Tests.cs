@@ -3,10 +3,6 @@
 
 namespace SweetMock.BuilderTests.Diagnostics;
 
-using Microsoft.CodeAnalysis;
-using SweetMock;
-using Util;
-
 public class DiagnosticsSm0003Tests(ITestOutputHelper testOutputHelper)
 {
     [Fact]

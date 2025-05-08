@@ -2,9 +2,6 @@
 
 namespace SweetMock.BuilderTests;
 
-using SweetMock;
-using Util;
-
 public class StaticInterfaceMembersTest(ITestOutputHelper testOutputHelper)
 {
     [Fact]

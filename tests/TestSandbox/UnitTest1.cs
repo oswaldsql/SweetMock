@@ -5,7 +5,7 @@ using SweetMock;
 public class UnitTest1
 {
     [Fact]
-    [Mock<MyClass>]
+    [Mock<MyClass[]>]
     public void Test1()
     {
         var sut = Mock.MyClass(config => config.Name("tester"));

@@ -1,7 +1,5 @@
 namespace SweetMock.BuilderTests;
 
-using Util;
-
 public class DoubleInheritanceTest(ITestOutputHelper testOutputHelper)
 {
     [Fact]

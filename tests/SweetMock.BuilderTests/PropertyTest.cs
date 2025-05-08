@@ -3,8 +3,6 @@
 
 namespace SweetMock.BuilderTests;
 
-using SweetMock;
-using Util;
 using Xunit.Sdk;
 
 public class PropertyTest(ITestOutputHelper testOutputHelper)

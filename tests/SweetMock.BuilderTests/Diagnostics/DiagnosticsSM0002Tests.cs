@@ -1,10 +1,6 @@
 ﻿namespace SweetMock.BuilderTests.Diagnostics;
 
-using JetBrains.Annotations;
-using Microsoft.CodeAnalysis;
-using Util;
-
-public class DiagnosticsSM0002Tests(ITestOutputHelper testOutputHelper) {
+public class DiagnosticsSm0002Tests(ITestOutputHelper testOutputHelper) {
 
     [Fact]
     public void MockingEmptyInterfaceWillRaiseTheSm0002Info()
@@ -22,7 +18,7 @@ public class DiagnosticsSM0002Tests(ITestOutputHelper testOutputHelper) {
         Assert.Equal("SM0002", actual.Id);
         Assert.Equal("Mocking target contains no members.", actual.GetMessage());
 
-        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSM0002Tests.IEmptyInterface>", actual.Location.GetCode());
+        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0002Tests.IEmptyInterface>", actual.Location.GetCode());
     }
 
     internal interface IEmptyInterface { }

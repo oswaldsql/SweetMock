@@ -61,7 +61,7 @@ internal class CodeBuilder
                 case "--":
                     continue;
                 default:
-                    Add(s);
+                    this.Add(s);
                     break;
             }
         }

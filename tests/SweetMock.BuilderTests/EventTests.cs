@@ -3,11 +3,6 @@
 
 namespace SweetMock.BuilderTests;
 
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using SweetMock;
-using Util;
-
 public class EventTests(ITestOutputHelper testOutputHelper)
 {
     [Fact]

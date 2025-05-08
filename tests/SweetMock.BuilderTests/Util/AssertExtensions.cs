@@ -1,7 +1,5 @@
 namespace SweetMock.BuilderTests.Util;
 
-using Microsoft.CodeAnalysis;
-
 public static class AssertExtensions
 {
     public static bool HasErrors(this Diagnostic[] diagnostics) => diagnostics.Any(t => t.Severity == DiagnosticSeverity.Error);
