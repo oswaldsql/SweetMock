@@ -1,8 +1,6 @@
 ﻿namespace SweetMock.Builders;
 
-using System.Linq;
 using Generation;
-using Microsoft.CodeAnalysis;
 
 public static class LogBuilder
 {

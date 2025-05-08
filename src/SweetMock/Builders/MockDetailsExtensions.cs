@@ -1,9 +1,5 @@
 namespace SweetMock.Builders;
 
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-
 public static class MockDetailsExtensions
 {
     internal static ISymbol[] GetCandidates(this MockDetails details)

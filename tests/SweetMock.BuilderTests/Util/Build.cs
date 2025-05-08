@@ -23,7 +23,7 @@ public class TestClass{{
 }}";
     }
 
-    public static string TestClass(string interfaceName, string content = "")
+    public static string TestClass(string interfaceName, string content = "", string outsideTest = "")
     {
         var name = interfaceName;
 
@@ -39,6 +39,8 @@ public class TestClass{{
     public void Test() {{
        {content}
     }}
+
+    {outsideTest}
 }}";
     }
 }

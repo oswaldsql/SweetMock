@@ -1,9 +1,7 @@
 namespace SweetMock.Builders.MemberBuilders;
 
-using System.Collections.Generic;
-using System.Linq;
+using Exceptions;
 using Generation;
-using Microsoft.CodeAnalysis;
 using Utils;
 
 /// <summary>
@@ -51,7 +49,7 @@ internal static class MethodBuilder
     {
         if (symbol.ReturnsByRef)
         {
-            throw new("Property has returns byref");
+            throw new RefReturnTypeNotSupportedException(symbol, symbol.ContainingType);
         }
 
         var parameters = symbol.ParameterStrings();

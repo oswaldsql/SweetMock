@@ -1,7 +1,5 @@
 ﻿namespace SweetMock.Generation;
 
-using System;
-using System.Collections.Generic;
 using Builders;
 using Utils;
 

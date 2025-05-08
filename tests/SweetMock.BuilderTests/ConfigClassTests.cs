@@ -29,19 +29,6 @@ public class ConfigClassTests(ITestOutputHelper testOutputHelper)
         Assert.Empty(generate.GetErrors());
     }
 
-    [Fact(Skip = "Diagnostics not working")]
-    public void SealedClassTests()
-    {
-        var source = Build.TestClass<SealedClass>();
-
-        var generate = new SweetMockSourceGenerator().Generate(source);
-
-        testOutputHelper.DumpResult(generate);
-
-        Assert.True(generate.diagnostics.HasErrors());
-        Assert.Contains(generate.GetErrors(), t => t.Id == "MM0006"); // Inheritance of sealed class is not allowed
-    }
-
     [Fact]
     public void AbstractClassTests()
     {

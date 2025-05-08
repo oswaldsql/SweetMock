@@ -1,9 +1,7 @@
 ﻿namespace SweetMock.Builders;
 
-using System.Linq;
 using Generation;
 using MemberBuilders;
-using Microsoft.CodeAnalysis;
 using Utils;
 
 internal static class BaseClassBuilder

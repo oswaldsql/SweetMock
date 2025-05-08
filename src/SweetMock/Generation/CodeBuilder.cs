@@ -1,7 +1,5 @@
 namespace SweetMock.Generation;
 
-using System;
-using System.Linq;
 using System.Text;
 
 internal class CodeBuilder

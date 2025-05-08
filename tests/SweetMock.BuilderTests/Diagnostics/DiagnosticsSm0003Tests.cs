@@ -1,15 +1,15 @@
 ﻿// ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.Diagnostics;
 
 using Microsoft.CodeAnalysis;
 using SweetMock;
 using Util;
 
-public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
+public class DiagnosticsSm0003Tests(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Diagnostics not working yet")]
+    [Fact]
     public void RefPropertyTests()
     {
         var source = Build.TestClass<IRefProperty>();
@@ -20,13 +20,14 @@ public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
 
         var actual = Assert.Single(diagnostics);
         Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
-        Assert.Equal("MM0002", actual.Id);
+        Assert.Equal("SM0003", actual.Id);
         Assert.Equal("Ref property not supported for 'Name' in 'IRefProperty'", actual.GetMessage());
 
-        Assert.Equal("Mock<MiniMock.UnitTests.DiagnosticsTests.IRefProperty>", actual.Location.GetCode());
+        Assert.StartsWith("Mock<", actual.Location.GetCode());
+        Assert.EndsWith(".IRefProperty>", actual.Location.GetCode());
     }
 
-    [Fact(Skip = "Diagnostics not working yet")]
+    [Fact]
     public void MethodWithRefReturnTypeShouldRaiseError()
     {
         var source = Build.TestClass<IRefMethod>();
@@ -39,29 +40,11 @@ public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
 
         var actual = Assert.Single(diagnostics);
         Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
-        Assert.Equal("MM0003", actual.Id);
+        Assert.Equal("SM0003", actual.Id);
         Assert.Equal("Ref return type not supported for 'GetName' in 'IRefMethod'", actual.GetMessage());
 
-        Assert.Equal("Mock<MiniMock.UnitTests.DiagnosticsTests.IRefMethod>", actual.Location.GetCode());
-    }
-
-    [Fact(Skip = "Diagnostics not working yet")]
-    public void MockingSealedClassesWillRaiseTheMm0006Error()
-    {
-        var source = Build.TestClass<SealedClass>();
-
-        var generate = new SweetMockSourceGenerator().Generate(source);
-
-        testOutputHelper.DumpResult(generate);
-
-        var diagnostics = generate.GetErrors();
-
-        var actual = Assert.Single(diagnostics);
-        Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
-        Assert.Equal("MM0006", actual.Id);
-        Assert.Equal("Cannot mock the sealed class 'SealedClass'", actual.GetMessage());
-
-        Assert.Equal("Mock<MiniMock.UnitTests.DiagnosticsTests.SealedClass>", actual.Location.GetCode());
+        Assert.StartsWith("Mock<", actual.Location.GetCode());
+        Assert.EndsWith(".IRefMethod>", actual.Location.GetCode());
     }
 
     public interface IRefProperty
@@ -72,9 +55,5 @@ public class DiagnosticsTests(ITestOutputHelper testOutputHelper)
     public interface IRefMethod
     {
         ref string GetName();
-    }
-
-    public sealed class SealedClass
-    {
     }
 }

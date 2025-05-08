@@ -1,12 +1,10 @@
 namespace SweetMock;
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using Builders;
-using Microsoft.CodeAnalysis;
+using Exceptions;
 using Microsoft.CodeAnalysis.Text;
 using Utils;
 
@@ -39,13 +37,71 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         var uniqueAttributes = attributes.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default).Where(t => t.Key != null);
         foreach (var attribute in uniqueAttributes)
         {
-            var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
-
-            foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
+            if (ValidateType(attribute.Key, context, attribute))
             {
-                context.AddSource($"{fileName}.{file.Name}.g.cs", SourceText.From(file.Content, Encoding.UTF8));
+                try
+                {
+                    var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
+
+                    foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
+                    {
+                        context.AddSource($"{fileName}.{file.Name}.g.cs", SourceText.From(file.Content, Encoding.UTF8));
+                    }
+                }
+                catch (SweetMockException e)
+                {
+                    context.AddUnsupportedMethodDiagnostic(attributes,e.Message);
+                }
+                catch (Exception e)
+                {
+                    context.AddUnknownExceptionOccured(attributes, e.Message);
+                }
             }
         }
+    }
+
+    private static readonly HashSet<TypeKind> validKinds = [TypeKind.Class, TypeKind.Interface];
+    private static bool ValidateType(ISymbol? symbol, SourceProductionContext context, IEnumerable<AttributeData> attributes)
+    {
+        if (symbol is INamedTypeSymbol target)
+        {
+            if (!validKinds.Contains(target.TypeKind))
+            {
+                context.AddUnsupportedTargetDiagnostic(attributes, "Mocking target must be a class or interface.");
+                return false;
+            }
+
+            if (target.IsRecord)
+            {
+                context.AddUnsupportedTargetDiagnostic(attributes, "Mocking target must not be a record type.");
+                return false;
+            }
+
+            if (target.DeclaredAccessibility == Accessibility.Private)
+            {
+                context.AddUnsupportedTargetDiagnostic(attributes, "Mocking target must not be a private class.");
+                return false;
+            }
+
+            if (target.IsSealed)
+            {
+                context.AddUnsupportedTargetDiagnostic(attributes, "Mocking target must not be a sealed class.");
+                return false;
+            }
+
+            if (target.IsStatic)
+            {
+                context.AddUnsupportedTargetDiagnostic(attributes, "Mocking target must not be a static class.");
+                return false;
+            }
+
+            if (target.GetMembers().Length == 0)
+            {
+                context.AddUnintendedTargetDiagnostic(attributes, "Mocking target contains no members.");
+            }
+        }
+
+        return true;
     }
 
     private static ITypeSymbol? FirstGenericType(AttributeData t)

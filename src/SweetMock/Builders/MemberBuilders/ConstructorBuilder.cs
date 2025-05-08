@@ -1,9 +1,6 @@
 ﻿namespace SweetMock.Builders.MemberBuilders;
 
-using System.Collections.Generic;
-using System.Linq;
 using Generation;
-using Microsoft.CodeAnalysis;
 using Utils;
 
 /// <summary>

@@ -1,10 +1,7 @@
 namespace SweetMock.Builders.MemberBuilders;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Exceptions;
 using Generation;
-using Microsoft.CodeAnalysis;
 using Utils;
 
 /// <summary>
@@ -50,7 +47,10 @@ internal static class PropertyBuilder
     /// <param name="index">The index of the property.</param>
     private static void BuildProperty(CodeBuilder builder, IPropertySymbol symbol, int index)
     {
-        if(symbol.ReturnsByRef) throw new Exception("Property has returns byref");
+        if (symbol.ReturnsByRef)
+        {
+            throw new RefPropertyNotSupportedException(symbol, symbol.ContainingType);
+        }
 
         var propertyName = symbol.Name;
         var internalName = index == 1 ? propertyName : $"{propertyName}_{index}";

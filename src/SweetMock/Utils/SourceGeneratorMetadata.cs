@@ -1,7 +1,5 @@
 namespace SweetMock.Utils;
 
-using System;
-
 public static class SourceGeneratorMetadata
 {
     static SourceGeneratorMetadata()

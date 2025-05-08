@@ -1,7 +1,5 @@
 namespace SweetMock.Utils;
 
-using Microsoft.CodeAnalysis;
-
 public static class ExceptionBuilders
 {
     internal static string BuildNotMockedException(this IPropertySymbol symbol)
