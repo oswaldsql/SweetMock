@@ -34,35 +34,41 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
     private static void GenerateCode(SourceProductionContext context, ImmutableArray<AttributeData> attributes)
     {
         var mockBuilder = new MockBuilder();
-        var uniqueAttributes = attributes.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default).Where(t => t.Key != null);
+        var uniqueAttributes = attributes.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default);
         foreach (var attribute in uniqueAttributes)
         {
             if (ValidateType(attribute.Key, context, attribute))
-            {
                 try
                 {
-                    var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
-
-                    foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
                     {
-                        context.AddSource($"{fileName}.{file.Name}.g.cs", SourceText.From(file.Content, Encoding.UTF8));
+                        var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
+
+                        foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
+                        {
+                            context.AddSource($"{fileName}.{file.Name}.g.cs", SourceText.From(file.Content, Encoding.UTF8));
+                        }
                     }
                 }
                 catch (SweetMockException e)
                 {
-                    context.AddUnsupportedMethodDiagnostic(attributes,e.Message);
+                    context.AddUnsupportedMethodDiagnostic(attributes, e.Message);
                 }
                 catch (Exception e)
                 {
                     context.AddUnknownExceptionOccured(attributes, e.Message);
                 }
-            }
         }
     }
 
     private static readonly HashSet<TypeKind> ValidKinds = [TypeKind.Class, TypeKind.Interface];
     private static bool ValidateType(ISymbol? symbol, SourceProductionContext context, IEnumerable<AttributeData> attributes)
     {
+        if (symbol is null)
+        {
+            context.AddUnsupportedTargetDiagnostic(attributes, "Mocking target must be a class or interface.");
+            return false;
+        }
+
         if (symbol is INamedTypeSymbol target)
         {
             if (!ValidKinds.Contains(target.TypeKind))
@@ -106,8 +112,13 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
     private static ITypeSymbol? FirstGenericType(AttributeData t)
     {
-        var firstGenericType = t.AttributeClass?.TypeArguments.OfType<INamedTypeSymbol>().FirstOrDefault();
-        return firstGenericType?.IsGenericType == true ? firstGenericType.OriginalDefinition : firstGenericType;
+        var firstGenericType = t.AttributeClass?.TypeArguments.FirstOrDefault();
+        if (firstGenericType is INamedTypeSymbol symbol)
+        {
+            return symbol?.IsGenericType == true ? symbol.OriginalDefinition : symbol;
+       }
+        //Console.WriteLine(firstGenericType);
+        return null;
     }
 
     private static IEnumerable<AttributeData> GetAttributes(GeneratorAttributeSyntaxContext arg1, CancellationToken arg2) =>

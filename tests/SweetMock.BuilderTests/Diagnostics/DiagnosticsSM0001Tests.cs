@@ -99,6 +99,50 @@ public class DiagnosticsSm0001Tests(ITestOutputHelper testOutputHelper) {
         Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0001Tests.RecordType>", actual.Location.GetCode());
     }
     
+    [Fact]
+    public void MockingTubelsWillRaiseTheSm0001Error()
+    {
+        var source = Build.TestClass("(string, int)");
+
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        testOutputHelper.DumpResult(generate);
+
+        var diagnostics = generate.GetErrors();
+
+        var actual = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
+        Assert.Equal("SM0001", actual.Id);
+        Assert.Equal("Mocking target must be a class or interface.", actual.GetMessage());
+
+        Assert.Equal("Mock<(string, int)>", actual.Location.GetCode());
+    }
+    
+    [Fact]
+    public void MockingArrayWillRaiseTheSm0001Error()
+    {
+        var source = Build.TestClass<MyClass[]>();
+        
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        testOutputHelper.DumpResult(generate);
+
+        var diagnostics = generate.GetErrors();
+
+        var actual = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
+        Assert.Equal("SM0001", actual.Id);
+        Assert.Equal("Mocking target must be a class or interface.", actual.GetMessage());
+
+        Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0001Tests.MyClass[]>", actual.Location.GetCode());
+    }
+
+    
+    public class MyClass
+    {
+        
+    }
+    
     internal interface IEmptyInterface { }
 
     private class privateClass { }
