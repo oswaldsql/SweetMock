@@ -95,7 +95,7 @@ internal static class EventBuilder
             if (types != "System.EventArgs")
             {
                 codeBuilder.Documentation(doc => doc
-                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.")
+                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/> directly.")
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."));
 
@@ -108,7 +108,7 @@ internal static class EventBuilder
             else
             {
                 codeBuilder.Documentation(doc => doc
-                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/>.")
+                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/> directly.")
                     .Returns("The updated configuration object."));
 
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [], config =>

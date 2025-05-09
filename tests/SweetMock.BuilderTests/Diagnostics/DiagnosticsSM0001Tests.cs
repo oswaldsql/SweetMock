@@ -138,19 +138,16 @@ public class DiagnosticsSm0001Tests(ITestOutputHelper testOutputHelper) {
     }
 
     
-    public class MyClass
-    {
-        
-    }
+    public class MyClass { }
     
     internal interface IEmptyInterface { }
 
-    private class privateClass { }
+    private class PrivateClass { }
     
     internal sealed class SealedClass { }
     
     [UsedImplicitly]
     internal static class StaticClass { }
     
-    internal record RecordType(string name);
+    internal record RecordType(string Name);
 }

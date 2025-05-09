@@ -76,7 +76,7 @@ internal static class MethodBuilder
         classScope.AddToConfig(config =>
         {
             config.Documentation(doc => doc
-                .Summary($"Delegate for calling <see cref=\"{symbol.ToCRef()}\"/>"));
+                .Summary($"Delegate for mocking calls to <see cref=\"{symbol.ToCRef()}\"/>."));
             config.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
 
             config.Documentation(doc => doc

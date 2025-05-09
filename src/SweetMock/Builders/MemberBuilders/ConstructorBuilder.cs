@@ -40,7 +40,10 @@ internal static class ConstructorBuilder {
                 builder.AddToConfig(config =>
                 {
                     config.Documentation(doc => doc
-                        .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>"));
+                        .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>")
+                        .Parameter("config", "Configuration object used to setup the mock.")
+                        .Returns($"New mock instance of <see cref=\"{details.Target.ToCRef()}\"/>")
+                    );
 
                     config.Add($"public static {details.SourceName} CreateNewMock({parameterList}System.Action<Config>? config = null) => new {details.MockType}({argumentList}config);");
                 });

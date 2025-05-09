@@ -103,8 +103,7 @@ internal static class PropertyBuilder
             var hasSet = property.SetMethod != null;
 
             codeBuilder.Documentation(doc => doc
-                .Summary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.",
-                    "This method configures the mock to use the specified value when the property is accessed.")
+                .Summary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.")
                 .Parameter("value", "The value to use for the initial value of the property.")
                 .Returns("The updated configuration object."));
 

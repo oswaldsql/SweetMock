@@ -105,7 +105,7 @@ internal static class IndexBuilder
             codeBuilder.AddLineBreak();
 
             codeBuilder.Documentation(doc => doc
-                .Summary("Gets or sets values in the dictionary when the indexer is called.", $"Configures <see cref=\"{indexer.ToCRef()}\" />")
+                .Summary($"Specifies a dictionary to be used as a source of the indexer for <see cref=\"{indexer.Parameters[0].Type.ToCRef()}\"/>.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."));
 
