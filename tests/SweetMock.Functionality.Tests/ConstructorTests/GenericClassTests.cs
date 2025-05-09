@@ -11,6 +11,7 @@ public class GenericClassTests
         var callLog = new CallLog();
         var sut = Mock.Repo<Guid>(config => config
             .SomeMethod(Guid.NewGuid())
+            .SomeMethod([Guid.NewGuid(), Guid.NewGuid()])
             .SomeMethod(new ArgumentException())
             .SomeMethod(guid => guid)
             .SomeProperty(Guid.NewGuid())

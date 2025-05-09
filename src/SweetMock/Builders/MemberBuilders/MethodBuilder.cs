@@ -209,7 +209,7 @@ internal static class MethodBuilder
             result.AddLineBreak();
             result.Documentation(doc => doc
                 .Summary("Configures the mock to return a one of the specific value disregarding the arguments.", $"Configures {seeString}")
-                .Parameter("returns", "The values that should be returned")
+                .Parameter("returnValues", "The values that should be returned in order. If the values are depleted <see cref=\"System.InvalidOperationException\"/>  is thrown.")
                 .Returns("The updated configuration object."));
 
             var returnType = candidate.First().ReturnType.ToString();
