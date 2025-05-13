@@ -1,4 +1,4 @@
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.Constructor;
 
 public class DoubleInheritanceTest(ITestOutputHelper testOutputHelper)
 {

@@ -1,4 +1,4 @@
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.MemberTypeTests;
 
 public class MemberTests(ITestOutputHelper output)
 {

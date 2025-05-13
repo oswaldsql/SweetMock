@@ -52,39 +52,39 @@ internal static class MethodBuilder
             throw new RefReturnTypeNotSupportedException(symbol, symbol.ContainingType);
         }
 
-        var parameters = symbol.ParameterStrings();
+        var (methodParameters, nameList) = symbol.ParameterStrings();
 
-        var method = MethodMetadata(symbol);
+        var (name, returnType, returnString) = MethodMetadata(symbol);
 
-        var overwrites = symbol.Overwrites();
+        var (containingSymbol, accessibilityString, overrideString) = symbol.Overwrites();
 
-        var delegateInfo = GetDelegateInfo(symbol, methodCount);
+        var (delegateName, delegateType, delegateParameters) = GetDelegateInfo(symbol, methodCount);
 
-        var functionPointer = methodCount == 1 ? $"_{method.Name}" : $"_{method.Name}_{methodCount}";
+        var functionPointer = methodCount == 1 ? $"_{name}" : $"_{name}_{methodCount}";
 
         var genericString = GenericString(symbol);
-        var castString = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + method.ReturnType + ") " : "";
+        var castString = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + returnType + ") " : "";
 
-        var signature = $"{overwrites.AccessibilityString}{overwrites.OverrideString}{method.ReturnType} {overwrites.ContainingSymbol}{method.Name}{genericString}({parameters.MethodParameters})";
+        var signature = $"{accessibilityString}{overrideString}{returnType} {containingSymbol}{name}{genericString}({methodParameters})";
         classScope.Scope(signature, methodScope => methodScope
             .BuildLogSegment(symbol)
-            .Add($"{method.ReturnString}{castString}this.{functionPointer}.Invoke({parameters.NameList});")
+            .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
         );
 
-        classScope.Add($"private Config.{delegateInfo.Name} {functionPointer} {{get;set;}} = ({delegateInfo.Parameters}) => {symbol.BuildNotMockedException()}");
+        classScope.Add($"private Config.{delegateName} {functionPointer} {{get;set;}} = ({delegateParameters}) => {symbol.BuildNotMockedException()}");
 
         classScope.AddToConfig(config =>
         {
             config.Documentation(doc => doc
                 .Summary($"Delegate for mocking calls to <see cref=\"{symbol.ToCRef()}\"/>."));
-            config.Add($"public delegate {delegateInfo.Type} {delegateInfo.Name}({delegateInfo.Parameters});");
+            config.Add($"public delegate {delegateType} {delegateName}({delegateParameters});");
 
             config.Documentation(doc => doc
                 .Summary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.")
                 .Parameter("call", "The action or function to execute when the method is called.")
                 .Returns("The updated configuration object."));
 
-            config.AddConfigMethod(method.Name, [$"{delegateInfo.Name} call"], builder => builder
+            config.AddConfigMethod(name, [$"{delegateName} call"], builder => builder
                 .Add($"target.{functionPointer} = call;"));
         });
 
@@ -93,11 +93,10 @@ internal static class MethodBuilder
     {
         var delegateName = methodCount == 1 ? $"DelegateFor_{symbol.Name}" : $"DelegateFor_{symbol.Name}_{methodCount}";
         var delegateType = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? "object" : symbol.ReturnType.ToString();
-        var delegateContainer = "--MockClass--";
 
         var parameterList = symbol.GetParameterInfos().ToString(p => $"{p.OutString}{p.Type} {p.Name}");
 
-        return new(delegateName, delegateType, delegateContainer, delegateContainer + delegateName, parameterList);
+        return new(delegateName, delegateType, parameterList);
     }
 
     private static IEnumerable<ParameterInfo> GetParameterInfos(this IMethodSymbol symbol)
@@ -302,7 +301,7 @@ internal static class MethodBuilder
         }
     }
 
-    private record DelegateInfo(string Name, string Type, string Container, string FullName, string Parameters);
+    private record DelegateInfo(string Name, string Type, string Parameters);
 
     private record MethodInfo(string Name, string ReturnType, string ReturnString);
 }

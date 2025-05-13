@@ -1,7 +1,7 @@
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.MemberTypeTests;
 
 public class OutArgumentTests(ITestOutputHelper testOutputHelper)
 {

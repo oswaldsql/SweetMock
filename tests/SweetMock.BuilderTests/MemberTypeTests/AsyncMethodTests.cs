@@ -1,32 +1,32 @@
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.MemberTypeTests;
 
 public class AsyncMethodTests(ITestOutputHelper testOutputHelper)
 {
     [Fact]
     public void SimpleTaskMethodsTests()
     {
-        var source = Build.TestClass<ISimpleTaskMethods>();
+        var source = Build.TestClass<ITaskMethods>();
 
         var generate = new SweetMockSourceGenerator().Generate(source);
 
         testOutputHelper.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        Assert.Empty(generate.GetWarnings());
     }
 
     [Fact]
     public void GenericTaskMethodsTests()
     {
-        var source = Build.TestClass<IGenericTaskMethods>();
+        var source = Build.TestClass<IValueTaskMethods>();
 
         var generate = new SweetMockSourceGenerator().Generate(source);
 
         testOutputHelper.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        Assert.Empty(generate.GetWarnings());
     }
 
     [Fact]
@@ -38,18 +38,23 @@ public class AsyncMethodTests(ITestOutputHelper testOutputHelper)
 
         testOutputHelper.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        Assert.Empty(generate.GetWarnings());
     }
 
-    public interface ISimpleTaskMethods
+    public interface ITaskMethods
     {
         Task WithParameter(string name);
         Task WithoutParameter();
+
+        Task<string> GenericWithParameter(string name);
+        Task<int> GenericWithoutParameter();
     }
 
-    public interface IGenericTaskMethods
+    public interface IValueTaskMethods
     {
-        Task<string> WithParameter(string name);
-        Task<int> WithoutParameter();
+        ValueTask WithParameter(string name);
+        ValueTask WithoutParameter();
+        ValueTask<string> GenericWithParameter(string name);
+        ValueTask<int> GenericWithoutParameter();
     }
 }

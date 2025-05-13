@@ -1,7 +1,7 @@
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.MemberTypeTests;
 
 public class MethodTests(ITestOutputHelper testOutputHelper)
 {
@@ -26,7 +26,7 @@ public class MethodTests(ITestOutputHelper testOutputHelper)
 
         testOutputHelper.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        Assert.Empty(generate.GetWarnings());
     }
 
     [Fact]
@@ -37,7 +37,7 @@ using SweetMock.BuilderTests;
 using SweetMock;
 using System;
 
-[Mock<MethodTests.IGeneric<string>>]
+[Mock<SweetMock.BuilderTests.MemberTypeTests.MethodTests.IGeneric<string>>]
 public class TestClass{
 }";
 
@@ -45,7 +45,7 @@ public class TestClass{
 
         testOutputHelper.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        Assert.Empty(generate.GetWarnings());
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class TestClass{
 
         testOutputHelper.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        Assert.Empty(generate.GetWarnings());
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class TestClass{
 
         testOutputHelper.DumpResult(generate);
 
-        Assert.Empty(generate.GetErrors());
+        Assert.Empty(generate.GetWarnings());
     }
     
     
@@ -124,5 +124,24 @@ public class TestClass{
     public interface IGenericMethods
     {
         public T EmptyGeneric<T>(string str, T name) where T : new();
+    }
+    
+    public interface IMethodRepository
+    {
+        Task<Guid> AddG(string name);
+        Task Add(string name);
+
+        void Drop();
+        void DropThis(string name);
+        string ReturnValue();
+        Guid CreateNewCustomer(string name);
+
+        (string name, int age) GetCustomerInfo(string name);
+
+        void Unlike() { }
+
+        static string StaticMethod() => "StaticMethod";
+
+        public string DefaultImp() => "Test";
     }
 }

@@ -1,7 +1,7 @@
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ArrangeTypeMemberModifiers
 
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.MemberTypeTests;
 
 using Xunit.Sdk;
 

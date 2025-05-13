@@ -37,26 +37,30 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         var uniqueAttributes = attributes.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default);
         foreach (var attribute in uniqueAttributes)
         {
-            if (ValidateType(attribute.Key, context, attribute))
-                try
-                {
-                    {
-                        var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
+            if (!ValidateType(attribute.Key, context, attribute))
+            {
+                continue;
+            }
 
-                        foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
-                        {
-                            context.AddSource($"{fileName}.{file.Name}.g.cs", SourceText.From(file.Content, Encoding.UTF8));
-                        }
+            try
+            {
+                {
+                    var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
+
+                    foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
+                    {
+                        context.AddSource($"{fileName}.{file.Name}.g.cs", SourceText.From(file.Content, Encoding.UTF8));
                     }
                 }
-                catch (SweetMockException e)
-                {
-                    context.AddUnsupportedMethodDiagnostic(attributes, e.Message);
-                }
-                catch (Exception e)
-                {
-                    context.AddUnknownExceptionOccured(attributes, e.Message);
-                }
+            }
+            catch (SweetMockException e)
+            {
+                context.AddUnsupportedMethodDiagnostic(attributes, e.Message);
+            }
+            catch (Exception e)
+            {
+                context.AddUnknownExceptionOccured(attributes, e.Message);
+            }
         }
     }
 
@@ -115,9 +119,9 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         var firstGenericType = t.AttributeClass?.TypeArguments.FirstOrDefault();
         if (firstGenericType is INamedTypeSymbol symbol)
         {
-            return symbol?.IsGenericType == true ? symbol.OriginalDefinition : symbol;
-       }
-        //Console.WriteLine(firstGenericType);
+            return symbol.IsGenericType ? symbol.OriginalDefinition : symbol;
+        }
+
         return null;
     }
 

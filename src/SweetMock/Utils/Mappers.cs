@@ -15,26 +15,10 @@ public static class Mappers
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
     );
 
-    public static string ToCRef(this ISymbol symbol)
-    {
-        var prefix = symbol.Prefix();
+    public static string ToCRef(this ISymbol symbol) =>
+        symbol.ToDisplayString(Format).Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
 
-        return $"{symbol.ToDisplayString(Format)}".Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
-    }
-
-    private static string Prefix(this ISymbol symbol) =>
-        symbol switch
-        {
-            INamespaceSymbol => "N:",
-            ITypeSymbol => "T:",
-            IFieldSymbol => "F:",
-            IPropertySymbol => "P:",
-            IMethodSymbol => "M:",
-            IEventSymbol => "E:",
-            _ => ""
-        };
-
-    internal static string AccessibilityString(this ISymbol method) =>
+    private static string AccessibilityString(this ISymbol method) =>
         method.DeclaredAccessibility.AccessibilityString();
 
     private static string AccessibilityString(this Accessibility accessibility) =>
@@ -71,11 +55,9 @@ public static class Mappers
             parameters.AddRange(method.TypeArguments.Select(typeArgument => new ParameterInfo("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")")));
         }
 
-        var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} {p.Name}");
-        var typeList = parameters.ToString(p => $"{p.Type}");
         var nameList = parameters.ToString(p => $"{p.OutString}{p.Function}");
 
-        return new ParameterStrings (methodParameters, parameterList, typeList, nameList);
+        return new(methodParameters, nameList);
     }
 
     internal static OverwriteString Overwrites(this ISymbol symbol)

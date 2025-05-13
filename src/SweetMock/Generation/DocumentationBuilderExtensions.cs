@@ -1,6 +1,5 @@
 ﻿namespace SweetMock.Generation;
 
-using Builders;
 using Utils;
 
 internal static class DocumentationBuilderExtensions
@@ -34,7 +33,10 @@ internal static class DocumentationBuilderExtensions
     public static DocumentationBuilder Parameter(this DocumentationBuilder doc, string name, string description, bool condition = true)
     {
         if (condition)
+        {
             doc.Builder.Add($"/// <param name=\"{name}\">{description}</param>");
+        }
+
         return doc;
     }
 

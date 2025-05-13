@@ -1,6 +1,6 @@
 ﻿// ReSharper disable ArrangeTypeMemberModifiers
 
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.MemberTypeTests;
 
 public class StaticInterfaceMembersTest(ITestOutputHelper testOutputHelper)
 {

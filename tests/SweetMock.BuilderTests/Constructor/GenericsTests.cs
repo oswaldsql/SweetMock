@@ -1,7 +1,7 @@
 ﻿// ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace SweetMock.BuilderTests;
+namespace SweetMock.BuilderTests.Constructor;
 
 public class GenericsTests(ITestOutputHelper testOutputHelper)
 {
@@ -16,7 +16,7 @@ using SweetMock;
 using System;
 
 
-[Mock<SweetMock.BuilderTests.GenericsTests.IGeneric<int, int>>]
+[Mock<SweetMock.BuilderTests.Constructor.GenericsTests.IGeneric<int, int>>]
 public class TestClass{{
     public void Test() {{
        {""}
