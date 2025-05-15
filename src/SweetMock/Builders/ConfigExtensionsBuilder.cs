@@ -56,10 +56,10 @@ public static class ConfigExtensionsBuilder
 
         var args = string.Join(" , ", arguments);
 
-        result.Add($"public Config {name}({args})");
-        result.Add("{").Indent();
-        build(result);
-        result.Add("return this;");
-        result.Unindent().Add("}");
+        result.Add($"public Config {name}({args})")
+            .Add("{").Indent()
+            .Apply(build)
+            .Add("return this;")
+            .Unindent().Add("}");
     }
 }

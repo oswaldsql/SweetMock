@@ -28,7 +28,6 @@ internal static class ConstructorBuilder {
             {
                 var parameterList = constructor.Parameters.ToString(p => $"{p.Type} {p.Name}, ", "");
                 var baseArguments = constructor.Parameters.ToString(p => p.Name);
-                var argumentList = constructor.Parameters.ToString(p => $"{p.Name}, ", "");
 
                 var constructorSignature = $"internal protected {details.MockName}({parameterList}System.Action<Config>? config = null) : base({baseArguments})";
 
@@ -36,17 +35,6 @@ internal static class ConstructorBuilder {
                     .Add("var result = new Config(this, config);")
                     .BuildLogSegment(constructor)
                 );
-
-                builder.AddToConfig(config =>
-                {
-                    config.Documentation(doc => doc
-                        .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>")
-                        .Parameter("config", "Configuration object used to setup the mock.")
-                        .Returns($"New mock instance of <see cref=\"{details.Target.ToCRef()}\"/>")
-                    );
-
-                    config.Add($"public static {details.SourceName} CreateNewMock({parameterList}System.Action<Config>? config = null) => new {details.MockType}({argumentList}config);");
-                });
             }
         });
 
@@ -61,13 +49,5 @@ internal static class ConstructorBuilder {
                                    }
                                }
                                """);
-
-            builder.AddToConfig(config =>
-            {
-                config.Documentation(doc => doc
-                    .Summary($"Creates a new instance of <see cref=\"{details.Target.ToCRef()}\"/>"));
-
-                config.Add($"public static {details.SourceName} CreateNewMock(System.Action<Config>? config = null) => new {details.MockType}(config);");
-            });
         });
 }
