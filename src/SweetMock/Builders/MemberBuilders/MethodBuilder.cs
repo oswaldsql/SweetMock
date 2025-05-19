@@ -173,8 +173,8 @@ internal static class MethodBuilder
 
             result.AddLineBreak();
             result.Documentation(doc => doc
-                .Summary("Configures the mock to return a specific value disregarding the arguments.", $"Configures {seeString}")
-                .Parameter("returns", "The value that should be returned")
+                .Summary("Configures the mock to return a specific value, regardless of the provided arguments.", $"Use this to quickly define a fixed return result for {seeString}.")
+                .Parameter("returns", "The fixed value that should be returned by the mock.")
                 .Returns("The updated configuration object."));
 
             var returnType = candidate.First().ReturnType.ToString();
