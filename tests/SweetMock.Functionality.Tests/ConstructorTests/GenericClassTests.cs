@@ -9,6 +9,8 @@ public class GenericClassTests
         Action<Guid> trigger = null!;
         // Arrange & Act
         var callLog = new CallLog();
+        var options = new MockOptions() {Logger = callLog};
+        
         var sut = Mock.Repo<Guid>(config => config
             .SomeMethod(Guid.NewGuid())
             .SomeMethod([Guid.NewGuid(), Guid.NewGuid()])
@@ -26,17 +28,17 @@ public class GenericClassTests
             .SomeList(returns: [Guid.NewGuid()])
             .ActionMethod()
             .SomeMethodAsync(returns: Task.FromResult(Guid.NewGuid()))
-        
-            .LogCallsTo(callLog)
+            , options: options
         );
 
         sut.OutMethod(out var g);
+        sut.SomeMethod(Guid.NewGuid());
         
         trigger(Guid.NewGuid());
 
         Assert.NotNull(sut);
 
-        callLog.SomeMethod(args => args.input is Guid);
+        Assert.Single(options.Logger.SomeMethod(args => args.input is Guid));
     }
 
     public class Repo<T> where T : new()

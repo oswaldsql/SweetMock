@@ -86,27 +86,29 @@ public static class FactoryClassBuilder
             .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter("config", "Optional configuration for the mock object.")
+            .Parameter("options", "Options for the mock object.")
             .Returns($"The mock object for <see cref=\"{cref}\"/>.")
         );
 
         builder.AddLines($"""
                       internal static {details.SourceName} {symbolName}
-                          ({parameters}System.Action<{details.Namespace}.{details.MockType}.Config>? config = null)
-                          => new {details.Namespace}.{details.MockName}({names}config);
+                          ({parameters}System.Action<{details.Namespace}.{details.MockType}.Config>? config = null, MockOptions? options = null)
+                          => new {details.Namespace}.{details.MockName}({names}config, options);
                       """);
 
         builder.Documentation(doc => doc
             .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter($"config{symbolName}", "Outputs configuration for the mock object.")
+            .Parameter("options", "Options for the mock object.")
             .Returns($"The mock object for <see cref=\"{cref}\"/>."));
 
         builder.AddLines($$"""
                       internal static {{details.SourceName}} {{symbolName}}
-                          ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{symbolName}})
+                          ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{symbolName}}, MockOptions? options = null)
                           {
                              {{details.Namespace}}.{{details.MockName}}.Config outConfig = null!;
-                             var result = new {{details.Namespace}}.{{details.MockName}}({{names}}config => outConfig = config);
+                             var result = new {{details.Namespace}}.{{details.MockName}}({{names}}config => outConfig = config, options);
                              config{{symbolName}} = outConfig;
                              return result;
                           }
@@ -135,26 +137,28 @@ public static class FactoryClassBuilder
             .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter("config", "Optional configuration for the mock object.")
+            .Parameter("options", "Options for the mock object.")
             .Returns($"The mock object for <see cref=\"{cref}\"/>."));
 
         builder.AddLines($"""
                       internal static {details.SourceName} {details.Target.Name}<{types}>
-                          ({parameters}System.Action<{details.Namespace}.{details.MockType}.Config>? config = null) {constraints}
-                          => new {details.Namespace}.{details.MockType}({arguments}config);
+                          ({parameters}System.Action<{details.Namespace}.{details.MockType}.Config>? config = null, MockOptions? options = null) {constraints}
+                          => new {details.Namespace}.{details.MockType}({arguments}config, options);
                       """);
 
         builder.Documentation(doc => doc
             .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter("config", "Outputs configuration for the mock object.")
+            .Parameter("options", "Options for the mock object.")
             .Returns($"The mock object for <see cref=\"{cref}\"/>."));
 
         builder.AddLines($$"""
                       internal static {{details.SourceName}} {{details.Target.Name}}<{{types}}>
-                          ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{details.Target.Name}}) {{constraints}}
+                          ({{parameters}}out {{details.Namespace}}.{{details.MockType}}.Config config{{details.Target.Name}}, MockOptions? options = null) {{constraints}}
                           {
                              {{details.Namespace}}.{{details.MockType}}.Config outConfig = null!;
-                             var result = new {{details.Namespace}}.{{details.MockType}}({{arguments}}config => outConfig = config);
+                             var result = new {{details.Namespace}}.{{details.MockType}}({{arguments}}config => outConfig = config, options);
                              config{{details.Target.Name}} = outConfig;;
                              return result;
                           }

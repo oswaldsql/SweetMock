@@ -107,7 +107,8 @@ public class BasicMethodTests
     {
         // Arrange
         var logger = new CallLog();
-        var sut = Mock.IBasicMethods(c => c.ReturnWithParameters(_ =>  "test").LogCallsTo(logger));
+        var options = new MockOptions() {Logger = logger};
+        var sut = Mock.IBasicMethods(c => c.ReturnWithParameters(_ =>  "test"), options);
 
         // Act
         sut.ReturnWithParameters("dfa1");

@@ -8,21 +8,21 @@ public static class LogBuilder
         source.Region("Logging", builder =>
         {
             builder
-                .Add("private bool _hasLog = false;")
-                .Add("private SweetMock.CallLog _log = new SweetMock.CallLog();");
+//                .Add("private bool _hasLog = _log != null;")
+                .Add("private SweetMock.CallLog? _log = new SweetMock.CallLog();");
 
-            builder.AddToConfig(config =>
-            {
-                config.Documentation(doc => doc
-                    .Summary("Add logging to the configuration.")
-                    .Parameter("callLog", "CallLog to use for logging.")
-                    .Returns("The configuration object."));
-
-                config.AddConfigMethod("LogCallsTo", ["SweetMock.CallLog callLog"], codeBuilder => codeBuilder
-                    .Add("target._log = callLog;")
-                    .Add("target._hasLog = true;")
-                );
-            });
+//            builder.AddToConfig(config =>
+//            {
+//                config.Documentation(doc => doc
+//                    .Summary("Add logging to the configuration.")
+//                    .Parameter("callLog", "CallLog to use for logging.")
+//                    .Returns("The configuration object."));
+//
+//                config.AddConfigMethod("LogCallsTo", ["SweetMock.CallLog callLog"], codeBuilder => codeBuilder
+//                    .Add("target._log = callLog;")
+//                    .Add("target._hasLog = true;")
+//                );
+//            });
         });
 
     internal static CodeBuilder BuildLogSegment(this CodeBuilder builder, IMethodSymbol? symbol, bool skipParameters = false)
@@ -33,12 +33,12 @@ public static class LogBuilder
         {
             var LogArgumentsValue = symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(Argument);
             var logArgs = string.Join("", LogArgumentsValue);
-            builder.Scope("if(_hasLog)", b => b
+            builder.Scope("if(_log != null)", b => b
                 .Add($"_log.Add(\"{symbol}\", SweetMock.Arguments{logArgs});"));
         }
         else
         {
-            builder.Scope("if(_hasLog)", b => b
+            builder.Scope("if(_log != null)", b => b
                 .Add($"_log.Add(\"{symbol}\");"));
         }
 

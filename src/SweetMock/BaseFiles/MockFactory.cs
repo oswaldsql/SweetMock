@@ -1,4 +1,5 @@
-﻿namespace SweetMock;
+﻿#nullable enable
+namespace SweetMock;
 
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,12 @@ public class ValueBox<T>
 {
     public ValueBox(T value) =>
         this.Value = value;
-    public T Value { get; set; } = default(T);
+    public T Value { get; set; }
+}
+
+public class MockOptions
+{
+    public static MockOptions Default => new();
+
+    public CallLog? Logger { get; init; } = null;
 }

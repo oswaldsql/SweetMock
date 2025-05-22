@@ -23,12 +23,12 @@ public class AbstractClassesTest(ITestOutputHelper output)
     [Mock<AbstractClass>]
     public void PropertiesCanBeSetToReturnASpecificValue()
     {
-        CallLog callLog = new();
+        var options = new MockOptions();
         var sut = Mock.AbstractClass(config => config
-            .LogCallsTo(callLog)
             .Abstract("Abstract")
             .AbstractGetOnly("AbstractGetOnly")
-            .AbstractSetOnly("AbstractSetOnly"));
+            .AbstractSetOnly("AbstractSetOnly"),
+            options);
 
         sut.Abstract += "_Test";
         var actualGet = sut.AbstractGetOnly ;
@@ -96,7 +96,6 @@ public class AbstractClassesTest(ITestOutputHelper output)
         Assert.Contains("Equals", memberInfos);
         Assert.Contains("GetHashCode", memberInfos);
         Assert.Contains("GetType", memberInfos);
-        Assert.Contains("LogCallsTo", memberInfos);
         Assert.Contains("ToString", memberInfos);
         Assert.Contains("Virtual", memberInfos);
         Assert.Contains("VirtualGetOnly", memberInfos);
