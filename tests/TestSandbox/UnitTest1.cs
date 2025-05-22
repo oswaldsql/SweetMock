@@ -8,8 +8,7 @@ public class UnitTest1
     [Mock<ITestInterface>]
     public void Test1()
     {
-        var options = new MockOptions();
-        // new MockOptions() { Logger = new CallLog(), LoggerEnabled = true};
+        var options = new MockOptions() {Logger = new()};
         
         var sut = Mock.ITestInterface(
             config => config.Test(),

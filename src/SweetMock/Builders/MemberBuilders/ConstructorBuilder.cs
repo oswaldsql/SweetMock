@@ -33,7 +33,6 @@ internal static class ConstructorBuilder {
 
                 builder.Scope(constructorSignature, ctor => ctor
                     .Add("_log = options?.Logger;")
-                    //.Add("_hasLog = options?.Logger != null;")
                     .Add("var result = new Config(this, config);")
                     .BuildLogSegment(constructor)
                 );
@@ -46,7 +45,6 @@ internal static class ConstructorBuilder {
             builder.AddLines($$"""
                                internal protected MockOf_{{details.Target.Name}}(System.Action<Config>? config = null, SweetMock.MockOptions? options = null) {
                                    _log = options?.Logger;
-                                   //_hasLog = options?.Logger != null;
                                    var result = new Config(this, config);
                                    if(_log != null) {
                                       _log.Add("{{details.Target}}.{{details.Target.Name}}()");
