@@ -1,4 +1,10 @@
 ﻿<Solution>
+  <Folder Name="/demo/">
+    <Project Path="demo\SweetMock.Demo\SweetMock.Demo.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/doc/">
+    <Project Path="doc\SweetMock.Documentation.csproj" Type="Classic C#" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src\SweetMock\SweetMock.csproj" Type="Classic C#" />
   </Folder>
