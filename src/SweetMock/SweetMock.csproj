@@ -12,14 +12,14 @@
     <Version>1.0.0</Version>
     <Title>Sweet mock</Title>
     <Authors>Lasse Sjørup</Authors>
-    <Description>A minimalistic source generator for creating mocks for testing is a tool that automatically generates mock implementations of interfaces or classes. This helps in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
+    <Description>Source generator for creating mocks for testing. SweetMock is a tool that automatically generates mock implementations of interfaces or classes helping in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
     <Copyright>Copyright (c) 2025 Lasse Sjørup</Copyright>
     <PackageProjectUrl>https://github.com/oswaldsql/SweetMock</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
-    <PackageTags>mocking, unit-testing, TDD, mock-objects</PackageTags>
-    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageTags>mocking, unit-testing, source-generator, TDD, mocks, testing-util</PackageTags>
+    <PackageIcon>Icon.png</PackageIcon>
     <PackageReleaseNotes>Renaming and cleanup of the MiniMock project.</PackageReleaseNotes>
     <AssemblyVersion>1.0.0</AssemblyVersion>
 
@@ -45,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\Icon.jpg" Pack="true" Visible="false" PackagePath=""/>
+    <None Include="..\..\Icon.png" Pack="true" Visible="false" PackagePath=""/>
     <None Include="..\..\LICENSE" Pack="true" PackagePath=""/>
     <None Include="..\..\README.md" Pack="true" PackagePath=""/>
   </ItemGroup>

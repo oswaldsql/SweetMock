@@ -23,6 +23,9 @@ public class ValueBox<T>
 
 public class MockOptions
 {
+    public MockOptions(CallLog? logger = null) =>
+        this.Logger = logger;
+
     public static MockOptions Default => new();
 
     public CallLog? Logger { get; init; } = null;

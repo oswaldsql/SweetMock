@@ -29,7 +29,7 @@ public static class MockDetailsExtensions
     {
         if (symbol is not (IMethodSymbol or IPropertySymbol or IEventSymbol)) return false;
         if (symbol.IsSealed || symbol.IsStatic) return false;
-        if (symbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Protected)) return false;
+        if (symbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Protected or Accessibility.Internal)) return false;
         if (symbol is IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.EventAdd or MethodKind.EventRaise or MethodKind.EventRemove }) return false;
         if (symbol is IMethodSymbol { MethodKind: MethodKind.Constructor }) return true;
         if (symbol.IsAbstract || symbol.IsVirtual) return true;

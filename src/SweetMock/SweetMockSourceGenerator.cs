@@ -105,6 +105,12 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                 return false;
             }
 
+            if (target.TypeKind == TypeKind.Class && target.Constructors.All(t => t.DeclaredAccessibility == Accessibility.Private))
+            {
+                context.AddUnsupportedTargetDiagnostic(attributes, "Mocking classes must have at least one accessible constructor.");
+                return false;
+            }
+
             if (target.GetMembers().Length == 0)
             {
                 context.AddUnintendedTargetDiagnostic(attributes, "Mocking target contains no members.");

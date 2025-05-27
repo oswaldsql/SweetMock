@@ -40,16 +40,10 @@ internal static class ConstructorBuilder {
         });
 
     private static void BuildEmptyConstructor(CodeBuilder classScope, MockDetails details) =>
-        classScope.Region("Constructors", builder =>
-        {
-            builder.AddLines($$"""
-                               internal protected MockOf_{{details.Target.Name}}(System.Action<Config>? config = null, SweetMock.MockOptions? options = null) {
-                                   _log = options?.Logger;
-                                   var result = new Config(this, config);
-                                   if(_log != null) {
-                                      _log.Add("{{details.Target}}.{{details.Target.Name}}()");
-                                   }
-                               }
-                               """);
-        });
+        classScope.Region("Constructors", builder => builder
+            .Scope($"internal protected MockOf_{details.Target.Name}(System.Action<Config>? config = null, SweetMock.MockOptions? options = null)", methodScope => methodScope
+                .Add("_log = options?.Logger;")
+                .Scope("if(_log != null)", b2 => b2
+                    .Add($"_log.Add(\"{details.Target}.{details.Target.Name}()\");"))
+                .Add("var result = new Config(this, config);")));
 }

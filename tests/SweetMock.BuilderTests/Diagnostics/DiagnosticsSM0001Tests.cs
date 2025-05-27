@@ -137,6 +137,110 @@ public class DiagnosticsSm0001Tests(ITestOutputHelper testOutputHelper) {
         Assert.Equal("Mock<SweetMock.BuilderTests.Diagnostics.DiagnosticsSm0001Tests.MyClass[]>", actual.Location.GetCode());
     }
 
+    [Fact]
+    public void ClassWithOnlyPrivateConstructorTest()
+    {
+        var source = Build.TestClass<ClassWithOnlyPrivateConstructor>();
+
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        testOutputHelper.DumpResult(generate);
+
+        var diagnostics = generate.GetErrors();
+
+        var actual = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
+        Assert.Equal("SM0001", actual.Id);
+        Assert.Equal("Mocking classes must have at least one accessible constructor.", actual.GetMessage());
+    }
+
+    [Fact]
+    public void ClassWithOnlyPrivateConstructorTest2()
+    {
+        var source = Build.TestClass("UnintendedTarget", "", "public class UnintendedTarget{private UnintendedTarget(){}}");
+
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        testOutputHelper.DumpResult(generate);
+
+        var diagnostics = generate.GetErrors();
+
+        var actual = Assert.Single(diagnostics);
+        Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
+        Assert.Equal("SM0001", actual.Id);
+        Assert.Equal("Mocking classes must have at least one accessible constructor.", actual.GetMessage());
+    }
+
+    
+    
+    /*
+     * public class UnintendedTarget
+{
+    private UnintendedTarget()
+    {
+
+    }
+}
+
+[Mock<UnintendedTarget>]
+public class Test{}
+     */
+    
+    
+    /// <summary>
+    ///     teste
+    /// </summary>
+    public class MultiCtorClass
+    {
+        /// <summary>
+        ///     Empty ctor
+        /// </summary>
+        public MultiCtorClass()
+        {
+        }
+
+
+        /// <summary>
+        ///     one parameter
+        /// </summary>
+        /// <param name="name">Name to set</param>
+        public MultiCtorClass(string name) => this.Name = name;
+
+        /// <summary>
+        ///     Two Parameters
+        /// </summary>
+        /// <param name="name">Name to set</param>
+        /// <param name="age">Age to set</param>
+        public MultiCtorClass(string name, int age)
+        {
+            this.Name = name;
+            this.Age = age;
+        }
+
+        public string? Name { get; }
+        public int Age { get; }
+    }
+
+    public interface ISupportedStaticInterfaceMembers
+    {
+        static ISupportedStaticInterfaceMembers() => StaticProperty = "Set from ctor";
+
+        static string StaticProperty { get; set; }
+    }
+
+    public abstract class AbstractClass
+    {
+    }
+
+    public class ClassWithOnlyPrivateConstructor
+    {
+        private string Name { get; set; }
+
+        private ClassWithOnlyPrivateConstructor()
+        {
+            Name = "test";
+        }
+    }
     
     public class MyClass { }
     
