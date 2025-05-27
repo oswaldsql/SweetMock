@@ -20,12 +20,12 @@
     <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
     <PackageTags>mocking, unit-testing, TDD, mock-objects</PackageTags>
     <PackageIcon>Icon.jpg</PackageIcon>
-    <PackageReleaseNotes>Initial version of SweetMock supporting Interfaces and a subset of class mocking.</PackageReleaseNotes>
+    <PackageReleaseNotes>Renaming and cleanup of the MiniMock project.</PackageReleaseNotes>
     <AssemblyVersion>1.0.0</AssemblyVersion>
 
     <IncludeBuildOutput>false</IncludeBuildOutput>
 
-    <AnalyzerRoslynVersion>4.12.0</AnalyzerRoslynVersion>
+    <AnalyzerRoslynVersion>4.14.0</AnalyzerRoslynVersion>
     <DevelopmentDependency>true</DevelopmentDependency>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
@@ -33,11 +33,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
   </ItemGroup>
 
   <ItemGroup>
