@@ -73,27 +73,27 @@ public class ValueTaskMethodTests
     {
         // Arrange
         var sut = Mock.IValueTasks(t => t.SimpleTask(() => ValueTask.FromException(new Exception())));
-
+ 
         // ACT
-        var actual = Record.ExceptionAsync(() => sut.SimpleTask());
-
+        var actual = Record.ExceptionAsync(async () => await sut.SimpleTask());
+ 
         // Assert
         Assert.IsType<ValueTask<Exception>>(actual);
     }
-
+ 
     [Fact]
     public async Task SimpleValueTaskWithoutParametersCanBeCancled()
     {
         // Arrange
         var sut = Mock.IValueTasks(t => t.SimpleTask(() => ValueTask.FromCanceled(new CancellationToken(true))));
-
+ 
         // ACT
-        var actual = await Record.ExceptionAsync(() => sut.SimpleTask());
-
+        var actual = await Record.ExceptionAsync(async () => await sut.SimpleTask());
+ 
         // Assert
         Assert.IsType<TaskCanceledException>(actual);
     }
-
+ 
     [Fact]
     public async Task SimpleValueTaskShouldHaveAllTheExpectedHelperMethods()
     {

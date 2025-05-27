@@ -43,7 +43,7 @@ public class GenericClassTests
 
     public class Repo<T> where T : new()
     {
-        public virtual T SomeProperty { get; set; }
+        public virtual T? SomeProperty { get; set; }
 
         public virtual T this[string key] { get => new(); set { } }
 
@@ -56,7 +56,7 @@ public class GenericClassTests
 
         public virtual IEnumerable<T> SomeList() => [];
 
-        public virtual void ActionMethod(Action<T> action) => action(default);
+        public virtual void ActionMethod(Action<T> action) => action(default!);
 
         public virtual Task<T> SomeMethodAsync() => Task.FromResult(new T());
         
