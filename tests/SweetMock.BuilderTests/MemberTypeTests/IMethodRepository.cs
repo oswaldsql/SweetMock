@@ -1,2 +1,0 @@
-﻿namespace SweetMock.BuilderTests.MemberTypeTests;
-

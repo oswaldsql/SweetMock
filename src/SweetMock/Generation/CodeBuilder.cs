@@ -45,6 +45,12 @@ internal class CodeBuilder
         return this;
     }
 
+    public CodeBuilder AddUnindented(string line)
+    {
+        this.result.AppendLine(line);
+        return this;
+    }
+
     public CodeBuilder AddLines(string text)
     {
         var strings = text.Split(["\r\n", "\n"], StringSplitOptions.None);

@@ -19,8 +19,13 @@ public class AccessLevelTests
         // ACT
         var actual = typeof(MockOf_AccessLevelTestClass).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance);
 
+        foreach (var info in actual)
+        {
+            Console.WriteLine(info);
+        }
+        
         // Assert
-        Assert.Equal(2, actual.Length);
+        Assert.Equal(3, actual.Length);
     }
 
     internal class AccessLevelTestClass

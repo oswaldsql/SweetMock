@@ -6,6 +6,7 @@ public class UnitTest1
 {
     [Fact]
     [Mock<ITestInterface>]
+    [Mock<MyClass>]
     public void Test1()
     {
         var options = new MockOptions() {Logger = new()};
@@ -15,6 +16,8 @@ public class UnitTest1
             options: options
             );
 
+        //Mock.MyClass(config => config)
+        
         sut.Test();
         
         Assert.Single(options.Logger.Test());
@@ -24,5 +27,10 @@ public class UnitTest1
     {
         void Test();
         
+    }
+    
+    internal class MyClass
+    {
+        internal virtual string Name() => "Test";
     }
 }

@@ -19,7 +19,7 @@ public class GenericClassTests
             .SomeProperty(Guid.NewGuid())
             .SomeProperty(Guid.NewGuid, _ => { })
             .Indexer(new())
-            .Indexer(s => Guid.NewGuid(), (s, guid) => { })
+            .Indexer(s => Guid.NewGuid(), (s, guid) => Guid.Parse(s))
             .SomeEvent(Guid.NewGuid())
             .SomeEvent(out trigger)
             .OutMethod(throws: new ArgumentException())

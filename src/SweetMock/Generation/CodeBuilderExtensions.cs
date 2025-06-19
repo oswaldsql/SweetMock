@@ -18,9 +18,10 @@ internal static class CodeBuilderExtensions
 
     public static CodeBuilder Region(this CodeBuilder source, string region, Action<CodeBuilder> action) =>
         source
-            .Add("#region " + region)
+            .AddUnindented("#region " + region)
             .Apply(action)
-            .Add("#endregion");
+            .AddUnindented("#endregion")
+            .AddLineBreak();
 
     public static CodeBuilder Scope(this CodeBuilder source, string prefix, Action<CodeBuilder> action) =>
         source

@@ -36,4 +36,20 @@ public static class MockDetailsExtensions
 
         return false;
     }
+
+    internal static bool IsReturningGenericTask(this IMethodSymbol method) =>
+        method.ReturnType.ToString().StartsWith("System.Threading.Tasks.Task<") &&
+        ((INamedTypeSymbol)method.ReturnType).TypeArguments.Length > 0;
+
+    internal static bool IsReturningGenericValueTask(this IMethodSymbol method) =>
+        method.ReturnType.ToString().StartsWith("System.Threading.Tasks.ValueTask<") &&
+        ((INamedTypeSymbol)method.ReturnType).TypeArguments.Length > 0;
+
+    internal static bool IsGenericTask(this ITypeSymbol type) =>
+        type.ToString().StartsWith("System.Threading.Tasks.Task<") &&
+        ((INamedTypeSymbol)type).TypeArguments.Length > 0;
+
+    internal static bool IsGenericValueTask(this ITypeSymbol type) =>
+        type.ToString().StartsWith("System.Threading.Tasks.ValueTask<") &&
+        ((INamedTypeSymbol)type).TypeArguments.Length > 0;
 }

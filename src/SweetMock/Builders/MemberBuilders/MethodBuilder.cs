@@ -177,13 +177,16 @@ internal static class MethodBuilder
                 .Parameter("returns", "The fixed value that should be returned by the mock.")
                 .Returns("The updated configuration object."));
 
-            var returnType = candidate.First().ReturnType.ToString();
-            if (candidate.First().ReturnType.TypeKind == TypeKind.TypeParameter && candidate.First().ReturnType.ContainingSymbol is IMethodSymbol)
+            var first = candidate.First();
+            var firstReturnType = first.ReturnType;
+
+            var returnType = firstReturnType.ToString();
+            if (firstReturnType.TypeKind == TypeKind.TypeParameter && firstReturnType.ContainingSymbol is IMethodSymbol)
             {
                 returnType = "System.Object";
             }
 
-            result.AddConfigExtension(mock, candidate.First(), [returnType + " returns"], builder =>
+            result.AddConfigExtension(mock, first, [returnType + " returns"], builder =>
             {
                 foreach (var m in candidate)
                 {
@@ -194,6 +197,41 @@ internal static class MethodBuilder
                     builder.Add($"this.{m.Name}(call: ({parameterList}) => returns);");
                 }
             });
+
+            var isGenericTask = firstReturnType.IsGenericTask();
+            var isGenericValueTask = firstReturnType.IsGenericValueTask();
+            if (isGenericTask || isGenericValueTask)
+            {
+                var genericType = ((INamedTypeSymbol)firstReturnType).TypeArguments.First();
+
+                result.AddLineBreak();
+                result.Documentation(doc => doc
+                    .Summary("Configures the mock to return a specific value as a <see cref=\"System.Threading.Tasks.Task{T}\"/>, regardless of the provided arguments.", $"Use this to quickly define a fixed return result for {seeString}.")
+                    .Parameter("returns", $"The fixed <see cref=\"{genericType.ToCRef()}\"/> that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
+                    .Returns("The updated configuration object."));
+
+                result.AddConfigExtension(mock, first, [genericType + " returns"], builder =>
+                {
+                    foreach (var m in candidate)
+                    {
+                        var parameters = GetParameterInfos(m);
+
+                        var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
+                        if (isGenericTask)
+                            builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.FromResult(returns));");
+
+                        if (isGenericValueTask)
+                            builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.FromResult(returns));");
+                    }
+                });
+            }
+
+//            var str = returnType switch
+//            {
+//                "System.Threading.Tasks.Task" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
+//                "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
+//                _ => ""
+//            };
         }
     }
 
