@@ -41,6 +41,7 @@ All mockable members are available through a **fluent interface** with **Intelli
 
 ![documentation](Documentation.png)
 
-All code required to run SweetMock is **source generated** within your test project and has **no runtime dependencies**. You can **inspect**, **step into**, and **debug** the generated code which also allows for **security** and **vulnerability 
-scanning** of the generated code.
+## Please note
 
+- Any member (method, property, indexer) not explicitly configured will throw an `InvalidOperationException` with a clear message.
+- This is by design to ensure strictness and avoid unintentional test behavior.

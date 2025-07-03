@@ -60,9 +60,9 @@ public class GenericClassTests
 
         public virtual Task<T> SomeMethodAsync() => Task.FromResult(new T());
         
-        public virtual event EventHandler<Guid>? SomeEvent;
+        public virtual event EventHandler<T>? SomeEvent;
 
-        protected virtual void OnSomeEvent(Guid e)
+        protected virtual void OnSomeEvent(T e)
         {
             SomeEvent?.Invoke(this, e);
         }

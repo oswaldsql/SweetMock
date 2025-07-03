@@ -1,16 +1,16 @@
 ﻿<Solution>
   <Folder Name="/demo/">
-    <Project Path="demo\SweetMock.Demo\SweetMock.Demo.csproj" Type="Classic C#" />
+    <Project Path="demo\SweetMock.Demo\SweetMock.Demo.csproj" />
   </Folder>
   <Folder Name="/doc/">
-    <Project Path="doc\SweetMock.Documentation.csproj" Type="Classic C#" />
+    <Project Path="doc\SweetMock.Documentation.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src\SweetMock\SweetMock.csproj" Type="Classic C#" />
+    <Project Path="src\SweetMock\SweetMock.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests\SweetMock.BuilderTests\SweetMock.BuilderTests.csproj" Type="Classic C#" />
-    <Project Path="tests\SweetMock.Functionality.Tests\SweetMock.Functionality.Tests.csproj" Type="Classic C#" />
-    <Project Path="tests\TestSandbox\TestSandbox.csproj" Type="Classic C#" />
+    <Project Path="tests\SweetMock.BuilderTests\SweetMock.BuilderTests.csproj" />
+    <Project Path="tests\SweetMock.Functionality.Tests\SweetMock.Functionality.Tests.csproj" />
+    <Project Path="tests\TestSandbox\TestSandbox.csproj" />
   </Folder>
 </Solution>

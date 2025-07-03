@@ -81,6 +81,6 @@ public class WicketIntendTests(ITestOutputHelper testOutputHelper)
     {
         public string this[string key] { get; set; }
 
-        public string Indexer(System.Func<string, string> get, System.Action<string, string> set);
+        public string Indexer(Func<string, string> get, Action<string, string> set);
     }
 }

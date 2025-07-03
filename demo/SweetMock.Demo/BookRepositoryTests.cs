@@ -18,12 +18,12 @@ public class BookRepositoryTests
         var mockUser = Mock.IUser(config => config.Id(userGuid));
         var basket1 = Mock.IBasket(c => c.Add());
         var basketRepo = Mock.IBasketRepo(config => config
-            .TryGetUserBasket((Guid id, out IBasket basket, CancellationToken token) =>
+            .TryGetUserBasket((Guid _, out IBasket basket, CancellationToken _) =>
             {
                 basket = basket1;
                 return Task.FromResult(true);
             })
-            .Save()
+            .Save(), new(logger)
         );
         var bookRepo = Mock.IBookRepository(config => config
             .IsAvailable(returns: true)

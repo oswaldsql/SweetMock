@@ -22,7 +22,9 @@ public class BookRepositoryTests
 
 Install the package via NuGet:
 
-shell dotnet add package SweetMock
+```
+dotnet add package SweetMock
+```
 
 ## Features
 
@@ -44,7 +46,7 @@ Simple example of how to use SweetMock:
 
 ## License
 
-This project is licensed under [LICENSE] - see the LICENSE file for details.
+This project is licensed under [MIT License](LICENSE)
 
 ## Project Links
 

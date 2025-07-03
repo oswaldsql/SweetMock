@@ -32,9 +32,7 @@ public class ParameterLessTests
 
     public class ParameterLessClass
     {
-        public ParameterLessClass() => this.CtorIsCalled = true;
-
-        public bool CtorIsCalled { get; set; }
+        public bool CtorIsCalled { get; set; } = true;
 
         public bool ImplicitCtorIsCalled { get; set; } = true;
     }

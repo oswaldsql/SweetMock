@@ -16,7 +16,7 @@ public class UnitTest1
             options: options
             );
 
-        //Mock.MyClass(config => config)
+        Mock.MyClass(config => config.Name("test"));
         
         sut.Test();
         
