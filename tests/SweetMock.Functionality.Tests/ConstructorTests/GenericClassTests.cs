@@ -19,7 +19,7 @@ public class GenericClassTests
             .SomeProperty(Guid.NewGuid())
             .SomeProperty(Guid.NewGuid, _ => { })
             .Indexer(new())
-            .Indexer(s => Guid.NewGuid(), (s, guid) => Guid.Parse(s))
+            .Indexer(_ => Guid.NewGuid(), (s, _) => Guid.Parse(s))
             .SomeEvent(Guid.NewGuid())
             .SomeEvent(out trigger)
             .OutMethod(throws: new ArgumentException())
@@ -31,7 +31,7 @@ public class GenericClassTests
             , options: options
         );
 
-        sut.OutMethod(out var g);
+        sut.OutMethod(out _);
         sut.SomeMethod(Guid.NewGuid());
         
         trigger(Guid.NewGuid());

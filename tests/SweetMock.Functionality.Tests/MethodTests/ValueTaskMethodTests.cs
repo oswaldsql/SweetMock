@@ -182,3 +182,29 @@ public class ValueTaskMethodTests
         ValueTask<string> TaskWithResultWithArgs(string name, CancellationToken ct = default);
     }
 }
+
+[Mock<IArrayParameters>]
+public class ArrayParameterTests
+{
+    [Fact]
+    public void METHOD()
+    {
+        // Arrange
+        string[] readOnlySpan = ["1", "2"];
+        var sut = Mock.IArrayParameters(config => config
+            .RevertArray(returnAsTasks: readOnlySpan)
+            .RevertArray2(returns: readOnlySpan)
+        );
+
+        // ACT
+
+        // Assert 
+
+    }
+    
+    public interface IArrayParameters
+    {
+        Task<string[]> RevertArray(string[] array);        
+        string[] RevertArray2(string[] array);
+    }
+}

@@ -207,10 +207,10 @@ internal static class MethodBuilder
                 result.AddLineBreak();
                 result.Documentation(doc => doc
                     .Summary("Configures the mock to return a specific value as a <see cref=\"System.Threading.Tasks.Task{T}\"/>, regardless of the provided arguments.", $"Use this to quickly define a fixed return result for {seeString}.")
-                    .Parameter("returns", $"The fixed <see cref=\"{genericType.ToCRef()}\"/> that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
+                    .Parameter("returnAsTasks", $"The fixed <see cref=\"{genericType.ToCRef()}\"/> that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
                     .Returns("The updated configuration object."));
 
-                result.AddConfigExtension(mock, first, [genericType + " returns"], builder =>
+                result.AddConfigExtension(mock, first, [genericType + " returnAsTasks"], builder =>
                 {
                     foreach (var m in candidate)
                     {
@@ -218,10 +218,10 @@ internal static class MethodBuilder
 
                         var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
                         if (isGenericTask)
-                            builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.FromResult(returns));");
+                            builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.FromResult(returnAsTasks));");
 
                         if (isGenericValueTask)
-                            builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.FromResult(returns));");
+                            builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.FromResult(returnAsTasks));");
                     }
                 });
             }

@@ -1,4 +1,4 @@
-﻿namespace SweetMock.BuilderTests.MemberTypeTests;
+﻿namespace SweetMock.BuilderTests.WicketIntent;
 
 public class WicketIntendTests(ITestOutputHelper testOutputHelper)
 {
@@ -56,7 +56,61 @@ public class WicketIntendTests(ITestOutputHelper testOutputHelper)
         // Assert
         testOutputHelper.DumpResult(generate);
         Assert.Empty(generate.GetErrors());
-    }  
+    }
+
+    [Fact]
+    public void NamespaceAndClassMustBeAbleToHaveSameName()
+    {
+        // Arrange
+        var source = """
+
+                     namespace OverlappingNamespaceAndClass;
+
+                     using SweetMock;
+                     using System;
+
+                     public class OverlappingNamespaceAndClass { }
+
+                     public interface IInterface { }
+
+                     [Mock<IInterface>]
+                     public class OverlappingNamespaceAndClassTests { }
+
+                     """;
+
+        // ACT
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        // Assert
+        testOutputHelper.DumpResult(generate);
+        Assert.Empty(generate.GetErrors());
+    }
+    
+    [Fact]
+    public void NamespaceAndClassMustBeAbleToHaveSameName2()
+    {
+        // Arrange
+        var source = """
+
+                     namespace OverlappingNamespaceAndClass;
+
+                     using SweetMock;
+                     using System;
+
+                     public class OverlappingNamespaceAndClass { }
+
+                     [Mock<OverlappingNamespaceAndClass>]
+                     public class OverlappingNamespaceAndClassTests { }
+
+                     """;
+
+        // ACT
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        // Assert
+        testOutputHelper.DumpResult(generate);
+        Assert.Empty(generate.GetErrors());
+    }
     
     internal interface IMembersWhereReturnAndTaskReturnOverlap
     {
