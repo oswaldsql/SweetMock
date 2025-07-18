@@ -41,15 +41,13 @@ public static class FixtureBuilder
 
                         foreach (var parameter in targetCtor.Parameters)
                         {
-                            classScope.Add($"private readonly {parameter.Type.ToDisplayString()} _{parameter.Name};")
-                                .Add($"// {parameter.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}")
-                                ;
+                            classScope.Add($"private readonly {parameter.Type.ToDisplayString()} _{parameter.Name};");
                         }
                         classScope.AddLineBreak();
 
                         classScope
                             .Documentation(d => d.Summary("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.","This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests."))
-                            .Add("public SweetMock.CallLog CallLog{get; private set;}")
+                            .Add("public SweetMock.CallLog Log{get; private set;}")
                             .AddLineBreak();
 
                         classScope
@@ -59,12 +57,12 @@ public static class FixtureBuilder
                             )
                             .Scope($"public FixtureFor_{s.Name}(System.Action<FixtureConfig>? config = null)", ctorScope =>
                         {
-                            ctorScope.Add("CallLog = new SweetMock.CallLog();");
+                            ctorScope.Add("Log = new SweetMock.CallLog();");
 
                             foreach (var parameter in targetCtor.Parameters)
                             {
                                 ctorScope
-                                    .Add($"_{parameter.Name} = SweetMock.Mock.{parameter.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}(out var temp_{parameter.Name}, new SweetMock.MockOptions(CallLog));");
+                                    .Add($"_{parameter.Name} = SweetMock.Mock.{parameter.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}(out var temp_{parameter.Name}, new SweetMock.MockOptions(Log));");
                             }
 
                             var parametersString = string.Join(", ", targetCtor.Parameters.Select(t => "temp_" + t.Name));

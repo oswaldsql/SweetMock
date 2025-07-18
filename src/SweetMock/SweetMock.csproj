@@ -9,7 +9,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>SweetMock</RootNamespace>
     <PackageId>SweetMock</PackageId>
-    <Version>0.9.10</Version>
+    <Version>0.9.12</Version>
     <Title>Sweet mock</Title>
     <Authors>Lasse Sjørup</Authors>
     <Description>Source generator for creating mocks for testing. SweetMock is a tool that automatically generates mock implementations of interfaces or classes helping in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
@@ -21,7 +21,7 @@
     <PackageTags>mocking, unit-testing, source-generator, TDD, mocks, testing-util</PackageTags>
     <PackageIcon>Icon.png</PackageIcon>
     <PackageReleaseNotes>Renaming and cleanup of the MiniMock project.</PackageReleaseNotes>
-    <AssemblyVersion>0.9.10</AssemblyVersion>
+    <AssemblyVersion>0.9.12</AssemblyVersion>
 
     <AnalyzerRoslynVersion>4.14.0</AnalyzerRoslynVersion>
     <DevelopmentDependency>true</DevelopmentDependency>

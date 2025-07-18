@@ -25,7 +25,7 @@ public class Tests
         });
         var sut = fixture.CreateSut();
         
-        foreach (var callLogItem in fixture.CallLog.GetLogs())
+        foreach (var callLogItem in fixture.Log.GetLogs())
         {
             Console.WriteLine(callLogItem);
         }

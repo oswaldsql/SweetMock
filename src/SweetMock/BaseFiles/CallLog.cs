@@ -89,14 +89,14 @@ namespace SweetMock {
 
         public IEnumerable<CallLogItem> GetLogs() => this.logs.AsEnumerable();
 
-        public IEnumerable<TypedCallLogItem<T>> Matching<T>(string signature, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
+        public IEnumerable<T> Matching<T>(string signature, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
             this.logs.Where(t => t.MethodSignature == signature)
-                .Select(t => new TypedCallLogItem<T>(t))
-                .Where(t => predicate == null || predicate(t.TypedArguments));
+                .Select(t => new TypedCallLogItem<T>(t).TypedArguments)
+                .Where(t => predicate == null || predicate(t));
 
-        public IEnumerable<TypedCallLogItem<T>> Matching<T>(HashSet<string> signatures, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
+        public IEnumerable<T> Matching<T>(HashSet<string> signatures, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
             this.logs.Where(t => signatures.Contains(t.MethodSignature!))
-                .Select(t => new TypedCallLogItem<T>(t))
-                .Where(t => predicate == null || predicate(t.TypedArguments));
+                .Select(t => new TypedCallLogItem<T>(t).TypedArguments)
+                .Where(t => predicate == null || predicate(t));
     }
 }

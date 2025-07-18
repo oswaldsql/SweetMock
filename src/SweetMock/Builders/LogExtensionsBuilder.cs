@@ -86,15 +86,19 @@ internal static class LogExtensionsBuilder
             return result;
         }
 
-        RenderArgumentClass(result, methodSymbol, $"{GetMethodName(methodSymbol)}_Args", ignoreArguments);
+        var methodName = GetMethodName(methodSymbol);
+        var argsClass = $"{methodName}_Args";
+        var predicateName = $"{methodSymbol.ContainingSymbol.Name}_{methodName}_Predicate";
+
+        RenderArgumentClass(result, methodSymbol, argsClass, ignoreArguments);
 
         BuildPredicateDocumentation(result, [methodSymbol], target);
 
         return result.AddLines($"""
-                    public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{$"{GetMethodName(methodSymbol)}_Args"}>> {GetMethodName(methodSymbol)}(this SweetMock.CallLog log, Func<{$"{GetMethodName(methodSymbol)}_Args"}, bool>? predicate = null) =>
-                       log.Matching<{$"{GetMethodName(methodSymbol)}_Args"}>("{methodSymbol}", predicate);
+                                public static System.Collections.Generic.IEnumerable<{argsClass}> {methodName}(this SweetMock.CallLog log, Func<{argsClass}, bool>? {predicateName} = null) =>
+                                   log.Matching<{argsClass}>("{methodSymbol}", {predicateName});
 
-                    """);
+                                """);
     }
 
     private static string GetMethodName(IMethodSymbol methodSymbol) =>
@@ -119,8 +123,8 @@ internal static class LogExtensionsBuilder
         }
 
         var propertyName = GetMethodName(symbols[0]);
-
         var argsClass = $"{propertyName}_Args";
+        var predicateName = $"{symbols[0].ContainingSymbol.Name}_{propertyName}_Predicate";
 
         RenderArgumentClass(result, symbols, argsClass);
 
@@ -130,9 +134,9 @@ internal static class LogExtensionsBuilder
 
         BuildPredicateDocumentation(result, symbols, symbols[0]);
 
-        result.AddLines($$"""
-                     public static System.Collections.Generic.IEnumerable<SweetMock.TypedCallLogItem<{{argsClass}}>> {{propertyName}}(this SweetMock.CallLog log, Func<{{argsClass}}, bool>? predicate = null) =>
-                        log.Matching<{{argsClass}}>({{propertyName}}_Signatures, predicate);
+        result.AddLines($"""
+                     public static System.Collections.Generic.IEnumerable<{argsClass}> {propertyName}(this SweetMock.CallLog log, Func<{argsClass}, bool>? {predicateName} = null) =>
+                        log.Matching<{argsClass}>({propertyName}_Signatures, {predicateName});
 
                      """);
     }

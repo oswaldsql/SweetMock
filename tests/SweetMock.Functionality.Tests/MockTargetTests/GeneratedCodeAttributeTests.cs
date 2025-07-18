@@ -5,7 +5,7 @@ using System.Reflection;
 
 public class GeneratedCodeAttributeTests
 {
-    private const string CurrentVersion = "0.9.10.0";
+    private const string CurrentVersion = "0.9.12.0";
 
     [Fact]
     public void MockAttributeShouldHaveAttribute()
