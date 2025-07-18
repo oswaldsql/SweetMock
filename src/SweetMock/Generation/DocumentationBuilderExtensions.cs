@@ -4,7 +4,7 @@ using Utils;
 
 internal static class DocumentationBuilderExtensions
 {
-    private const bool Disable = false;
+    private const bool Disable = true;
 
     public static CodeBuilder Documentation(this CodeBuilder builder, Action<DocumentationBuilder> build)
     {

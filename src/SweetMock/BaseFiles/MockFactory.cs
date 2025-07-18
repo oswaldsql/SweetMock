@@ -14,6 +14,9 @@ internal static partial class Mock
 {
 }
 
+[System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
+internal static partial class Fixture{}
+
 public class ValueBox<T>
 {
     public ValueBox(T value) =>

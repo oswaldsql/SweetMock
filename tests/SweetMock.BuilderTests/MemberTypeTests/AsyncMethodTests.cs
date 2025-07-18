@@ -58,3 +58,24 @@ public class AsyncMethodTests(ITestOutputHelper testOutputHelper)
         ValueTask<int> GenericWithoutParameter();
     }
 }
+
+public class MethodsWithGenericFunctionsTests(ITestOutputHelper testOutputHelper)
+{
+    [Fact]
+    public void CanCreateMockForINotifyPropertyChanged()
+    {
+        var source = Build.TestClass("SweetMock.BuilderTests.MemberTypeTests.MethodsWithGenericFunctionsTests.IG<string>", "");
+
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        testOutputHelper.DumpResult(generate);
+
+        Assert.Empty(generate.GetWarnings());
+    }
+    
+    public interface IG<T>
+    {
+//    void Do<TU>(TU u);
+        void Do2<TU>(Func<TU> u);
+    }
+}

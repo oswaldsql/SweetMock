@@ -32,7 +32,7 @@ internal static class ConstructorBuilder {
                 var constructorSignature = $"internal protected {details.MockName}({parameterList}System.Action<Config>? config = null, SweetMock.MockOptions? options = null) : base({baseArguments})";
 
                 builder.Scope(constructorSignature, ctor => ctor
-                    .Add("_log = options?.Logger;")
+                    .Add("_sweetMockCallLog = options?.Logger;")
                     .Add("var result = new Config(this, config);")
                     .BuildLogSegment(constructor)
                 );
@@ -42,8 +42,8 @@ internal static class ConstructorBuilder {
     private static void BuildEmptyConstructor(CodeBuilder classScope, MockDetails details) =>
         classScope.Region("Constructors", builder => builder
             .Scope($"internal protected MockOf_{details.Target.Name}(System.Action<Config>? config = null, SweetMock.MockOptions? options = null)", methodScope => methodScope
-                .Add("_log = options?.Logger;")
-                .Scope("if(_log != null)", b2 => b2
-                    .Add($"_log.Add(\"{details.Target}.{details.Target.Name}()\");"))
+                .Add("_sweetMockCallLog = options?.Logger;")
+                .Scope("if(_sweetMockCallLog != null)", b2 => b2
+                    .Add($"_sweetMockCallLog.Add(\"{details.Target}.{details.Target.Name}()\");"))
                 .Add("var result = new Config(this, config);")));
 }

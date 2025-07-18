@@ -10,4 +10,8 @@ namespace SweetMock
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
     internal class MockAttribute<T> : Attribute { }
+
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
+    internal class FixtureAttribute<T> : Attribute { }
 }

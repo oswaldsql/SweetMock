@@ -19,8 +19,6 @@ internal static class BaseClassBuilder
 
             var c = details.Target.ToString().Substring(details.Target.ContainingNamespace.ToString().Length + 1);
 
-            namespaceScope.Add($"// {c}");
-
             namespaceScope.AddGeneratedCodeAttrib();
             namespaceScope.Scope($"internal partial class {details.MockType} : {c}{details.Constraints}", classScope =>
             {

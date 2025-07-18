@@ -118,6 +118,11 @@ internal static class MethodBuilder
                 yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
             }
             else
+            if (((INamedTypeSymbol)parameter.Type).IsGenericType)
+            {
+                yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
+            }
+            else
             {
                 yield return new(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name);
             }

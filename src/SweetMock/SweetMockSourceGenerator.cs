@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using Builders;
 using Exceptions;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Utils;
 
@@ -22,16 +23,52 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                 SourceText.From(content, Encoding.UTF8)));
         }
 
+        var fixtureAttributes = context.SyntaxProvider
+            .ForAttributeWithMetadataName("SweetMock.FixtureAttribute`1", (syntaxNode, _) => syntaxNode != null, GetAttributes)
+            .Where(t => t is not null)
+            .SelectMany((enumerable, _) => enumerable)
+            .Collect();
+
+        context.RegisterSourceOutput(fixtureAttributes, (c, datas) =>
+        {
+            foreach (var ad in datas.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default))
+            {
+                try
+                {
+                    if (ad.Key != null)
+                    {
+                        var prefix = TypeToFileName(ad.Key);
+                        var factoryFilename = prefix + ".FixtureFactory.g.cs";
+                        var code2 = FixtureBuilder.BuildFixtureFactory(ad.Key);
+
+                        var fixtureFilename = prefix + ".Fixture.g.cs";
+                        var code = FixtureBuilder.BuildFixture(ad.Key);
+
+                        c.AddSource(fixtureFilename, code);
+                        c.AddSource(factoryFilename, code2);
+                    }
+                }
+                catch (SweetMockException e)
+                {
+                    c.AddUnsupportedMethodDiagnostic(ad, e.Message);
+                }
+                catch (Exception e)
+                {
+                    c.AddUnknownExceptionOccured(ad, e.Message);
+                }
+            }
+        });
+
         var mockAttributes = context.SyntaxProvider
             .ForAttributeWithMetadataName("SweetMock.MockAttribute`1", (syntaxNode, _) => syntaxNode != null, GetAttributes)
             .Where(t => t is not null)
             .SelectMany((enumerable, _) => enumerable)
             .Collect();
 
-        context.RegisterSourceOutput(mockAttributes, GenerateCode);
+        context.RegisterSourceOutput(mockAttributes, GenerateMocks);
     }
 
-    private static void GenerateCode(SourceProductionContext context, ImmutableArray<AttributeData> attributes)
+    private static void GenerateMocks(SourceProductionContext context, ImmutableArray<AttributeData> attributes)
     {
         var mockBuilder = new MockBuilder();
         var uniqueAttributes = attributes.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default);
@@ -45,7 +82,8 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
             try
             {
                 {
-                    var fileName = attribute.Key!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
+                    var attributeKey = attribute.Key;
+                    var fileName = TypeToFileName(attributeKey);
 
                     foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)attribute.Key))
                     {
@@ -63,6 +101,8 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
             }
         }
     }
+
+    private static string TypeToFileName(ISymbol? attributeKey) => attributeKey!.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
 
     private static readonly HashSet<TypeKind> ValidKinds = [TypeKind.Class, TypeKind.Interface];
     private static bool ValidateType(ISymbol? symbol, SourceProductionContext context, IEnumerable<AttributeData> attributes)

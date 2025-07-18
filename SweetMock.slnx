@@ -10,6 +10,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests\SweetMock.BuilderTests\SweetMock.BuilderTests.csproj" />
+    <Project Path="tests\SweetMock.FixtureTests\SweetMock.FixtureTests.csproj" Type="Classic C#" />
     <Project Path="tests\SweetMock.Functionality.Tests\SweetMock.Functionality.Tests.csproj" />
     <Project Path="tests\TestSandbox\TestSandbox.csproj" />
   </Folder>

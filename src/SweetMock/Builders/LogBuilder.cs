@@ -8,7 +8,7 @@ public static class LogBuilder
         source.Region("Logging", builder =>
         {
             builder
-                .Add("private SweetMock.CallLog? _log = new SweetMock.CallLog();");
+                .Add("private SweetMock.CallLog? _sweetMockCallLog = new SweetMock.CallLog();");
         });
 
     internal static CodeBuilder BuildLogSegment(this CodeBuilder builder, IMethodSymbol? symbol, bool skipParameters = false)
@@ -19,13 +19,13 @@ public static class LogBuilder
         {
             var LogArgumentsValue = symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(Argument);
             var logArgs = string.Join("", LogArgumentsValue);
-            builder.Scope("if(_log != null)", b => b
-                .Add($"_log.Add(\"{symbol}\", SweetMock.Arguments{logArgs});"));
+            builder.Scope("if(_sweetMockCallLog != null)", b => b
+                .Add($"_sweetMockCallLog.Add(\"{symbol}\", SweetMock.Arguments{logArgs});"));
         }
         else
         {
-            builder.Scope("if(_log != null)", b => b
-                .Add($"_log.Add(\"{symbol}\");"));
+            builder.Scope("if(_sweetMockCallLog != null)", b => b
+                .Add($"_sweetMockCallLog.Add(\"{symbol}\");"));
         }
 
         return builder;

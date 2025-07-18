@@ -87,6 +87,8 @@ namespace SweetMock {
             }
         }
 
+        public IEnumerable<CallLogItem> GetLogs() => this.logs.AsEnumerable();
+
         public IEnumerable<TypedCallLogItem<T>> Matching<T>(string signature, Func<T, bool>? predicate = null) where T : TypedArguments, new() =>
             this.logs.Where(t => t.MethodSignature == signature)
                 .Select(t => new TypedCallLogItem<T>(t))
