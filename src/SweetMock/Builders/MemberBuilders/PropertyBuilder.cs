@@ -83,7 +83,7 @@ internal static class PropertyBuilder
             var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{type}> set" : "");
 
             config.Documentation(doc => doc
-                .Summary($"Configures <see cref=\"{symbol.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
+                .Summary($"Configures {symbol.ToSeeCRef()} by specifying methods to call when the property is accessed.")
                 .Parameter("get", "Function to call when the property is read.", hasGet)
                 .Parameter("set", "Function to call when the property is set.", hasGet)
                 .Returns("The updated configuration object."));
@@ -103,7 +103,7 @@ internal static class PropertyBuilder
             var hasSet = property.SetMethod != null;
 
             codeBuilder.Documentation(doc => doc
-                .Summary($"Specifies a value to used for mocking the property <see cref=\"{property.ToCRef()}\"/>.")
+                .Summary($"Specifies a value to used for mocking the property {property.ToSeeCRef()}.")
                 .Parameter("value", "The value to use for the initial value of the property.")
                 .Returns("The updated configuration object."));
 

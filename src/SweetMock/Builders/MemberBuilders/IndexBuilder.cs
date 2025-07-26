@@ -82,7 +82,7 @@ internal static class IndexBuilder
             var indexerParameters = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
 
             config.Documentation(doc => doc
-                .Summary($"Configures the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> by specifying methods to call when the property is accessed.")
+                .Summary($"Configures the indexer for {symbol.Parameters[0].Type.ToSeeCRef()} by specifying methods to call when the property is accessed.")
                 .Parameter("get", "Function to call when the property is read.", hasGet)
                 .Parameter("set", "Function to call when the property is set.", hasSet)
                 .Returns("The configuration object."));
@@ -105,7 +105,7 @@ internal static class IndexBuilder
             codeBuilder.AddLineBreak();
 
             codeBuilder.Documentation(doc => doc
-                .Summary($"Specifies a dictionary to be used as a source of the indexer for <see cref=\"{indexer.Parameters[0].Type.ToCRef()}\"/>.")
+                .Summary($"Specifies a dictionary to be used as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."));
 

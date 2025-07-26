@@ -15,7 +15,7 @@ internal static class BaseClassBuilder
         fileScope.Scope($"namespace {details.Namespace}", namespaceScope =>
         {
             namespaceScope.Documentation(doc => doc
-                .Summary($"Mock implementation of <see cref=\"{details.Target.ToCRef()}\"/>.", "Should only be used for testing purposes."));
+                .Summary($"Mock implementation of {details.Target.ToSeeCRef()}.", "Should only be used for testing purposes."));
 
             var c = details.Target.ToString().Substring(details.Target.ContainingNamespace.ToString().Length + 1);
 

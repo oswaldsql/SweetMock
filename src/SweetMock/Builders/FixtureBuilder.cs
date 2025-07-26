@@ -27,7 +27,7 @@ public static class FixtureBuilder
                                 builder.Summary("Configuration object for the fixture");
                                 foreach (var parameter in targetCtor.Parameters)
                                 {
-                                    builder.Parameter(parameter.Name, $"Configuring the {parameter.Name} mock of type <see cref=\"{parameter.Type.ToCRef()}\"/>.");
+                                    builder.Parameter(parameter.Name, $"Configuring the {parameter.Name} mock of type {s.ToSeeCRef()}.");
                                 }
                             })
                             .Add($"internal record FixtureConfig({configString});")
@@ -52,7 +52,7 @@ public static class FixtureBuilder
 
                         classScope
                             .Documentation(d => d
-                                .Summary($"Provides a fixture for the <see cref=\"{s.ToCRef()}\"/> object, setting up mocks and a call log for testing purposes.")
+                                .Summary($"Provides a fixture for the {s.ToSeeCRef()} object, setting up mocks and a call log for testing purposes.")
                                 .Parameter("config", "Optional configuration of the mocked dependencies.")
                             )
                             .Scope($"public FixtureFor_{s.Name}(System.Action<FixtureConfig>? config = null)", ctorScope =>
@@ -75,8 +75,8 @@ public static class FixtureBuilder
                         var parametersString = string.Join(", ", targetCtor.Parameters.Select(t => "_" + t.Name));
                         classScope
                             .Documentation(d => d
-                                .Summary($"Creates an instance of the <see cref=\"{s.ToCRef()}\"/> object using the initialized mock dependencies.")
-                                .Returns($"A <see cref=\"{s.ToCRef()}\"/> instance configured with mocked dependencies.")
+                                .Summary($"Creates an instance of the {s.ToSeeCRef()} object using the initialized mock dependencies.")
+                                .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
                             )
                             .Add($"public {s} CreateSut() =>").Indent()
                             .Add($"new {s.Name}({parametersString});")
@@ -99,9 +99,9 @@ public static class FixtureBuilder
                     .Scope("internal static partial class Fixture", classScope =>
                         classScope
                             .Documentation(d => d
-                                .Summary($"Represents a test fixture designed for the <see cref=\"{s.ToCRef()}\"/> class, leveraging mocked dependencies for unit testing.")
+                                .Summary($"Represents a test fixture designed for the {s.ToSeeCRef()} class, leveraging mocked dependencies for unit testing.")
                                 .Parameter("config","An optional configuration action to customize the mocked dependencies or fixture setup.")
-                                .Returns($"Returns a fixture object configured for testing the <see cref=\"{s.ToCRef()}\"/> class.")
+                                .Returns($"Returns a fixture object configured for testing the {s.ToSeeCRef()} class.")
                             )
                             .Scope($"public static {s.ContainingNamespace}.FixtureFor_{s.Name} {s.Name}(System.Action<{s.ContainingNamespace}.FixtureFor_{s.Name}.FixtureConfig>? config = null)", methodScope =>
                             methodScope

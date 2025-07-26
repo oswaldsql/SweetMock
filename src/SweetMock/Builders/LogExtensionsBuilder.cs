@@ -161,7 +161,7 @@ internal static class LogExtensionsBuilder
                 if (l.Count() > 1)
                 {
                     result.Documentation(doc => doc
-                        .Summary("The argument can be different types", string.Join(", ", l.Select(t => t.ToCRef()))));
+                        .Summary("The argument can be different types", string.Join(", ", l.Select(t => t.ToSeeCRef()))));
 
                     result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                 }
@@ -190,15 +190,15 @@ internal static class LogExtensionsBuilder
     private static string GetArgumentSummery(IMethodSymbol symbol, ISymbol target) =>
         symbol switch
         {
-            { MethodKind : MethodKind.Constructor } => $"Identifies when the mock object for <see cref=\"{symbol.ToCRef()}\"/> <see cref=\"{target.ToCRef()}\"/> is created.",
-            { MethodKind : MethodKind.EventAdd } => $"Identifies when the event <see cref=\"{target.ToCRef()}\"/> was subscribed to.",
-            { MethodKind : MethodKind.EventRaise } => $"Identifies when the event <see cref=\"{target.ToCRef()}\"/> was raised.",
-            { MethodKind : MethodKind.EventRemove } => $"Identifies when the event <see cref=\"{target.ToCRef()}\"/> was unsubscribed to.",
-            { MethodKind : MethodKind.Ordinary } => $"Identifying calls to the method <see cref=\"{target.ToCRef()}\"/>.",
-            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property <see cref=\"{target.ToCRef()}\"/> was read.",
-            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property <see cref=\"{target.ToCRef()}\"/> was set.",
-            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> was read.",
-            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for <see cref=\"{symbol.Parameters[0].Type.ToCRef()}\"/> was set.",
+            { MethodKind : MethodKind.Constructor } => $"Identifies when the mock object for {symbol.ToSeeCRef()} {target.ToSeeCRef()} is created.",
+            { MethodKind : MethodKind.EventAdd } => $"Identifies when the event {target.ToSeeCRef()} was subscribed to.",
+            { MethodKind : MethodKind.EventRaise } => $"Identifies when the event {target.ToSeeCRef()} was raised.",
+            { MethodKind : MethodKind.EventRemove } => $"Identifies when the event {target.ToSeeCRef()} was unsubscribed to.",
+            { MethodKind : MethodKind.Ordinary } => $"Identifying calls to the method {target.ToSeeCRef()}.",
+            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property {target.ToSeeCRef()} was read.",
+            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : false } => $"Identifies when the property {target.ToSeeCRef()} was set.",
+            { MethodKind : MethodKind.PropertyGet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for {symbol.Parameters[0].Type.ToSeeCRef()} was read.",
+            { MethodKind : MethodKind.PropertySet } when target is IPropertySymbol { IsIndexer : true } => $"Identifies when the indexer for {symbol.Parameters[0].Type.ToSeeCRef()} was set.",
             _ => ""
         };
 }

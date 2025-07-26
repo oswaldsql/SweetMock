@@ -80,14 +80,12 @@ public static class FactoryClassBuilder
 
         var symbolName = details.Target.Name;
 
-        var cref = details.Target.ToCRef();
-
         builder.Documentation(doc => doc
-            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Summary($"Creates a mock object for {details.Target.ToSeeCRef()}.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter("config", "Optional configuration for the mock object.")
             .Parameter("options", "Options for the mock object.")
-            .Returns($"The mock object for <see cref=\"{cref}\"/>.")
+            .Returns($"The mock object for {details.Target.ToSeeCRef()}.")
         );
 
         builder.AddLines($"""
@@ -97,11 +95,11 @@ public static class FactoryClassBuilder
                       """);
 
         builder.Documentation(doc => doc
-            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Summary($"Creates a mock object for {details.Target.ToSeeCRef()}.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter($"config{symbolName}", "Outputs configuration for the mock object.")
             .Parameter("options", "Options for the mock object.")
-            .Returns($"The mock object for <see cref=\"{cref}\"/>."));
+            .Returns($"The mock object for {details.Target.ToSeeCRef()}."));
 
         builder.AddLines($$"""
                       internal static {{details.SourceName}} {{symbolName}}
@@ -128,17 +126,15 @@ public static class FactoryClassBuilder
         var parameters = constructorParameters.ToString(t => $"{t.Type} {t.Name}, ", "");
         var arguments = constructorParameters.ToString(t => $"{t.Name}, ", "");
 
-        var cref = details.Target.ToCRef();
-
         var types = details.Target.TypeArguments.ToString(t => t.Name);
         var constraints = details.Target.TypeArguments.ToConstraints();
 
         builder.Documentation(doc => doc
-            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Summary($"Creates a mock object for {details.Target.ToSeeCRef()}.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter("config", "Optional configuration for the mock object.")
             .Parameter("options", "Options for the mock object.")
-            .Returns($"The mock object for <see cref=\"{cref}\"/>."));
+            .Returns($"The mock object for {details.Target.ToSeeCRef()}."));
 
         builder.AddLines($"""
                       internal static {details.SourceName} {details.Target.Name}<{types}>
@@ -147,11 +143,11 @@ public static class FactoryClassBuilder
                       """);
 
         builder.Documentation(doc => doc
-            .Summary($"Creates a mock object for <see cref=\"{cref}\"/>.")
+            .Summary($"Creates a mock object for {details.Target.ToSeeCRef()}.")
             .Parameter(constructorParameters, t => t.Name, t => $"Base constructor parameter {t.Name}.")
             .Parameter("config", "Outputs configuration for the mock object.")
             .Parameter("options", "Options for the mock object.")
-            .Returns($"The mock object for <see cref=\"{cref}\"/>."));
+            .Returns($"The mock object for {details.Target.ToSeeCRef()}."));
 
         builder.AddLines($$"""
                       internal static {{details.SourceName}} {{details.Target.Name}}<{{types}}>

@@ -15,8 +15,10 @@ public static class Mappers
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
     );
 
-    public static string ToCRef(this ISymbol symbol) =>
+    private static string ToCRef(this ISymbol symbol) =>
         symbol.ToDisplayString(Format).Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
+
+    public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="{symbol.ToCRef()}"/>""";
 
     private static string AccessibilityString(this ISymbol method) =>
         method.DeclaredAccessibility.AccessibilityString();

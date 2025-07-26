@@ -71,7 +71,7 @@ internal static class EventBuilder
         builder.AddToConfig(config =>
             {
                 config.Documentation(doc => doc
-                    .Summary($"Returns a action delegate to invoke when <see cref=\"{symbol.ToCRef()}\"/> should be triggered."));
+                    .Summary($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered."));
 
                 if (types == "System.EventArgs")
                     config.AddConfigMethod(eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
@@ -95,7 +95,7 @@ internal static class EventBuilder
             if (types != "System.EventArgs")
             {
                 codeBuilder.Documentation(doc => doc
-                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/> directly.")
+                    .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."));
 
@@ -108,7 +108,7 @@ internal static class EventBuilder
             else
             {
                 codeBuilder.Documentation(doc => doc
-                    .Summary($"Triggers the event <see cref=\"{eventSymbol.ToCRef()}\"/> directly.")
+                    .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Returns("The updated configuration object."));
 
                 codeBuilder.AddConfigExtension(mock, eventSymbol, [], config =>

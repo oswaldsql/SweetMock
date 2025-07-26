@@ -76,11 +76,11 @@ internal static class MethodBuilder
         classScope.AddToConfig(config =>
         {
             config.Documentation(doc => doc
-                .Summary($"Delegate for mocking calls to <see cref=\"{symbol.ToCRef()}\"/>."));
+                .Summary($"Delegate for mocking calls to {symbol.ToSeeCRef()}."));
             config.Add($"public delegate {delegateType} {delegateName}({delegateParameters});");
 
             config.Documentation(doc => doc
-                .Summary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToCRef()}\"/>.")
+                .Summary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToSeeCRef()}\"/>.")
                 .Parameter("call", "The action or function to execute when the method is called.")
                 .Returns("The updated configuration object."));
 
@@ -174,7 +174,7 @@ internal static class MethodBuilder
         var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
         foreach (var candidate in candidates)
         {
-            var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+            var seeString = string.Join(", ", candidate.Select(t => t.ToSeeCRef()));
 
             result.AddLineBreak();
             result.Documentation(doc => doc
@@ -212,7 +212,7 @@ internal static class MethodBuilder
                 result.AddLineBreak();
                 result.Documentation(doc => doc
                     .Summary("Configures the mock to return a specific value as a <see cref=\"System.Threading.Tasks.Task{T}\"/>, regardless of the provided arguments.", $"Use this to quickly define a fixed return result for {seeString}.")
-                    .Parameter("returnAsTasks", $"The fixed <see cref=\"{genericType.ToCRef()}\"/> that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
+                    .Parameter("returnAsTasks", $"The fixed {genericType.ToSeeCRef()} that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
                     .Returns("The updated configuration object."));
 
                 result.AddConfigExtension(mock, first, [genericType + " returnAsTasks"], builder =>
@@ -246,7 +246,7 @@ internal static class MethodBuilder
         var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
         foreach (var candidate in candidates)
         {
-            var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+            var seeString = string.Join(", ", candidate.Select(t => t.ToSeeCRef()));
 
             result.AddLineBreak();
             result.Documentation(doc => doc
@@ -290,7 +290,7 @@ internal static class MethodBuilder
         var candidates = methodSymbols.ToLookup(t => t.Name);
         foreach (var candidate in candidates)
         {
-            var seeString = string.Join(", ", candidate.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+            var seeString = string.Join(", ", candidate.Select(t => t.ToSeeCRef()));
 
             result.AddLineBreak();
             result.Documentation(doc => doc
@@ -322,7 +322,7 @@ internal static class MethodBuilder
     {
         foreach (var methodGroup in methods.ToLookup(t => t.Name))
         {
-            var seeString = string.Join(", ", methodGroup.Select(t => $"<see cref=\"{t.ToCRef()}\"/>"));
+            var seeString = string.Join(", ", methodGroup.Select(t => t.ToSeeCRef()));
 
             result.AddLineBreak();
             result.Documentation(doc => doc
