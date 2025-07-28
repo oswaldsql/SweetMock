@@ -10,7 +10,9 @@ using SweetMock;
 [Mock<IBasketRepo>]
 [Mock<IStockHandler>]
 [Mock<IUser>]
+//[Mock<IUser, User>]
 [Mock<ILogger<ShoppingBasket>>]
+[Mock<ILogger<IStockHandler>>]
 public class Tests
 {
     [SetUp]
@@ -53,5 +55,10 @@ public interface IStockHandler { }
 public interface IUser
 {
     public string GetUserName();
+}
+
+public class User : IUser
+{
+    public string GetUserName() => "";
 }
 

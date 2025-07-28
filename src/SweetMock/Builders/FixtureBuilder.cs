@@ -5,6 +5,21 @@ using Utils;
 
 public static class FixtureBuilder
 {
+    public static IEnumerable<ITypeSymbol> GetRequiredMocks(ISymbol symbol)
+    {
+        var s = (INamedTypeSymbol)symbol;
+        var targetCtor = s.Constructors.First();
+        foreach (var param in targetCtor.Parameters)
+        {
+            if (param.Type is INamedTypeSymbol paramSymbol)
+            {
+                yield return paramSymbol.IsGenericType ? paramSymbol.OriginalDefinition : paramSymbol;
+            }
+        }
+
+//        return targetCtor.Parameters.Select(t => t.Type);
+    }
+
     public static string BuildFixture(ISymbol source)
     {
         var s = (INamedTypeSymbol)source;
