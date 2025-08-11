@@ -4,41 +4,42 @@ using System.Collections.Immutable;
 using System.Text;
 using Builders;
 using Exceptions;
+using Generation;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Utils;
 
 [Generator]
 public class SweetMockSourceGenerator : IIncrementalGenerator
 {
-    private record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute);
+    private static readonly SymbolDisplayFormat Format = new();
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         AddBaseFiles(context);
 
         var fixtureAttributes = context.SyntaxProvider
-            .ForAttributeWithMetadataName("SweetMock.FixtureAttribute`1", (node, _) => node != null, (syntaxContext, _) => syntaxContext.Attributes)
-            .Where(attribute => !attribute.IsDefaultOrEmpty)
-            .SelectMany((fixture, _) => fixture)
-            .Collect()
+                .ForAttributeWithMetadataName("SweetMock.FixtureAttribute`1", (node, _) => node != null, (syntaxContext, _) => syntaxContext.Attributes)
+                .Where(attribute => !attribute.IsDefaultOrEmpty)
+                .SelectMany((fixture, _) => fixture)
+                .Collect()
             ;
 
         var mockAttributes = context.SyntaxProvider
-            .ForAttributeWithMetadataName("SweetMock.MockAttribute`1", (node, _) => node != null, (syntaxContext, _) => syntaxContext.Attributes)
-            .Where(attribute => !attribute.IsDefaultOrEmpty)
-            .SelectMany((mock, _) => mock)
-            .Collect()
+                .ForAttributeWithMetadataName("SweetMock.MockAttribute`1", (node, _) => node != null, (syntaxContext, _) => syntaxContext.Attributes)
+                .Where(attribute => !attribute.IsDefaultOrEmpty)
+                .SelectMany((mock, _) => mock)
+                .Collect()
             ;
 
         var customMockAttributes = context.SyntaxProvider
-            .ForAttributeWithMetadataName("SweetMock.MockAttribute`2", (node, _) => node != null, (syntaxContext, _) => syntaxContext.Attributes)
-            .Where(attribute => !attribute.IsDefaultOrEmpty)
-            .SelectMany((customMock, _) => customMock)
-            .Collect()
+                .ForAttributeWithMetadataName("SweetMock.MockAttribute`2", (node, _) => node != null, (syntaxContext, _) => syntaxContext.Attributes)
+                .Where(attribute => !attribute.IsDefaultOrEmpty)
+                .SelectMany((customMock, _) => customMock)
+                .Collect()
             ;
 
         var flattenedAttributes = customMockAttributes.Combine(mockAttributes).Combine(fixtureAttributes);
-
         context.RegisterSourceOutput(flattenedAttributes, BuildFileList);
     }
 
@@ -62,17 +63,42 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
         var collectedMocks = CollectedMocks(mocks, fixtures, customMocks);
 
-        AddFixtures(fixtures, spc);
-        GenerateMocks(spc, collectedMocks);
+        var mockInfos = AddMocks(spc, collectedMocks).ToList();
+        mockInfos.AddRange(AddCustomMocks(spc, customMocks));
+        AddFixtures(fixtures, spc, mockInfos);
+        AddMockFactory(spc, mockInfos);
     }
 
-    private static void GenerateMocks(SourceProductionContext spc, List<MockTypeWithLocation> collectedMocks)
+    private static void AddMockFactory(SourceProductionContext spc, List<MockInfo> mocks)
+    {
+        var code = FactoryClassBuilder.Build(mocks);
+        spc.AddSource("SweetMock.Mock.g.cs", code);
+    }
+
+    private static IEnumerable<MockInfo> AddCustomMocks(SourceProductionContext spc, ImmutableArray<AttributeData> customMocks)
+    {
+        var lookup = customMocks.ToLookup(data => FirstGenericType(data), SymbolEqualityComparer.Default);
+        foreach (var mock in lookup)
+        {
+            var mockType = (INamedTypeSymbol)mock.Key!;
+            //var fileName = TypeToFileName(mockType!);
+
+            var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
+            //var code = CustomMockBuilder.BuildFactory(mockType, implementation);
+
+            //spc.AddSource(fileName + ".Factory.g.cs", code.ToString());
+
+            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockType.Wrapper, implementation);
+        }
+    }
+
+    private static IEnumerable<MockInfo> AddMocks(SourceProductionContext spc, List<MockTypeWithLocation> collectedMocks)
     {
         var mockBuilder = new MockBuilder();
         var uniqueAttributes = collectedMocks.ToLookup(t => t.Type, a => a.Attribute, SymbolEqualityComparer.Default);
         foreach (var attribute in uniqueAttributes)
         {
-            var mockType = attribute.Key;
+            var mockType = attribute.Key as INamedTypeSymbol;
             MockBuilder.DiagnoseType(mockType, spc, attribute);
             if (MockBuilder.CanBeMocked(mockType))
             {
@@ -80,10 +106,8 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                 {
                     var fileName = TypeToFileName(mockType!);
 
-                    foreach (var file in mockBuilder.BuildFiles((INamedTypeSymbol)mockType!))
-                    {
-                        spc.AddSource($"{fileName}.{file.Name}.g.cs", SourceText.From(file.Content, Encoding.UTF8));
-                    }
+                    var code = mockBuilder.BuildFiles(mockType!);
+                    spc.AddSource($"{fileName}.g.cs", code);
                 }
                 catch (SweetMockException e)
                 {
@@ -93,26 +117,30 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                 {
                     spc.AddUnknownExceptionOccured(attribute, e.Message);
                 }
+
+                yield return new(mockType!, mockType.ContainingNamespace + ".MockOf_" + mockType.ToDisplayString(Format), MockType.Generated);
             }
         }
     }
 
-    private static void AddFixtures(ImmutableArray<AttributeData> fixtures, SourceProductionContext spc)
+    private static void AddFixtures(ImmutableArray<AttributeData> fixtures, SourceProductionContext spc, List<MockInfo> mockInfos)
     {
-        foreach (var fixture in fixtures.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default).Where(t => t.Key != null))
+        var fix = fixtures.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default);
+
+        var factoryCode = FixtureBuilder.BuildFixturesFactory(fix.Select(t => t.Key).OfType<INamedTypeSymbol>());
+        spc.AddSource("SweetMock.Fixture.g.cs", factoryCode);
+
+        foreach (var fixture in fix)
         {
             try
             {
                 var fixtureType = fixture.Key!;
                 var prefix = TypeToFileName(fixtureType);
-                var factoryFilename = prefix + ".FixtureFactory2.g.cs";
-                var code2 = FixtureBuilder.BuildFixtureFactory(fixtureType);
 
-                var fixtureFilename = prefix + ".Fixture2.g.cs";
-                var code = FixtureBuilder.BuildFixture(fixtureType);
+                var fixtureFilename = prefix + ".Fixture.g.cs";
+                var fixtureCode = FixtureBuilder.BuildFixture(fixtureType, mockInfos);
 
-                spc.AddSource(fixtureFilename, code);
-                spc.AddSource(factoryFilename, code2);
+                spc.AddSource(fixtureFilename, fixtureCode);
             }
             catch (SweetMockException e)
             {
@@ -125,7 +153,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         }
     }
 
-    private static string TypeToFileName(ISymbol attributeKey) => attributeKey.ToString().Replace("<", "_").Replace(">", "").Replace(", ", "_");
+    private static string TypeToFileName(ISymbol attributeKey) => attributeKey.ToCRef().Replace("<", "_").Replace(">", "").Replace(", ", "_");
 
     private static List<MockTypeWithLocation> CollectedMocks(ImmutableArray<AttributeData> mocks, ImmutableArray<AttributeData> fixtures, ImmutableArray<AttributeData> customMocks)
     {
@@ -149,7 +177,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         return collectedMocks;
     }
 
-    private static ITypeSymbol? FirstGenericType(AttributeData t)
+    private static INamedTypeSymbol? FirstGenericType(AttributeData t)
     {
         var firstGenericType = t.AttributeClass?.TypeArguments.FirstOrDefault();
         if (firstGenericType is INamedTypeSymbol symbol)
@@ -159,4 +187,15 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
         return null;
     }
+
+    private record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute);
+}
+
+public record MockInfo(INamedTypeSymbol Target, string MockClass, MockType Type, INamedTypeSymbol? Implementation = null);
+
+public enum MockType
+{
+    Generated,
+    Wrapper,
+    Direct
 }

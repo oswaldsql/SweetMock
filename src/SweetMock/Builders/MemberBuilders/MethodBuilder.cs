@@ -71,7 +71,11 @@ internal static class MethodBuilder
             .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
         );
 
-        classScope.Add($"private Config.{delegateName} {functionPointer} {{get;set;}} = ({delegateParameters}) => {symbol.BuildNotMockedException()}");
+        classScope.Add($"private Config.{delegateName} {functionPointer} {{get;set;}} = ({delegateParameters}) => ")
+            .Indent()
+            .Add(symbol.BuildNotMockedException())
+            .Unindent()
+            .AddLineBreak();
 
         classScope.AddToConfig(config =>
         {
@@ -80,7 +84,7 @@ internal static class MethodBuilder
             config.Add($"public delegate {delegateType} {delegateName}({delegateParameters});");
 
             config.Documentation(doc => doc
-                .Summary($"Configures the mock to execute the specified action when calling <see cref=\"{symbol.ToSeeCRef()}\"/>.")
+                .Summary($"Configures the mock to execute the specified action when calling {symbol.ToSeeCRef()}.")
                 .Parameter("call", "The action or function to execute when the method is called.")
                 .Returns("The updated configuration object."));
 
@@ -230,13 +234,6 @@ internal static class MethodBuilder
                     }
                 });
             }
-
-//            var str = returnType switch
-//            {
-//                "System.Threading.Tasks.Task" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
-//                "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
-//                _ => ""
-//            };
         }
     }
 
@@ -250,7 +247,7 @@ internal static class MethodBuilder
 
             result.AddLineBreak();
             result.Documentation(doc => doc
-                .Summary("Configures the mock to return a one of the specific value disregarding the arguments.", $"Configures {seeString}")
+                .Summary("Configures the mock to return a one of the specific values disregarding the arguments.", $"Configures {seeString}")
                 .Parameter("returnValues", "The values that should be returned in order. If the values are depleted <see cref=\"System.InvalidOperationException\"/>  is thrown.")
                 .Returns("The updated configuration object."));
 

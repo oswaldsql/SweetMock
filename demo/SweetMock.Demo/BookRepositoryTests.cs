@@ -26,7 +26,7 @@ public class BookRepositoryTests
             .Save(), new(logger)
         );
         var bookRepo = Mock.IBookRepository(config => config
-            .IsAvailable(returns: true)
+            .IsAvailable(true)
             .InStock(42)
             .GetByISBN(new Book("isbn 0-434-00348-4", "The Hitch Hiker's Guide to the Galaxy", "Douglas Adams"))
         );
@@ -53,6 +53,44 @@ public class BookRepositoryTests
 //        Assert.True(actual);
 ////
 //        var request = Assert.Single(logger.IsAvailable(args => args.isbn == "isbn 0-434-00348-4"));
+    }
+}
+
+[Fixture<ShoppingBasket>]
+public class BookRepositoryTests2
+{
+    [Fact]
+    public async Task TheGuideShouldAlwaysBeAvailable()
+    {
+        var userGuid = Guid.NewGuid();
+
+        var fixture = Fixture.ShoppingBasket(config =>
+        {
+            config.user.Id(userGuid);
+            var basket1 = Mock.IBasket(c => c.Add());
+            config.basketRepo.TryGetUserBasket((Guid id, out IBasket basket, CancellationToken token) =>
+            {
+                basket = basket1;
+                return Task.FromResult(true);
+            }).Save();
+            config.bookRepo
+                .IsAvailable(true)
+                .InStock(42)
+                .GetByISBN(new Book("isbn 0-434-00348-4", "The Hitch Hiker's Guide to the Galaxy", "Douglas Adams"));
+            config.messageBroker.SendMessage();
+        });
+
+        var sut = fixture.CreateSut();
+
+        await sut.AddBookToBasket("isbn 0-434-00348-4", CancellationToken.None);
+
+        foreach (var item in fixture.Log.GetLogs())
+        {
+            Console.WriteLine(item);
+        }
+
+        var sendMessage = Assert.Single(fixture.Log.SendMessage());
+        Assert.Equal("The book The Hitch Hiker's Guide to the Galaxy by Douglas Adams was added to your basket", sendMessage.message);
     }
 }
 

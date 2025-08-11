@@ -3,6 +3,8 @@
 
 namespace SweetMock.BuilderTests.Constructor;
 
+using Microsoft.Extensions.Logging;
+
 public class GenericsTests(ITestOutputHelper testOutputHelper)
 {
     [Fact]
@@ -89,7 +91,7 @@ public class TestClass{{
 //        Assert.Equal("Generic methods in non generic interfaces or classes is not currently supported for 'Parse' in 'IGenericMethod'", error.GetMessage());
 //        Assert.Equal("MM0004", error.Id);
     }
-
+    
     public interface IGenericMethod
     {
         void ReturnGeneric(string value);

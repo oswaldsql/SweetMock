@@ -18,16 +18,18 @@ public static class ConfigExtensionsBuilder
             .AddLineBreak();
 
         result
-            .Scope($"namespace {mock.Namespace}", namespaceScope => namespaceScope
-                .Scope($"internal partial class {mock.MockType}", mockScope => mockScope
-                    .Scope("internal partial class Config", configScope =>
-                    {
-                        BuildMembers(configScope, mock);
-                    }))
-            );
+            .Scope($"namespace {mock.Namespace}", namespaceScope => namespaceScope.BuildConfigClass(mock));
 
         return result.ToString();
     }
+
+    internal static CodeBuilder BuildConfigClass(this CodeBuilder namespaceScope, MockDetails mock) =>
+        namespaceScope
+            .Scope($"internal partial class {mock.MockType}", mockScope => mockScope
+                .Scope("internal partial class Config", configScope =>
+                {
+                    BuildMembers(configScope, mock);
+                }));
 
     private static void BuildMembers(CodeBuilder builder, MockDetails mock)
     {

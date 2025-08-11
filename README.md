@@ -1,6 +1,6 @@
 # ![Icon](Icon.png) Sweet Mock
 
-A source generator for creating mocks for testing. SweetMock automatically generates mock implementations of interfaces or classes to help in unit testing by providing a way to simulate the behavior of complex dependencies.
+A source generator for creating mocks and fixtures for testing. SweetMock automatically generates fixture and mock implementations of interfaces or classes to help in unit testing by providing a way to simulate the behavior of complex dependencies.
 
 ``` csharp
 [Mock<IBookRepository>] // Use the Mock attribute to indicate the interface or class to mock.

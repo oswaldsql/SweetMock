@@ -15,7 +15,7 @@ public static class Mappers
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
     );
 
-    private static string ToCRef(this ISymbol symbol) =>
+    internal static string ToCRef(this ISymbol symbol) =>
         symbol.ToDisplayString(Format).Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
 
     public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="{symbol.ToCRef()}"/>""";
@@ -71,4 +71,17 @@ public static class Mappers
 
         return new("", symbol.AccessibilityString() + " ", "override ");
     }
+
+    internal static string GetTypeGenerics(this INamedTypeSymbol type) => type.IsGenericType ? "<" + string.Join(", ", type.TypeArguments) + ">" : "";
+}
+
+public sealed class NamedSymbolEqualityComparer : IEqualityComparer<INamedTypeSymbol>
+{
+    public static NamedSymbolEqualityComparer Default { get; } = new NamedSymbolEqualityComparer();
+
+    private static SymbolEqualityComparer symbolEqualityComparer = SymbolEqualityComparer.Default;
+
+    public bool Equals(INamedTypeSymbol x, INamedTypeSymbol y) => symbolEqualityComparer.Equals(x,y);
+
+    public int GetHashCode(INamedTypeSymbol obj) => symbolEqualityComparer.GetHashCode(obj);
 }

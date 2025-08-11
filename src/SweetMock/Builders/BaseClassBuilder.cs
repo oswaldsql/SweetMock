@@ -6,29 +6,23 @@ using Utils;
 
 internal static class BaseClassBuilder
 {
-    public static CodeBuilder Build(MockDetails details)
+    internal static CodeBuilder BuildMockClass(this CodeBuilder namespaceScope, MockDetails details)
     {
-        CodeBuilder fileScope = new();
+        namespaceScope.Documentation(doc => doc
+            .Summary($"Mock implementation of {details.Target.ToSeeCRef()}.", "Should only be used for testing purposes."));
 
-        fileScope.AddFileHeader();
-        fileScope.Add("#nullable enable");
-        fileScope.Scope($"namespace {details.Namespace}", namespaceScope =>
+        // TODO : Fix this uglyness
+        var className = details.Target.ToString().Substring(details.Target.ContainingNamespace.ToString().Length + 1);
+
+        namespaceScope.AddGeneratedCodeAttrib();
+        namespaceScope.Scope($"internal partial class {details.MockType} : {className}{details.Constraints}", classScope =>
         {
-            namespaceScope.Documentation(doc => doc
-                .Summary($"Mock implementation of {details.Target.ToSeeCRef()}.", "Should only be used for testing purposes."));
-
-            var c = details.Target.ToString().Substring(details.Target.ContainingNamespace.ToString().Length + 1);
-
-            namespaceScope.AddGeneratedCodeAttrib();
-            namespaceScope.Scope($"internal partial class {details.MockType} : {c}{details.Constraints}", classScope =>
-            {
-                classScope.InitializeConfig(details);
-                classScope.InitializeLogging();
-                BuildMembers(classScope, details);
-            });
+            classScope.InitializeConfig(details);
+            classScope.InitializeLogging();
+            BuildMembers(classScope, details);
         });
 
-        return fileScope;
+        return namespaceScope;
     }
 
     private static void InitializeConfig(this CodeBuilder result, MockDetails details) =>
@@ -42,7 +36,7 @@ internal static class BaseClassBuilder
                     config.Add($"private readonly {details.MockType} target;");
 
                     config.Documentation(doc => doc
-                        .Summary($"Initializes a new instance of the <see cref=\"T:{details.Namespace}.{details.MockType}.Config\"/> class")
+                        .Summary($"Initializes a new instance of the <see cref=\"T:{details.Target.ToCRef()}.Config\"/> class")
                         .Parameter("target", "The target mock class.")
                         .Parameter("config", "Optional configuration method."));
 

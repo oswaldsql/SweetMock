@@ -17,13 +17,16 @@ internal static class LogExtensionsBuilder
             .Add("using System;")
             .AddLineBreak();
 
-        builder.Scope($"namespace {details.Namespace}", namespaceScope => namespaceScope
-            .AddGeneratedCodeAttrib()
-            .Scope($"internal static class {details.MockName}_LogExtensions", config =>
-                BuildMembers(config, details)));
+        builder.Scope($"namespace {details.Namespace}", namespaceScope => namespaceScope.BuildLogExtensionsClass(details));
 
         return builder.ToString();
     }
+
+    internal static CodeBuilder BuildLogExtensionsClass(this CodeBuilder namespaceScope, MockDetails details) =>
+        namespaceScope
+            .AddGeneratedCodeAttrib()
+            .Scope($"internal static class {details.MockName}_LogExtensions", config =>
+                BuildMembers(config, details));
 
     private static void BuildMembers(CodeBuilder builder, MockDetails details)
     {

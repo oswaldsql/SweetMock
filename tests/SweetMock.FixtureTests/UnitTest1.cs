@@ -1,42 +1,36 @@
 ﻿namespace SweetMock.FixtureTests;
 
+using CustomMocks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SweetMock;
 
-
 [Fixture<ShoppingBasket>]
-//[Mock<IG<string>>]
-[Mock<IBasketRepo>]
-[Mock<IStockHandler>]
-[Mock<IUser>]
-//[Mock<IUser, User>]
-[Mock<ILogger<ShoppingBasket>>]
-[Mock<ILogger<IStockHandler>>]
+[Mock<TimeProvider, MockOf_TimeProvider>]
+[Mock<String, MockOf_String>]
+[Mock<ILogger<string>, MockOf_ILogger<string>>]
+[Mock<Tests>]
+[Mock<ShoppingBasket>]
 public class Tests
 {
     [SetUp]
     public void Setup()
     {
-        var logger = NullLogger<ShoppingBasket>.Instance;
-        
         var fixture = Fixture.ShoppingBasket(config =>
         {
+            config.name.Value = "Tester32";
             config.user.GetUserName("fds");
-            config.logger.Log(call: (level, id, state, exception, formatter, tState) => logger.Log<object>(level, id, state, exception, (Func<object, object?, string>)formatter));
+            config.time.Value = TimeProvider.System;
+            config.logger.Value = NullLogger<ShoppingBasket>.Instance;
         });
         var sut = fixture.CreateSut();
+        
+        Console.WriteLine(sut.Name);
         
         foreach (var callLogItem in fixture.Log.GetLogs())
         {
             Console.WriteLine(callLogItem);
         }
-    }
-
-    [Test]
-    public void Test1()
-    {
-        Assert.Pass();
     }
 }
 
@@ -46,7 +40,10 @@ public interface IG<T>
     void Do2<TU>(Func<TU> u);
 }
 
-public class ShoppingBasket(IUser user, IStockHandler stockHandler, IBasketRepo repo, ILogger<ShoppingBasket> logger) { }
+public class ShoppingBasket(string name, TimeProvider time, IUser user, IStockHandler stockHandler, IBasketRepo repo, ILogger<ShoppingBasket> logger)
+{
+    public string Name => name;
+}
 
 public interface IBasketRepo { }
 
@@ -61,4 +58,3 @@ public class User : IUser
 {
     public string GetUserName() => "";
 }
-
