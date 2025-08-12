@@ -15,14 +15,14 @@ public class IndexTest
         // ACT
 
         // Assert
-        Assert.Throws<InvalidOperationException>(() => sut[(uint)10] = 10);
-        Assert.Throws<InvalidOperationException>(() => { _ = sut[10]; });
-        Assert.Throws<InvalidOperationException>(() => sut["key"] = 10);
-        Assert.Throws<InvalidOperationException>(() => { _ = sut["key"]; });
-        Assert.Throws<InvalidOperationException>(() => sut[Guid.Empty] = ("name", 10));
-        Assert.Throws<InvalidOperationException>(() => { _ = sut[Guid.Empty]; });
-        Assert.Throws<InvalidOperationException>(() => { _ = sut[("name", 10)]; });
-        Assert.Throws<InvalidOperationException>(() => sut[("name", 10)] = "value");
+        Assert.Throws<NotExplicitlyMockedException>(() => sut[(uint)10] = 10);
+        Assert.Throws<NotExplicitlyMockedException>(() => { _ = sut[10]; });
+        Assert.Throws<NotExplicitlyMockedException>(() => sut["key"] = 10);
+        Assert.Throws<NotExplicitlyMockedException>(() => { _ = sut["key"]; });
+        Assert.Throws<NotExplicitlyMockedException>(() => sut[Guid.Empty] = ("name", 10));
+        Assert.Throws<NotExplicitlyMockedException>(() => { _ = sut[Guid.Empty]; });
+        Assert.Throws<NotExplicitlyMockedException>(() => { _ = sut[("name", 10)]; });
+        Assert.Throws<NotExplicitlyMockedException>(() => sut[("name", 10)] = "value");
     }
 
     [Fact]

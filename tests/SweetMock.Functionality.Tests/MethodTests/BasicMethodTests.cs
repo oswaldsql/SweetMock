@@ -13,12 +13,11 @@ public class BasicMethodTests
         var sut = Mock.IBasicMethods();
 
         // Act
-        var actual = Assert.Throws<InvalidOperationException>(() => sut.VoidWithoutParameters());
+        var actual = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.VoidWithoutParameters());
 
         // Assert
         Assert.NotNull(actual);
         Assert.Contains("VoidWithoutParameters", actual.Message);
-        Assert.Contains("VoidWithoutParameters", actual.Source);
     }
 
     [Fact]

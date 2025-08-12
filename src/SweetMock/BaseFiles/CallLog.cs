@@ -6,6 +6,8 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace SweetMock {
+    using System.Runtime.CompilerServices;
+
     public class CallLogItem
     {
         public int Index { get; init; }
@@ -99,4 +101,6 @@ namespace SweetMock {
                 .Select(t => new TypedCallLogItem<T>(t).TypedArguments)
                 .Where(t => predicate == null || predicate(t));
     }
+
+    public class NotExplicitlyMockedException(string instanceName, string memberName) : System.InvalidOperationException($"'{memberName}' in '{instanceName}' is not explicitly mocked.");
 }

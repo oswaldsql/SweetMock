@@ -13,12 +13,11 @@ public class TaskMethodTests
         var sut = Mock.IAsyncTaskMethods();
 
         // Act
-        var actual = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.SimpleTask("Whats in a name"));
+        var actual = await Assert.ThrowsAsync<SweetMock.NotExplicitlyMockedException>(() => sut.SimpleTask("Whats in a name"));
 
         // Assert
         Assert.NotNull(actual);
         Assert.Contains("SimpleTask", actual.Message);
-        Assert.Contains("SimpleTask", actual.Source);
     }
 
     [Fact]
@@ -90,12 +89,11 @@ public class TaskMethodTests
         var sut = Mock.IAsyncTaskMethods();
 
         // Act
-        var actual = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.TaskWithResult("Whats in a name"));
+        var actual = await Assert.ThrowsAsync<SweetMock.NotExplicitlyMockedException>(() => sut.TaskWithResult("Whats in a name"));
 
         // Assert
         Assert.NotNull(actual);
         Assert.Contains("TaskWithResult", actual.Message);
-        Assert.Contains("TaskWithResult", actual.Source);
     }
 
     [Fact]

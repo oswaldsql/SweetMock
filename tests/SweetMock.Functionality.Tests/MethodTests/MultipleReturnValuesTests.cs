@@ -13,7 +13,7 @@ public class MultipleReturnValuesTests
         var first = sut.Method();
         var second = sut.Method();
         var third = sut.Method();
-        var shouldFail = Assert.Throws<InvalidOperationException>(() => sut.Method());
+        var shouldFail = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.Method());
 
         // Assert
         Assert.Equal("1", first);
@@ -34,7 +34,7 @@ public class MultipleReturnValuesTests
         var firstAsync = await sut.MethodAsync(token);
         var secondAsync = await sut.MethodAsync(token);
         var thirdAsync = await sut.MethodAsync(token);
-        var shouldFailAsync = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.MethodAsync(token));
+        var shouldFailAsync = await Assert.ThrowsAsync<SweetMock.NotExplicitlyMockedException>(() => sut.MethodAsync(token));
 
         // Assert
         Assert.Equal("1", firstAsync);
@@ -67,7 +67,7 @@ public class MultipleReturnValuesTests
         });
 
         // Act
-        var shouldFail = Assert.Throws<InvalidOperationException>(() => sut.Method());
+        var shouldFail = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.Method());
 
         // Assert
         Assert.NotNull(shouldFail);

@@ -68,10 +68,14 @@ internal static class MethodBuilder
         var signature = $"{accessibilityString}{overrideString}{returnType} {containingSymbol}{name}{genericString}({methodParameters})";
         classScope.Scope(signature, methodScope => methodScope
             .BuildLogSegment(symbol)
+            .Scope($"if (this.{functionPointer} is null)", ifScope =>
+            {
+                ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
+            })
             .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
         );
 
-        classScope.Add($"private Config.{delegateName} {functionPointer} {{get;set;}} = ({delegateParameters}) => ")
+        classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = ({delegateParameters}) => ")
             .Indent()
             .Add(symbol.BuildNotMockedException())
             .Unindent()

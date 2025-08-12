@@ -25,6 +25,7 @@ internal static class ConstructorBuilder {
         classScope.Region("Constructors", builder =>
         {
             builder.Add("SweetMock.MockOptions? _sweetMockOptions {get;set;}");
+            builder.Add("string _sweetMockInstanceName {get; set;} = \"\";");
 
             foreach (var constructor in constructors)
             {
@@ -34,8 +35,9 @@ internal static class ConstructorBuilder {
                 var constructorSignature = $"internal protected {details.MockName}({parameterList}System.Action<Config>? config = null, SweetMock.MockOptions? options = null) : base({baseArguments})";
 
                 builder.Scope(constructorSignature, ctor => ctor
-                    .Add("_sweetMockCallLog = options?.Logger;")
                     .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
+                    .Add("_sweetMockCallLog = _sweetMockOptions.Logger;")
+                    .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{details.MockType}\";")
                     .Add("new Config(this, config);")
                     .BuildLogSegment(constructor)
                 );
@@ -45,9 +47,11 @@ internal static class ConstructorBuilder {
     private static void BuildEmptyConstructor(CodeBuilder classScope, MockDetails details) =>
         classScope.Region("Constructors", builder => builder
             .Add("SweetMock.MockOptions? _sweetMockOptions {get;set;}")
+            .Add("string _sweetMockInstanceName {get; set;} = \"\";")
             .Scope($"internal protected MockOf_{details.Target.Name}(System.Action<Config>? config = null, SweetMock.MockOptions? options = null)", methodScope => methodScope
-                .Add("_sweetMockCallLog = options?.Logger;")
                 .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
+                .Add("_sweetMockCallLog = options?.Logger;")
+                .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{details.MockType}\";")
                 .Scope("if(_sweetMockCallLog != null)", b2 => b2
                     .Add($"_sweetMockCallLog.Add(\"{details.Target}.{details.Target.Name}()\");"))
                 .Add("new Config(this, config);")));

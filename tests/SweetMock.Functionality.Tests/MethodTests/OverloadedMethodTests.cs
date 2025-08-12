@@ -15,10 +15,10 @@ public class OverloadedMethodTests(ITestOutputHelper output)
         // Act
 
         // Assert
-        Assert.Throws<InvalidOperationException>(() => sut.OverloadedMethod());
-        Assert.Throws<InvalidOperationException>(() => sut.OverloadedMethod("name"));
-        Assert.Throws<InvalidOperationException>(() => sut.OverloadedMethod("name", 10));
-        Assert.Throws<InvalidOperationException>(() => sut.OverloadedMethod(10, "name"));
+        Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.OverloadedMethod());
+        Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.OverloadedMethod("name"));
+        Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.OverloadedMethod("name", 10));
+        Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.OverloadedMethod(10, "name"));
     }
 
     [Fact]
@@ -28,13 +28,12 @@ public class OverloadedMethodTests(ITestOutputHelper output)
         var sut = Mock.IOverloadedMethods();
 
         // Act
-        var actual = Assert.Throws<InvalidOperationException>(() => sut.OverloadedMethod());
+        var actual = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.OverloadedMethod());
 
         // Assert
         Assert.NotNull(actual);
         output.WriteLine(actual.Message);
         Assert.Contains("OverloadedMethod", actual.Message);
-        Assert.Contains("OverloadedMethod", actual.Source);
     }
 
     [Fact]

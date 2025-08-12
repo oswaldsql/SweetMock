@@ -65,7 +65,7 @@ public class ValueTaskMethodTests
         // Assert
         Assert.NotNull(actualException);
         Assert.Equal(ValueTask.CompletedTask, actual);
-        Assert.IsType<InvalidOperationException>(actualException);
+        Assert.IsType<SweetMock.NotExplicitlyMockedException>(actualException);
     }
 
     [Fact]
