@@ -99,7 +99,7 @@ internal static class EventBuilder
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."));
 
-                codeBuilder.AddConfigExtension(mock, eventSymbol, [types + " eventArgs"], config =>
+                codeBuilder.AddConfigExtension(eventSymbol, [types + " eventArgs"], config =>
                 {
                     config.Add($"this.{eventSymbol.Name}(out var trigger);");
                     config.Add("trigger.Invoke(eventArgs);");
@@ -111,7 +111,7 @@ internal static class EventBuilder
                     .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Returns("The updated configuration object."));
 
-                codeBuilder.AddConfigExtension(mock, eventSymbol, [], config =>
+                codeBuilder.AddConfigExtension(eventSymbol, [], config =>
                 {
                     config.Add($"this.{eventSymbol.Name}(out var trigger);");
                     config.Add("trigger.Invoke();");

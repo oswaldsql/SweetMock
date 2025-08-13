@@ -35,9 +35,6 @@ public static class ConfigExtensionsBuilder
     {
         var candidates = mock.GetCandidates().Distinct(SymbolEqualityComparer.Default).ToArray();
 
-        var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
-        MethodBuilder.BuildConfigExtensions(builder, mock, methods);
-
         var properties = candidates.OfType<IPropertySymbol>().Where(t => !t.IsIndexer);
         PropertyBuilder.BuildConfigExtensions(builder, mock, properties);
 
@@ -48,7 +45,7 @@ public static class ConfigExtensionsBuilder
         EventBuilder.BuildConfigExtensions(builder, mock, events);
     }
 
-    internal static void AddConfigExtension(this CodeBuilder result, MockDetails mock, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
+    internal static void AddConfigExtension(this CodeBuilder result, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
     {
         var name = symbol.Name;
         if (name == "this[]")

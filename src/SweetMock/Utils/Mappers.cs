@@ -85,3 +85,25 @@ public sealed class NamedSymbolEqualityComparer : IEqualityComparer<INamedTypeSy
 
     public int GetHashCode(INamedTypeSymbol obj) => symbolEqualityComparer.GetHashCode(obj);
 }
+
+public sealed class ParameterSymbolEqualityComparer : IEqualityComparer<IParameterSymbol>
+{
+    public static ParameterSymbolEqualityComparer Default { get; } = new ParameterSymbolEqualityComparer();
+
+    private static SymbolEqualityComparer symbolEqualityComparer = SymbolEqualityComparer.Default;
+
+    public bool Equals(IParameterSymbol x, IParameterSymbol y) => symbolEqualityComparer.Equals(x,y);
+
+    public int GetHashCode(IParameterSymbol obj) => symbolEqualityComparer.GetHashCode(obj);
+}
+
+public sealed class TypeSymbolEqualityComparer : IEqualityComparer<ITypeSymbol>
+{
+    public static TypeSymbolEqualityComparer Default { get; } = new TypeSymbolEqualityComparer();
+
+    private static SymbolEqualityComparer symbolEqualityComparer = SymbolEqualityComparer.Default;
+
+    public bool Equals(ITypeSymbol x, ITypeSymbol y) => symbolEqualityComparer.Equals(x,y);
+
+    public int GetHashCode(ITypeSymbol obj) => symbolEqualityComparer.GetHashCode(obj);
+}

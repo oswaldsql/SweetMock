@@ -107,7 +107,7 @@ internal static class PropertyBuilder
                 .Parameter("value", "The value to use for the initial value of the property.")
                 .Returns("The updated configuration object."));
 
-            codeBuilder.AddConfigExtension(mock, property, [$"{property.Type} value"], builder =>
+            codeBuilder.AddConfigExtension(property, [$"{property.Type} value"], builder =>
                 {
                     builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
                     builder.AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");

@@ -109,7 +109,7 @@ internal static class IndexBuilder
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."));
 
-            codeBuilder.AddConfigExtension(mock, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
+            codeBuilder.AddConfigExtension(indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
             {
                 builder.AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
                 builder.AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);");

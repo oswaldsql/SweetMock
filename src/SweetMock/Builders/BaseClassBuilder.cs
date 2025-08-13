@@ -54,7 +54,8 @@ internal static class BaseClassBuilder
         ConstructorBuilder.Build(classScope, details, constructors);
 
         var methods = candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
-        MethodBuilder.Build(classScope, methods);
+        new MethodBuilder(methods).Render(classScope);
+        //MethodBuilder.Build(classScope, methods);
 
         var properties = candidates.OfType<IPropertySymbol>().Where(t => !t.IsIndexer);
         PropertyBuilder.Build(classScope, properties);

@@ -11,6 +11,7 @@ using SweetMock;
 [Mock<ILogger<string>, MockOf_ILogger<string>>]
 [Mock<Tests>]
 [Mock<ShoppingBasket>]
+[Mock<ISendEndpoint>]
 public class Tests
 {
     [SetUp]
@@ -58,3 +59,44 @@ public class User : IUser
 {
     public string GetUserName() => "";
 }
+
+    public interface ISendEndpoint
+    {
+        Task Send<T>(T message, CancellationToken cancellationToken = default)
+            where T : class;
+
+        Task Send<T>(T message, IPipe<SendContext<T>> pipe, CancellationToken cancellationToken = default)
+            where T : class;
+
+        Task Send<T>(T message, IPipe<SendContext> pipe, CancellationToken cancellationToken = default)
+            where T : class;
+
+        Task Send(object message, CancellationToken cancellationToken = default);
+
+        Task Send(object message, Type messageType, CancellationToken cancellationToken = default);
+
+        Task Send(object message, IPipe<SendContext> pipe, CancellationToken cancellationToken = default);
+
+        Task Send(object message, Type messageType, IPipe<SendContext> pipe, CancellationToken cancellationToken = default);
+
+        Task Send<T>(object values, CancellationToken cancellationToken = default)
+            where T : class;
+
+        Task Send<T>(object values, IPipe<SendContext<T>> pipe, CancellationToken cancellationToken = default)
+            where T : class;
+
+        Task Send<T>(object values, IPipe<SendContext> pipe, CancellationToken cancellationToken = default)
+            where T : class;
+    }
+
+    public class SendContext<T>
+    {
+        
+    }
+    public class SendContext
+    {
+    }
+
+    public interface IPipe<T>
+    {
+    }

@@ -7,35 +7,30 @@ using Utils;
 /// <summary>
 ///     Represents a builder for methods, implementing the ISymbolBuilder interface.
 /// </summary>
-internal static class MethodBuilder
+internal class MethodBuilder
 {
-    public static void Build(CodeBuilder classScope, IEnumerable<IMethodSymbol> methods)
-    {
-        var lookup = methods.ToLookup(t => t.Name);
-        foreach (var m in lookup)
-        {
-            BuildMethods(classScope, m.ToArray());
-        }
-    }
+    private readonly ILookup<string, IMethodSymbol> methodGroups;
+    private readonly Dictionary<IMethodSymbol, string> methodDelegateName = new(SymbolEqualityComparer.Default);
 
-    /// <summary>
-    ///     Builds methods from the provided method symbols and adds them to the code builder.
-    /// </summary>
-    /// <param name="classScope">The code builder for the class scope.</param>
-    /// <param name="methodSymbols">The method symbols to build methods from.</param>
-    /// <returns>True if at least one method was built; otherwise, false.</returns>
-    private static void BuildMethods(CodeBuilder classScope, IMethodSymbol[] methodSymbols)
+    public MethodBuilder(IEnumerable<IMethodSymbol> methods) =>
+        this.methodGroups = methods.ToLookup(t => t.Name);
+
+    public void Render(CodeBuilder classScope)
     {
-        var name = methodSymbols.First().Name;
-        classScope.Region($"Method : {name}", builder =>
+        foreach (var m in this.methodGroups)
         {
-            var methodCount = 1;
-            foreach (var symbol in methodSymbols)
+            classScope.Region($"Method : {m.Key}", builder =>
             {
-                Build(builder, symbol, methodCount);
-                methodCount++;
-            }
-        });
+                var methodCount = 1;
+                foreach (var symbol in m)
+                {
+                    this.Build(builder, symbol, methodCount);
+                    methodCount++;
+                }
+
+                classScope.AddToConfig(config => this.BuildConfigExtensions(config, m));
+            });
+        }
     }
 
     /// <summary>
@@ -45,7 +40,7 @@ internal static class MethodBuilder
     /// <param name="symbol">The method symbol to build the method from.</param>
     /// <param name="methodCount">The count of methods built so far.</param>
     /// <returns>True if the method was built; otherwise, false.</returns>
-    private static void Build(CodeBuilder classScope, IMethodSymbol symbol, int methodCount)
+    private void Build(CodeBuilder classScope, IMethodSymbol symbol, int methodCount)
     {
         if (symbol.ReturnsByRef)
         {
@@ -59,6 +54,7 @@ internal static class MethodBuilder
         var (containingSymbol, accessibilityString, overrideString) = symbol.Overwrites();
 
         var (delegateName, delegateType, delegateParameters) = GetDelegateInfo(symbol, methodCount);
+        this.methodDelegateName.Add(symbol, delegateName);
 
         var functionPointer = methodCount == 1 ? $"_{name}" : $"_{name}_{methodCount}";
 
@@ -95,19 +91,19 @@ internal static class MethodBuilder
             config.AddConfigMethod(name, [$"{delegateName} call"], builder => builder
                 .Add($"target.{functionPointer} = call;"));
         });
-
     }
+
     private static DelegateInfo GetDelegateInfo(IMethodSymbol symbol, int methodCount)
     {
         var delegateName = methodCount == 1 ? $"DelegateFor_{symbol.Name}" : $"DelegateFor_{symbol.Name}_{methodCount}";
         var delegateType = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? "object" : symbol.ReturnType.ToString();
 
-        var parameterList = symbol.GetParameterInfos().ToString(p => $"{p.OutString}{p.Type} {p.Name}");
+        var parameterList = GetParameterInfos(symbol).ToString(p => $"{p.OutString}{p.Type} {p.Name}");
 
         return new(delegateName, delegateType, parameterList);
     }
 
-    private static IEnumerable<ParameterInfo> GetParameterInfos(this IMethodSymbol symbol)
+    private static IEnumerable<ParameterInfo> GetParameterInfos(IMethodSymbol symbol)
     {
         if (!symbol.IsGenericMethod)
         {
@@ -121,7 +117,7 @@ internal static class MethodBuilder
 
         foreach (var parameter in symbol.Parameters)
         {
-            if (parameter.Type.TypeKind == TypeKind.TypeParameter && parameter.Type.ContainingSymbol is IMethodSymbol)
+            if (parameter.Type is { TypeKind: TypeKind.TypeParameter, ContainingSymbol: IMethodSymbol })
             {
                 yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
             }
@@ -163,23 +159,18 @@ internal static class MethodBuilder
         return $"<{types}>";
     }
 
-    public static void BuildConfigExtensions(CodeBuilder builder, MockDetails mock, IEnumerable<IMethodSymbol> methods)
+    private void BuildConfigExtensions(CodeBuilder builder, IGrouping<string, IMethodSymbol> methods)
     {
-        var source = methods.ToArray();
-
-        builder.AddReturnsExtensions(mock, source);
-
-        builder.AddReturnValuesExtensions(mock, source);
-
-        builder.AddNoReturnValueExtensions(mock, source);
-
-        builder.AddThrowExtensions(mock, source);
+        this.AddReturnsExtensions(builder, methods);
+        this.AddReturnValuesExtensions(builder, methods);
+        this.AddNoReturnValueExtensions(builder, methods);
+        this.AddThrowExtensions(builder, methods);
     }
 
-    private static void AddReturnsExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    private void AddReturnsExtensions(CodeBuilder result, IGrouping<string, IMethodSymbol> methods)
     {
-        var methodSymbols = source.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
-        var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
+        var methodSymbols = methods.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
+        var candidates = methodSymbols.ToLookup(t => t.ReturnType, SymbolEqualityComparer.Default);
         foreach (var candidate in candidates)
         {
             var seeString = string.Join(", ", candidate.Select(t => t.ToSeeCRef()));
@@ -191,15 +182,15 @@ internal static class MethodBuilder
                 .Returns("The updated configuration object."));
 
             var first = candidate.First();
-            var firstReturnType = first.ReturnType;
+            var firstReturnType = (ITypeSymbol)candidate.Key!;
 
             var returnType = firstReturnType.ToString();
-            if (firstReturnType.TypeKind == TypeKind.TypeParameter && firstReturnType.ContainingSymbol is IMethodSymbol)
+            if (firstReturnType is { TypeKind: TypeKind.TypeParameter, ContainingSymbol: IMethodSymbol })
             {
                 returnType = "System.Object";
             }
 
-            result.AddConfigExtension(mock, first, [returnType + " returns"], builder =>
+            result.AddConfigExtension(first, [returnType + " returns"], builder =>
             {
                 foreach (var m in candidate)
                 {
@@ -207,7 +198,7 @@ internal static class MethodBuilder
 
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    builder.Add($"this.{m.Name}(call: ({parameterList}) => returns);");
+                    builder.Add($"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => returns));");
                 }
             });
 
@@ -223,7 +214,7 @@ internal static class MethodBuilder
                     .Parameter("returnAsTasks", $"The fixed {genericType.ToSeeCRef()} that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
                     .Returns("The updated configuration object."));
 
-                result.AddConfigExtension(mock, first, [genericType + " returnAsTasks"], builder =>
+                result.AddConfigExtension(first, [genericType + " returnAsTasks"], builder =>
                 {
                     foreach (var m in candidate)
                     {
@@ -231,17 +222,21 @@ internal static class MethodBuilder
 
                         var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
                         if (isGenericTask)
+                        {
                             builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.FromResult(returnAsTasks));");
+                        }
 
                         if (isGenericValueTask)
+                        {
                             builder.Add($"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.FromResult(returnAsTasks));");
+                        }
                     }
                 });
             }
         }
     }
 
-    private static void AddReturnValuesExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    private void AddReturnValuesExtensions(CodeBuilder result, IGrouping<string, IMethodSymbol> source)
     {
         var methodSymbols = source.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
         var candidates = methodSymbols.ToLookup(t => t.Name + ":" + t.ReturnType);
@@ -251,7 +246,7 @@ internal static class MethodBuilder
 
             result.AddLineBreak();
             result.Documentation(doc => doc
-                .Summary("Configures the mock to return a one of the specific values disregarding the arguments.", $"Configures {seeString}")
+                .Summary("Configures the mock to return one of the specific values disregarding the arguments.", $"Configures {seeString}")
                 .Parameter("returnValues", "The values that should be returned in order. If the values are depleted <see cref=\"System.InvalidOperationException\"/>  is thrown.")
                 .Returns("The updated configuration object."));
 
@@ -263,7 +258,7 @@ internal static class MethodBuilder
 
             returnType = "System.Collections.Generic.IEnumerable<" + returnType + ">";
 
-            result.AddConfigExtension(mock, candidate.First(), [returnType + " returnValues"], builder =>
+            result.AddConfigExtension(candidate.First(), [returnType + " returnValues"], builder =>
             {
                 var index = 0;
                 foreach (var m in candidate)
@@ -274,18 +269,18 @@ internal static class MethodBuilder
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
                     builder.Add($"var {m.Name}{index1}_Values = returnValues.GetEnumerator();");
-                    builder.Scope($"this.{m.Name}(call: ({parameterList}) => ", lambdaScope => lambdaScope
+                    builder.Scope($"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => ", lambdaScope => lambdaScope
                             .Scope($"if({m.Name}{index1}_Values.MoveNext())", conditionScope => conditionScope
                                 .Add($"return {m.Name}{index1}_Values.Current;")
                             )
                             .Add(m.BuildNotMockedException()))
-                        .Add(");");
+                        .Add("));");
                 }
             });
         }
     }
 
-    private static void AddNoReturnValueExtensions(this CodeBuilder result, MockDetails mock, IMethodSymbol[] source)
+    private void AddNoReturnValueExtensions(CodeBuilder result, IGrouping<string, IMethodSymbol> source)
     {
         var methodSymbols = source.Where(t => (t.ReturnsVoid || t.ReturnType.ToString() == "System.Threading.Tasks.Task" || t.ReturnType.ToString() == "System.Threading.Tasks.ValueTask") && !t.Parameters.Any(s => s.RefKind == RefKind.Out));
         var candidates = methodSymbols.ToLookup(t => t.Name);
@@ -298,7 +293,7 @@ internal static class MethodBuilder
                 .Summary("Configures the mock to accept any call to methods not returning values.", $"Configures {seeString}")
                 .Returns("The updated configuration object."));
 
-            result.AddConfigExtension(mock, candidate.First(), [], builder =>
+            result.AddConfigExtension(candidate.First(), [], builder =>
             {
                 foreach (var m in candidate)
                 {
@@ -307,9 +302,9 @@ internal static class MethodBuilder
 
                     var str = m.ReturnType.ToString() switch
                     {
-                        "void" => $"this.{m.Name}(call: ({parameterList}) => {{}});",
-                        "System.Threading.Tasks.Task" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.Task.CompletedTask);",
-                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask);",
+                        "void" => $"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => {{}}));",
+                        "System.Threading.Tasks.Task" => $"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => System.Threading.Tasks.Task.CompletedTask));",
+                        "System.Threading.Tasks.ValueTask" => $"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask));",
                         _ => ""
                     };
 
@@ -319,7 +314,7 @@ internal static class MethodBuilder
         }
     }
 
-    private static void AddThrowExtensions(this CodeBuilder result, MockDetails mock, IEnumerable<IMethodSymbol> methods)
+    private void AddThrowExtensions(CodeBuilder result, IGrouping<string, IMethodSymbol> methods)
     {
         foreach (var methodGroup in methods.ToLookup(t => t.Name))
         {
@@ -331,7 +326,7 @@ internal static class MethodBuilder
                 .Parameter("throws", "The exception to be thrown when the method is called.")
                 .Returns("The updated configuration object."));
 
-            result.AddConfigExtension(mock, methodGroup.First(), ["Exception throws"], builder =>
+            result.AddConfigExtension(methodGroup.First(), ["Exception throws"], builder =>
             {
                 foreach (var method in methodGroup)
                 {
@@ -339,7 +334,7 @@ internal static class MethodBuilder
 
                     var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    builder.Add($"this.{method.Name}(call: ({parameterList}) => throw throws);");
+                    builder.Add($"this.{method.Name}(call: ({this.methodDelegateName[method]})(({parameterList}) => throw throws));");
                 }
             });
         }
