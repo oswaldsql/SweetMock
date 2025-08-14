@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 namespace SweetMock
 {
     /// <summary>
-    /// Instructs SweetMock in create a mock for a specific interface or class.
+    /// Instructs SweetMock to create a mock for a specific interface or class.
     /// </summary>
     /// <typeparam name="T">The type to create a mock based on.</typeparam>
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
@@ -25,10 +25,10 @@ namespace SweetMock
     internal class MockAttribute<T, TImplementation> : Attribute;
 
     /// <summary>
-    /// Instructs SweetMock in create a fixture for a specific class.
+    /// Instructs SweetMock to create a fixture for a specific class.
     /// </summary>
     /// <typeparam name="T">The type to create a fixture for.</typeparam>
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
-    internal class FixtureAttribute<T> : Attribute { }
+    internal class FixtureAttribute<T> : Attribute where T : class { }
 }

@@ -36,7 +36,7 @@ internal static class BaseClassBuilder
                     config.Add($"private readonly {details.MockType} target;");
 
                     config.Documentation(doc => doc
-                        .Summary($"Initializes a new instance of the <see cref=\"T:{details.Target.ToCRef()}.Config\"/> class")
+                        .Summary($"Initializes a new instance of the <see cref=\"global::{details.Target.ToCRef()}.Config\"/> class")
                         .Parameter("target", "The target mock class.")
                         .Parameter("config", "Optional configuration method."));
 

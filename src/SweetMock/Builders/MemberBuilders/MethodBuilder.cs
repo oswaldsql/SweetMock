@@ -71,11 +71,13 @@ internal class MethodBuilder
             .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
         );
 
-        classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = ({delegateParameters}) => ")
-            .Indent()
-            .Add(symbol.BuildNotMockedException())
-            .Unindent()
-            .AddLineBreak();
+        classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = null;");
+
+//        classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = ({delegateParameters}) => ")
+//            .Indent()
+//            .Add(symbol.BuildNotMockedException())
+//            .Unindent()
+//            .AddLineBreak();
 
         classScope.AddToConfig(config =>
         {

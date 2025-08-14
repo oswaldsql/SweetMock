@@ -27,7 +27,7 @@ public static class FactoryClassBuilder
             {
                 foreach (var t in mocks)
                 {
-                    mockScope.Region(t.Key.ToCRef(), regionScope =>
+                    mockScope.Region(t.Key!.ToCRef(), regionScope =>
                     {
 
                         var (targetType, _, mockType, namedTypeSymbol) = t.First();
@@ -49,7 +49,7 @@ public static class FactoryClassBuilder
                                 break;
                             }
                             case MockKind.Wrapper:
-                                BuildCustomMockFactory(targetType, namedTypeSymbol, mockScope);
+                                BuildCustomMockFactory(targetType, namedTypeSymbol!, mockScope);
                                 break;
                         }
                     });

@@ -74,7 +74,7 @@ public static class FixtureBuilder
                 {
                     var type = (INamedTypeSymbol)parameter.Type;
                     var generics = type.GetTypeGenerics();
-                    if (infos.TryGetValue(parameter.Type.OriginalDefinition as INamedTypeSymbol, out var info))
+                    if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
                     {
                         classScope
                             .AddLineBreak()
@@ -196,7 +196,7 @@ public static class FixtureBuilder
 
     private static MockKind GetMockType(Dictionary<INamedTypeSymbol, MockInfo> infos, IParameterSymbol t)
     {
-        if (infos.TryGetValue(t.Type.OriginalDefinition as INamedTypeSymbol, out var result))
+        if (infos.TryGetValue((INamedTypeSymbol)t.Type.OriginalDefinition, out var result))
         {
             return result.Kind;
         }
@@ -212,7 +212,7 @@ public static class FixtureBuilder
         {
             var type = (INamedTypeSymbol)parameter.Type;
             var generics = type.GetTypeGenerics();
-            if (infos.TryGetValue(parameter.Type.OriginalDefinition as INamedTypeSymbol, out var info))
+            if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
             {
                 yield return $"{info.MockClass}{generics}.Config {parameter.Name}";
             }

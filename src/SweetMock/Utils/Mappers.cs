@@ -1,13 +1,14 @@
 ﻿namespace SweetMock.Utils;
 
 using Exceptions;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 public static class Mappers
 {
     internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
         values == null ? "" : string.Join(separator, values.Select(mapper));
 
-    private static readonly SymbolDisplayFormat Format = new(
+    private static readonly SymbolDisplayFormat ToCRefFormat = new(
         SymbolDisplayGlobalNamespaceStyle.Omitted,
         SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
@@ -15,10 +16,19 @@ public static class Mappers
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
     );
 
-    internal static string ToCRef(this ISymbol symbol) =>
-        symbol.ToDisplayString(Format).Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
+    private static readonly SymbolDisplayFormat ToFullNameFormat = new(
+        SymbolDisplayGlobalNamespaceStyle.Omitted,
+        SymbolDisplayTypeQualificationStyle.NameOnly,
+        SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+    );
 
-    public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="{symbol.ToCRef()}"/>""";
+    internal static string ToCRef(this ISymbol symbol) =>
+        symbol.ToDisplayString(ToCRefFormat).Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
+
+    public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(ToFullNameFormat)}</see>""";
 
     private static string AccessibilityString(this ISymbol method) =>
         method.DeclaredAccessibility.AccessibilityString();
@@ -66,7 +76,7 @@ public static class Mappers
     {
         if (symbol.ContainingType.TypeKind == TypeKind.Interface)
         {
-            return new(symbol.ContainingSymbol + ".", "", "");
+            return new("global::" + symbol.ContainingSymbol + ".", "", "");
         }
 
         return new("", symbol.AccessibilityString() + " ", "override ");

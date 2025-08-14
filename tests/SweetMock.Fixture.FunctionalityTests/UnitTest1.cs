@@ -1,5 +1,7 @@
 namespace SweetMock.FixtureGenerator.FunctionalityTests;
 
+using Repo;
+
 [SweetMock.Fixture<TestTarget>]
 [Fixture<GenericFixtureTarget<TestTarget2>>]
 [Mock<GenericMockTarget<TestTarget2>>]
@@ -7,23 +9,40 @@ namespace SweetMock.FixtureGenerator.FunctionalityTests;
 [Mock<ICustomMock, MockOf_ICustomMock>]
 public class UnitTest1
 {
+    /// <summary>
+    /// this is a test <see cref="global::Repo.IRepo"/> <see cref="C:System.String"/>
+    /// </summary>
     [Fact]
     public void Test1()
     {
         var fix = Fixture.TestTarget(config =>
         {
-            config.directValue = "TestTarget";
-            config.implicitMock.ImplicitValue("TestTarget");
-            config.explicitMock.ExplicitValue("TestTarget");
+            config.directValue = "directValue";
+            config.imp.ImplicitValue("ImplicitValue");
+            config.explicitMock.ExplicitValue("ExplicitValue");
             config.customMock.Value = new CustomMockImplementation();
         });
 
         var sut = fix.CreateSut();
 
-        Assert.Equal("TestTarget", sut.GetDirectValue());
+        Assert.Equal("directValue", sut.GetDirectValue());
+        Assert.Equal("directValue", sut.GetImplicitValue());
         
         Assert.True(true);
+
+        new MockOf_IRepo2();
+        var repo = Mock.IRepo2(config =>
+            {
+                config.SomeOverload();
+            }
+            );
+        
     }
+}
+
+[Mock<IRepo2>]
+public class ClassNamespaceCollisionTests
+{
 }
 
 public class GenericMockTarget
@@ -39,14 +58,19 @@ public class GenericFixtureTarget<T>() where T : new(){};
 
 public class TestTarget2{}
 
-public class TestTarget(string directValue, IImplicitMock implicitMock, IExplicitMock explicitMock, ICustomMock customMock)
+public class TestTarget(string directValue, IImplicitMock imp, IExplicitMock explicitMock, ICustomMock customMock)
 {
     public string GetDirectValue() => directValue;
+    public string GetImplicitValue() => imp.ImplicitMethod();
+    public string GetExplicitValue() => explicitMock.ExplicitValue;
+
+    public string GetCustomValue() => customMock.CustomValue;
 }
 
 public interface IImplicitMock
 {
     public string ImplicitValue { get; set; }
+    public string ImplicitMethod();
 }
 
 public interface IExplicitMock

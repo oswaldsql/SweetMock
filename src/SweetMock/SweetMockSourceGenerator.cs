@@ -93,19 +93,21 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         var requestedMocks = collectedMocks.ToLookup(t => t.Type, a => a, SymbolEqualityComparer.Default);
         foreach (var mock in requestedMocks)
         {
-            var mockType = mock.Key as INamedTypeSymbol;
+            var mockType = (INamedTypeSymbol)mock.Key!;
             var attributes = mock.Select(t => t.Attribute).ToArray();
 
-            if(mock.Any(t => t.Explicit))
+            if (mock.Any(t => t.Explicit))
+            {
                 MockBuilder.DiagnoseType(mockType, spc, mock.Where(t => t.Explicit == true).Select(t => t.Attribute));
+            }
 
             if (MockBuilder.CanBeMocked(mockType))
             {
                 try
                 {
-                    var fileName = TypeToFileName(mockType!);
+                    var fileName = TypeToFileName(mockType);
 
-                    var code = mockBuilder.BuildFiles(mockType!);
+                    var code = mockBuilder.BuildFiles(mockType);
                     spc.AddSource($"{fileName}.g.cs", code);
                 }
                 catch (SweetMockException e)
@@ -117,7 +119,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                     spc.AddUnknownExceptionOccured(attributes, e.Message);
                 }
 
-                yield return new(mockType!, mockType.ContainingNamespace + ".MockOf_" + mockType.ToDisplayString(Format), MockKind.Generated);
+                yield return new(mockType, mockType.ContainingNamespace + ".MockOf_" + mockType.ToDisplayString(Format), MockKind.Generated);
             }
         }
     }
