@@ -1,10 +1,25 @@
 ﻿namespace TestSandbox;
 
+using MassTransit;
+using MassTransit.TestFramework;
 using Microsoft.Extensions.Logging;
+using NUnit.Framework;
 using SweetMock;
 
+[Fixture<TestFixture>]
+[Mock<MassTransit.ConsumeContext<Payload>, MockOf_ConsumeContext<Payload>>]
+//[Mock<ConsumeContext<string>>]
 public class UnitTest1
 {
+    [Test]
+    public void METHOD()
+    {
+        Fixture.TestFixture(config =>
+        {
+            config.context.Value = new TestConsumeContext<string>("test");
+        });
+    }
+    
 //    [Fact]
 //    [Mock<ISlimLogger<UnitTest1>>]
 //    public void Test1()
@@ -37,3 +52,9 @@ public class UnitTest1
 //        void Log<TState>(Func<TState, Exception?, string> formatter);
 //    }
 }
+
+public class TestFixture(ConsumeContext<string> context) {}
+
+public class Payload {}
+
+internal class MockOf_ConsumeContext<T>(Action<WrapperMock<MassTransit.ConsumeContext<T>>.Config>? config, object? dummy = null) : WrapperMock<MassTransit.ConsumeContext<T>>(config) where T : class;

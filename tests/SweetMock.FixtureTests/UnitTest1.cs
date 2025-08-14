@@ -7,7 +7,6 @@ using SweetMock;
 
 [Fixture<ShoppingBasket>]
 [Mock<TimeProvider, MockOf_TimeProvider>]
-[Mock<String, MockOf_String>]
 [Mock<ILogger<string>, MockOf_ILogger<string>>]
 [Mock<Tests>]
 [Mock<ShoppingBasket>]
@@ -19,10 +18,9 @@ public class Tests
     {
         var fixture = Fixture.ShoppingBasket(config =>
         {
-            config.name.Value = "Tester32";
+            config.name = "Tester32";
             config.user.GetUserName("fds");
             config.time.Value = TimeProvider.System;
-            config.logger.Value = NullLogger<ShoppingBasket>.Instance;
         });
         var sut = fixture.CreateSut();
         

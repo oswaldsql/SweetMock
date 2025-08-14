@@ -41,7 +41,6 @@ internal class WrapperMock<TInterface>
 {
     public static implicit operator TInterface(WrapperMock<TInterface>  d) => d.Value;
 
-    private bool valueIsSet = false;
     protected virtual TInterface? value { get; set; } = default(TInterface);
 
     internal class Config
@@ -62,10 +61,10 @@ internal class WrapperMock<TInterface>
 
         public TInterface Value
         {
-            get => value ?? throw new NullReferenceException();
+            get => this.value ?? throw new NullReferenceException();
             set
             {
-                target.Value = value;
+                this.target.Value = value;
                 this.value = value;
             }
         }
@@ -85,14 +84,11 @@ internal class WrapperMock<TInterface>
     {
         get
         {
-            if(valueIsSet)
-                return value!;
-            throw new Exception("Value is not set");
+            return value!;
         }
         private set
         {
             this.value = value;
-            valueIsSet = true;
         }
     }
 }

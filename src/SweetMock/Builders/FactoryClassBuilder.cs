@@ -33,7 +33,7 @@ public static class FactoryClassBuilder
                         var (targetType, _, mockType, namedTypeSymbol) = t.First();
                         switch (mockType)
                         {
-                            case MockType.Generated:
+                            case MockKind.Generated:
                             {
                                 var constructors = targetType.Constructors.Where(Include).ToArray();
                                 foreach (var constructor in constructors)
@@ -48,7 +48,7 @@ public static class FactoryClassBuilder
 
                                 break;
                             }
-                            case MockType.Wrapper:
+                            case MockKind.Wrapper:
                                 BuildCustomMockFactory(targetType, namedTypeSymbol, mockScope);
                                 break;
                         }
@@ -119,6 +119,7 @@ public static class FactoryClassBuilder
     private static void BuildCustomMockFactory(INamedTypeSymbol type, INamedTypeSymbol implementationType, CodeBuilder mockScope)
     {
         var generics = type.GetTypeGenerics();
+        var constraints = type.TypeArguments.ToConstraints();
 
         mockScope
             .Documentation(doc => doc
@@ -127,7 +128,7 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
-            .Scope($"(System.Action<{implementationType}.Config>? config = null, MockOptions? options = null)", methodScope => methodScope
+            .Scope($"(System.Action<{implementationType}.Config>? config = null, MockOptions? options = null){constraints}", methodScope => methodScope
                 .Add($"return new {implementationType}(config);"));
 
         mockScope.AddLineBreak();
@@ -139,7 +140,7 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
-            .Scope($"(out {implementationType}.Config config{type.Name}, MockOptions? options = null)", methodScope => methodScope
+            .Scope($"(out {implementationType}.Config config{type.Name}, MockOptions? options = null){constraints}", methodScope => methodScope
                 .Add($"{implementationType}.Config outConfig = null!;")
                 .Add($"var result = new {implementationType}(config => outConfig = config);")
                 .Add($"config{type.Name} = outConfig;")

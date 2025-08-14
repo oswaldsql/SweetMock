@@ -81,25 +81,24 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         foreach (var mock in lookup)
         {
             var mockType = (INamedTypeSymbol)mock.Key!;
-            //var fileName = TypeToFileName(mockType!);
 
             var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
-            //var code = CustomMockBuilder.BuildFactory(mockType, implementation);
-
-            //spc.AddSource(fileName + ".Factory.g.cs", code.ToString());
-
-            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockType.Wrapper, implementation);
+            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, implementation);
         }
     }
 
     private static IEnumerable<MockInfo> AddMocks(SourceProductionContext spc, List<MockTypeWithLocation> collectedMocks)
     {
         var mockBuilder = new MockBuilder();
-        var uniqueAttributes = collectedMocks.ToLookup(t => t.Type, a => a.Attribute, SymbolEqualityComparer.Default);
-        foreach (var attribute in uniqueAttributes)
+        var requestedMocks = collectedMocks.ToLookup(t => t.Type, a => a, SymbolEqualityComparer.Default);
+        foreach (var mock in requestedMocks)
         {
-            var mockType = attribute.Key as INamedTypeSymbol;
-            MockBuilder.DiagnoseType(mockType, spc, attribute);
+            var mockType = mock.Key as INamedTypeSymbol;
+            var attributes = mock.Select(t => t.Attribute).ToArray();
+
+            if(mock.Any(t => t.Explicit))
+                MockBuilder.DiagnoseType(mockType, spc, mock.Where(t => t.Explicit == true).Select(t => t.Attribute));
+
             if (MockBuilder.CanBeMocked(mockType))
             {
                 try
@@ -111,14 +110,14 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                 }
                 catch (SweetMockException e)
                 {
-                    spc.AddUnsupportedMethodDiagnostic(attribute, e.Message);
+                    spc.AddUnsupportedMethodDiagnostic(attributes, e.Message);
                 }
                 catch (Exception e)
                 {
-                    spc.AddUnknownExceptionOccured(attribute, e.Message);
+                    spc.AddUnknownExceptionOccured(attributes, e.Message);
                 }
 
-                yield return new(mockType!, mockType.ContainingNamespace + ".MockOf_" + mockType.ToDisplayString(Format), MockType.Generated);
+                yield return new(mockType!, mockType.ContainingNamespace + ".MockOf_" + mockType.ToDisplayString(Format), MockKind.Generated);
             }
         }
     }
@@ -157,14 +156,14 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
     private static List<MockTypeWithLocation> CollectedMocks(ImmutableArray<AttributeData> mocks, ImmutableArray<AttributeData> fixtures, ImmutableArray<AttributeData> customMocks)
     {
-        var collectedMocks = mocks.Select(t => new MockTypeWithLocation(FirstGenericType(t), t)).ToList();
+        var collectedMocks = mocks.Select(t => new MockTypeWithLocation(FirstGenericType(t), t, true)).ToList();
         foreach (var fixture in fixtures)
         {
             var fixtureType = FirstGenericType(fixture);
             if (fixtureType != null)
             {
                 var requiredMocks = FixtureBuilder.GetRequiredMocks(fixtureType);
-                collectedMocks.AddRange(requiredMocks.Select(requiredMock => new MockTypeWithLocation(requiredMock, fixture)));
+                collectedMocks.AddRange(requiredMocks.Select(requiredMock => new MockTypeWithLocation(requiredMock, fixture, false)));
             }
         }
 
@@ -188,12 +187,12 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         return null;
     }
 
-    private record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute);
+    private record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute, bool Explicit);
 }
 
-public record MockInfo(INamedTypeSymbol Target, string MockClass, MockType Type, INamedTypeSymbol? Implementation = null);
+public record MockInfo(INamedTypeSymbol Target, string MockClass, MockKind Kind, INamedTypeSymbol? Implementation = null);
 
-public enum MockType
+public enum MockKind
 {
     Generated,
     Wrapper,
