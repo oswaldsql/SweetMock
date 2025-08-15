@@ -73,12 +73,6 @@ internal class MethodBuilder
 
         classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = null;");
 
-//        classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = ({delegateParameters}) => ")
-//            .Indent()
-//            .Add(symbol.BuildNotMockedException())
-//            .Unindent()
-//            .AddLineBreak();
-
         classScope.AddToConfig(config =>
         {
             config.Documentation(doc => doc

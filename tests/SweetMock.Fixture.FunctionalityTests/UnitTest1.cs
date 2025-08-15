@@ -26,7 +26,11 @@ public class UnitTest1
         var sut = fix.CreateSut();
 
         Assert.Equal("directValue", sut.GetDirectValue());
-        Assert.Equal("directValue", sut.GetImplicitValue());
+        var actual = Assert.Throws<NotExplicitlyMockedException>(() => sut.GetImplicitValue());
+        Assert.Equal("'ImplicitMethod' in 'imp' is not explicitly mocked.", actual.Message);
+        Assert.Equal("ImplicitMethod", actual.MemberName);
+        Assert.Equal("imp", actual.InstanceName);
+        
         
         Assert.True(true);
 
@@ -36,7 +40,6 @@ public class UnitTest1
                 config.SomeOverload();
             }
             );
-        
     }
 }
 
@@ -92,12 +95,24 @@ internal class MockOf_ICustomMock(Action<WrapperMock<ICustomMock>.Config>? confi
 {
 }
 
+public class Test
+{
+    [Fact]
+    public void METHOD()
+    {
+        var mockOfICustomMock2 = new MockOf_ICustomMock2();
+        // Arrange
+
+        // ACT
+
+        // Assert 
+    }
+}
+
 internal class MockOf_ICustomMock2() : WrapperMock2<ICustomMock>(new CustomMockImplementation());
 
 internal class WrapperMock2<TInterface>
 {
-    public static implicit operator TInterface(WrapperMock2<TInterface>  d) => d.Value;
-
     protected virtual TInterface? value { get; set; } = default(TInterface);
 
     internal class Config
@@ -105,10 +120,11 @@ internal class WrapperMock2<TInterface>
         private readonly WrapperMock2<TInterface> target;
         private TInterface? value;
 
-        public static void Init(WrapperMock2<TInterface> target, Action<Config>? config = null)
+        public static Config Init(WrapperMock2<TInterface> target, Action<Config>? config = null)
         {
             var config1 = new Config(target);
             config?.Invoke(config1);
+            return config1;
         }
 
         private Config(WrapperMock2<TInterface> target)
@@ -129,8 +145,10 @@ internal class WrapperMock2<TInterface>
 
     public WrapperMock2(TInterface value)
     {
-        Config.Init(this, config => config.Value = value);
+        this.Config2 = Config.Init(this, config => config.Value = value);
     }
+
+    public Config Config2 { get; private set; }
 
     internal TInterface Value
     {

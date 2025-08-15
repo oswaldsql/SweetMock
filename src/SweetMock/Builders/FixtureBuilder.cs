@@ -80,7 +80,7 @@ public static class FixtureBuilder
                             .AddLineBreak()
                             .Documentation(doc => doc
                                 .Summary($"Gets the configuration for {parameter.Name} used within the fixture."))
-                            .Add($"internal {info.MockClass}{generics}.Config {parameter.Name} {{get;private set;}}");// yield return $"{info.MockClass}{generics}.Config {parameter.Name}";
+                            .Add($"internal {info.MockClass}{generics}.Config {parameter.Name} {{get;private set;}}");
                     }
                     else
                     {
@@ -88,7 +88,7 @@ public static class FixtureBuilder
                             .AddLineBreak()
                             .Documentation(doc => doc
                                 .Summary($"Gets or sets {parameter.Name} used for configuration within the fixture."))
-                            .Add($"internal {parameter.Type}{generics} {parameter.Name} {{get; set;}}");// yield return $"{parameter.Type} {parameter.Name}";
+                            .Add($"internal {parameter.Type}{generics} {parameter.Name} {{get; set;}}");
                     }
                 }
             })

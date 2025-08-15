@@ -102,5 +102,10 @@ namespace SweetMock {
                 .Where(t => predicate == null || predicate(t));
     }
 
-    public class NotExplicitlyMockedException(string memberName, string instanceName) : System.InvalidOperationException($"'{memberName}' in '{instanceName}' is not explicitly mocked.");
+    public class NotExplicitlyMockedException(string memberName, string instanceName) : System.InvalidOperationException($"'{memberName}' in '{instanceName}' is not explicitly mocked.")
+    {
+        public string MemberName => memberName;
+
+        public string InstanceName => instanceName;
+    }
 }

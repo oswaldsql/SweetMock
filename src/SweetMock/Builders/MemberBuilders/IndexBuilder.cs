@@ -64,17 +64,24 @@ internal static class IndexBuilder
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
                     .BuildLogSegment(symbol.GetMethod)
+                    .Scope($"if (this.{internalName}_get is null)", ifScope =>
+                    {
+                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
+                    })
                     .Add($"return this.{internalName}_get({argName});")
                 ))
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
                     .BuildLogSegment(symbol.SetMethod)
-                    .Add($"this.{internalName}_set({argName}, value);")
+                    .Scope($"if (this.{internalName}_set is null)", ifScope =>
+                    {
+                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
+                    }).Add($"this.{internalName}_set({argName}, value);")
                 )));
 
         classScope
-            .Add($"private System.Func<{indexType}, {returnType}> {internalName}_get {{ get; set; }} = (_) => {exception}")
-            .Add($"private System.Action<{indexType}, {returnType}> {internalName}_set {{ get; set; }} = (_, _) => {exception}")
+            .Add($"private System.Func<{indexType}, {returnType}>? {internalName}_get {{ get; set; }} = null;")
+            .Add($"private System.Action<{indexType}, {returnType}>? {internalName}_set {{ get; set; }} = null;")
             .AddLineBreak();
 
         classScope.AddToConfig(config =>
@@ -105,7 +112,7 @@ internal static class IndexBuilder
             codeBuilder.AddLineBreak();
 
             codeBuilder.Documentation(doc => doc
-                .Summary($"Specifies a dictionary to be used as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
+                .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."));
 

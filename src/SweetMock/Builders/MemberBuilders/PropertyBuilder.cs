@@ -67,15 +67,23 @@ internal static class PropertyBuilder
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
                     .BuildLogSegment(symbol.GetMethod)
+                    .Scope($"if (this._{internalName}_get is null)", ifScope =>
+                    {
+                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
+                    })
                     .Add($"return this._{internalName}_get();")))
             .AddIf(hasSet, set => set
                 .Scope(setType, setScope => setScope
                     .BuildLogSegment(symbol.SetMethod)
+                    .Scope($"if (this._{internalName}_set is null)", ifScope =>
+                    {
+                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
+                    })
                     .Add($"this._{internalName}_set(value);"))));
 
         builder
-            .Add($"private System.Func<{type}> _{internalName}_get {{ get; set; }} = () => {symbol.BuildNotMockedException()}")
-            .Add($"private System.Action<{type}> _{internalName}_set {{ get; set; }} = s => {symbol.BuildNotMockedException()}")
+            .Add($"private System.Func<{type}>? _{internalName}_get {{ get; set; }} = null;")
+            .Add($"private System.Action<{type}>? _{internalName}_set {{ get; set; }} = null;")
             .AddLineBreak();
 
         builder.AddToConfig(config =>
@@ -103,7 +111,7 @@ internal static class PropertyBuilder
             var hasSet = property.SetMethod != null;
 
             codeBuilder.Documentation(doc => doc
-                .Summary($"Specifies a value to used for mocking the property {property.ToSeeCRef()}.")
+                .Summary($"Specifies a value to use for mocking the property {property.ToSeeCRef()}.")
                 .Parameter("value", "The value to use for the initial value of the property.")
                 .Returns("The updated configuration object."));
 
