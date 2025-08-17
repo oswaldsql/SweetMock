@@ -6,9 +6,15 @@ using Utils;
 /// <summary>
 ///     Represents a builder for indexers, implementing the ISymbolBuilder interface.
 /// </summary>
-internal static class IndexBuilder
+internal class IndexBuilder(MockContext context)
 {
-    public static void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
+    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IPropertySymbol> symbols)
+    {
+        var builder = new IndexBuilder(context);
+        builder.Build(classScope, symbols);
+    }
+
+    public void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
     {
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -23,7 +29,7 @@ internal static class IndexBuilder
     /// <param name="classScope"></param>
     /// <param name="indexerSymbols">The collection of indexer symbols to build.</param>
     /// <returns>True if any indexers were built; otherwise, false.</returns>
-    private static void BuildIndexes(CodeBuilder classScope, IEnumerable<IPropertySymbol> indexerSymbols)
+    private void BuildIndexes(CodeBuilder classScope, IEnumerable<IPropertySymbol> indexerSymbols)
     {
         var symbols = indexerSymbols as IPropertySymbol[] ?? indexerSymbols.ToArray();
         var indexType = symbols.First().Parameters[0].Type.ToString();
@@ -34,7 +40,7 @@ internal static class IndexBuilder
             foreach (var symbol in symbols)
             {
                 indexerCount++;
-                BuildIndex(builder, symbol, indexerCount);
+                this.BuildIndex(builder, symbol, indexerCount);
             }
         });
     }
@@ -45,11 +51,10 @@ internal static class IndexBuilder
     /// <param name="classScope"></param>
     /// <param name="symbol">The property symbol representing the indexer.</param>
     /// <param name="index">The count of indexers built so far.</param>
-    private static void BuildIndex(CodeBuilder classScope, IPropertySymbol symbol, int index)
+    private void BuildIndex(CodeBuilder classScope, IPropertySymbol symbol, int index)
     {
         var returnType = symbol.Type.ToString();
         var indexType = symbol.Parameters[0].Type.ToString();
-        var exception = symbol.BuildNotMockedExceptionForIndexer();
         var internalName = index == 1 ? "_onIndex" : $"_onIndex_{index}";
 
         var overwrites = symbol.Overwrites();
@@ -84,7 +89,7 @@ internal static class IndexBuilder
             .Add($"private System.Action<{indexType}, {returnType}>? {internalName}_set {{ get; set; }} = null;")
             .AddLineBreak();
 
-        classScope.AddToConfig(config =>
+        classScope.AddToConfig(context, config =>
         {
             var indexerParameters = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
 
@@ -94,34 +99,33 @@ internal static class IndexBuilder
                 .Parameter("set", "Function to call when the property is set.", hasSet)
                 .Returns("The configuration object."));
 
-            config.AddConfigMethod("Indexer", [indexerParameters], builder => builder
+            config.AddConfigMethod(context, "Indexer", [indexerParameters], builder => builder
                 .AddIf(hasGet, () => $"target.{internalName}_get = get;")
                 .AddIf(hasSet, () => $"target.{internalName}_set = set;")
             );
+
+            GenerateIndexerConfigExtensions(config, symbol);
         });
     }
 
-    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IPropertySymbol> indexers)
+    private static void GenerateIndexerConfigExtensions(CodeBuilder codeBuilder, IPropertySymbol indexer)
     {
-        foreach (var indexer in indexers)
-        {
-            var hasGet = indexer.GetMethod != null;
-            var hasSet = indexer.SetMethod != null;
+        var hasGet = indexer.GetMethod != null;
+        var hasSet = indexer.SetMethod != null;
 
-            var typeSymbol = indexer.Parameters[0].Type;
-            codeBuilder.AddLineBreak();
+        var typeSymbol = indexer.Parameters[0].Type;
+        codeBuilder.AddLineBreak();
 
-            codeBuilder.Documentation(doc => doc
+        codeBuilder
+            .Documentation(doc => doc
                 .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
-                .Returns("The updated configuration object."));
-
-            codeBuilder.AddConfigExtension(indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
+                .Returns("The updated configuration object."))
+            .AddConfigExtension(indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
             {
                 builder.AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
                 builder.AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);");
                 builder.AddIf(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
             });
-        }
     }
 }

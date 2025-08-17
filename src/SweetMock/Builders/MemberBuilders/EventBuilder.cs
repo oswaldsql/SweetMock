@@ -6,9 +6,15 @@ using Utils;
 /// <summary>
 ///     Represents a builder for events, implementing the ISymbolBuilder interface.
 /// </summary>
-internal static class EventBuilder
+internal class EventBuilder(MockContext context)
 {
-    public static void Build(CodeBuilder classScope, IEnumerable<IEventSymbol> events)
+    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IEventSymbol> events)
+    {
+        var builder = new EventBuilder(context);
+        builder.Build(classScope, events);
+    }
+
+    public void Build(CodeBuilder classScope, IEnumerable<IEventSymbol> events)
     {
         var lookup = events.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -23,7 +29,7 @@ internal static class EventBuilder
     /// <param name="classScope"></param>
     /// <param name="eventSymbols">The event symbols to build.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
-    private static void BuildEvents(CodeBuilder classScope, IEventSymbol[] eventSymbols)
+    private void BuildEvents(CodeBuilder classScope, IEventSymbol[] eventSymbols)
     {
         var name = eventSymbols.First().Name;
 
@@ -32,7 +38,7 @@ internal static class EventBuilder
             var eventCount = 1;
             foreach (var symbol in eventSymbols)
             {
-                BuildEvent(builder, symbol, eventCount);
+                this.BuildEvent(builder, symbol, eventCount);
                 eventCount++;
             }
         });
@@ -45,7 +51,7 @@ internal static class EventBuilder
     /// <param name="symbol">The event symbol to build.</param>
     /// <param name="eventCount">The count of the event being built.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
-    private static void BuildEvent(CodeBuilder builder, IEventSymbol symbol, int eventCount)
+    private void BuildEvent(CodeBuilder builder, IEventSymbol symbol, int eventCount)
     {
         var eventName = symbol.Name;
         var invokeMethod = symbol.Type.GetMembers().OfType<IMethodSymbol>().First(t => t.Name == "Invoke");
@@ -68,55 +74,54 @@ internal static class EventBuilder
                 .Add($"this._{eventFunction} -= value;"))
         );
 
-        builder.AddToConfig(config =>
+        builder.AddToConfig(context, config =>
             {
                 config.Documentation(doc => doc
                     .Summary($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered."));
 
                 if (types == "System.EventArgs")
-                    config.AddConfigMethod(eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
+                    config.AddConfigMethod(context, eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
                         .Add($"trigger = () => target._{eventName}?.Invoke(target, System.EventArgs.Empty);"));
                 else
-                    config.AddConfigMethod(eventName, [$"out System.Action<{types}> trigger"], codeBuilder => codeBuilder
+                    config.AddConfigMethod(context, eventName, [$"out System.Action<{types}> trigger"], codeBuilder => codeBuilder
                         .Add($"trigger = args => target._{eventName}?.Invoke(target, args);")
                     );
+
+                GenerateEventTriggerConfig(builder, symbol);
             }
         );
     }
 
-    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IEventSymbol> events)
+    private void GenerateEventTriggerConfig(CodeBuilder codeBuilder, IEventSymbol eventSymbol)
     {
-        foreach (var eventSymbol in events)
+        var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type));
+
+        codeBuilder.AddLineBreak();
+
+        if (types != "System.EventArgs")
         {
-            var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type));
-
-            codeBuilder.AddLineBreak();
-
-            if (types != "System.EventArgs")
-            {
-                codeBuilder.Documentation(doc => doc
+            codeBuilder
+                .Documentation(doc => doc
                     .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Parameter("eventArgs", "The arguments used in the event.")
-                    .Returns("The updated configuration object."));
-
-                codeBuilder.AddConfigExtension(eventSymbol, [types + " eventArgs"], config =>
+                    .Returns("The updated configuration object."))
+                .AddConfigExtension(eventSymbol, [types + " eventArgs"], config =>
                 {
                     config.Add($"this.{eventSymbol.Name}(out var trigger);");
                     config.Add("trigger.Invoke(eventArgs);");
                 });
-            }
-            else
-            {
-                codeBuilder.Documentation(doc => doc
+        }
+        else
+        {
+            codeBuilder
+                .Documentation(doc => doc
                     .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
-                    .Returns("The updated configuration object."));
-
-                codeBuilder.AddConfigExtension(eventSymbol, [], config =>
+                    .Returns("The updated configuration object."))
+                .AddConfigExtension(eventSymbol, [], config =>
                 {
                     config.Add($"this.{eventSymbol.Name}(out var trigger);");
                     config.Add("trigger.Invoke();");
                 });
-            }
         }
     }
 }

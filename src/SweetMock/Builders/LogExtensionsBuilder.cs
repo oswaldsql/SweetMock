@@ -5,32 +5,15 @@ using Utils;
 
 internal static class LogExtensionsBuilder
 {
-    public static string BuildLogExtensions(MockDetails details)
-    {
-        var builder = new CodeBuilder();
-
-        builder.AddFileHeader();
-
-        builder
-            .Add("#nullable enable")
-            .Add("using System.Linq;")
-            .Add("using System;")
-            .AddLineBreak();
-
-        builder.Scope($"namespace {details.Namespace}", namespaceScope => namespaceScope.BuildLogExtensionsClass(details));
-
-        return builder.ToString();
-    }
-
-    internal static CodeBuilder BuildLogExtensionsClass(this CodeBuilder namespaceScope, MockDetails details) =>
+    internal static CodeBuilder BuildLogExtensionsClass(this CodeBuilder namespaceScope, MockContext context) =>
         namespaceScope
             .AddGeneratedCodeAttrib()
-            .Scope($"internal static class {details.MockName}_LogExtensions", config =>
-                BuildMembers(config, details));
+            .Scope($"internal static class {context.MockName}_LogExtensions", config =>
+                BuildMembers(config, context));
 
-    private static void BuildMembers(CodeBuilder builder, MockDetails details)
+    private static void BuildMembers(CodeBuilder builder, MockContext context)
     {
-        var members = details.GetCandidates().Distinct(SymbolEqualityComparer.IncludeNullability).ToLookup(t => t.Name);
+        var members = context.GetCandidates().Distinct(SymbolEqualityComparer.IncludeNullability).ToLookup(t => t.Name);
 
         foreach (var m in members)
         {

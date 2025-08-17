@@ -107,7 +107,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                 {
                     var fileName = TypeToFileName(mockType);
 
-                    var code = mockBuilder.BuildFiles(mockType);
+                    var code = mockBuilder.BuildFiles(mockType, out var context);
                     spc.AddSource($"{fileName}.g.cs", code);
                 }
                 catch (SweetMockException e)

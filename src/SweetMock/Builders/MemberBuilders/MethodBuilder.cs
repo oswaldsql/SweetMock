@@ -9,26 +9,36 @@ using Utils;
 /// </summary>
 internal class MethodBuilder
 {
+    private readonly MockContext context;
     private readonly ILookup<string, IMethodSymbol> methodGroups;
     private readonly Dictionary<IMethodSymbol, string> methodDelegateName = new(SymbolEqualityComparer.Default);
 
-    public MethodBuilder(IEnumerable<IMethodSymbol> methods) =>
+    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IMethodSymbol> methods)
+    {
+        var methodBuilder = new MethodBuilder(methods, context);
+        methodBuilder.Render(classScope);
+    }
+
+    public MethodBuilder(IEnumerable<IMethodSymbol> methods, MockContext context)
+    {
+        this.context = context;
         this.methodGroups = methods.ToLookup(t => t.Name);
+    }
 
     public void Render(CodeBuilder classScope)
     {
-        foreach (var m in this.methodGroups)
+        foreach (var methodGroup in this.methodGroups)
         {
-            classScope.Region($"Method : {m.Key}", builder =>
+            classScope.Region($"Method : {methodGroup.Key}", builder =>
             {
                 var methodCount = 1;
-                foreach (var symbol in m)
+                foreach (var symbol in methodGroup)
                 {
                     this.Build(builder, symbol, methodCount);
                     methodCount++;
                 }
 
-                classScope.AddToConfig(config => this.BuildConfigExtensions(config, m));
+                classScope.AddToConfig(this.context, config => this.BuildConfigExtensions(config, methodGroup));
             });
         }
     }
@@ -73,7 +83,7 @@ internal class MethodBuilder
 
         classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = null;");
 
-        classScope.AddToConfig(config =>
+        classScope.AddToConfig(this.context, config =>
         {
             config.Documentation(doc => doc
                 .Summary($"Delegate for mocking calls to {symbol.ToSeeCRef()}."));
@@ -84,7 +94,7 @@ internal class MethodBuilder
                 .Parameter("call", "The action or function to execute when the method is called.")
                 .Returns("The updated configuration object."));
 
-            config.AddConfigMethod(name, [$"{delegateName} call"], builder => builder
+            config.AddConfigMethod(this.context, name, [$"{delegateName} call"], builder => builder
                 .Add($"target.{functionPointer} = call;"));
         });
     }

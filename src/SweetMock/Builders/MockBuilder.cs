@@ -4,9 +4,9 @@ using Generation;
 
 public class MockBuilder
 {
-    public string BuildFiles(INamedTypeSymbol target)
+    public string BuildFiles(INamedTypeSymbol target, out MockContext context)
     {
-        var mockDetails = GetMockDetails(target);
+        var mockContext = new MockContext(target);
 
         var result = new CodeBuilder();
 
@@ -17,10 +17,15 @@ public class MockBuilder
             .Add("using System.Linq;")
             .Add("using System;")
             .AddLineBreak()
-            .Scope($"namespace {mockDetails.Target.ContainingNamespace}", namespaceScope => namespaceScope.BuildMockClass(mockDetails).AddLineBreak()
-                .BuildConfigClass(mockDetails).AddLineBreak()
-                .BuildLogExtensionsClass(mockDetails));
+            .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope =>
+            {
+                var builder = new BaseClassBuilder(mockContext);
+                builder.BuildMockClass(namespaceScope)
+                    .AddLineBreak()
+                    .BuildLogExtensionsClass(mockContext);
+            });
 
+        context = mockContext;
         return result.ToString();
     }
 
@@ -73,25 +78,4 @@ public class MockBuilder
             }
         }
     }
-
-    private static MockDetails GetMockDetails(INamedTypeSymbol target)
-    {
-        var sourceName = target.ToString();
-        var interfaceNamespace = target.ContainingNamespace.ToString();
-        var mockType = "MockOf_" + target.Name;
-        var mockName = "MockOf_" + target.Name;
-        var constraints = "";
-
-        var typeArguments = target.TypeArguments;
-        if (typeArguments.Length > 0)
-        {
-            var generics = string.Join(", ", typeArguments.Select(t => t.Name));
-            mockType = $"MockOf_{target.Name}<{generics}>";
-            constraints = typeArguments.ToConstraints();
-        }
-
-        return new(target, interfaceNamespace, sourceName, mockType, mockName, constraints);
-    }
-
-    public record BuildResult(string Name, string Content);
 }

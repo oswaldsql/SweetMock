@@ -1,11 +1,11 @@
 namespace SweetMock.Builders;
 
-public static class MockDetailsExtensions
+public static class MockContextExtensions
 {
-    internal static ISymbol[] GetCandidates(this MockDetails details)
+    internal static ISymbol[] GetCandidates(this MockContext context)
     {
-        var allMembers = details.Target.GetMembers().ToList();
-        AddInheritedInterfaces(allMembers, details.Target);
+        var allMembers = context.Source.GetMembers().ToList();
+        AddInheritedInterfaces(allMembers, context.Source);
         var m = allMembers.Where(IsCandidate).ToArray();
         return m;
     }

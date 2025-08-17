@@ -7,9 +7,15 @@ using Utils;
 /// <summary>
 ///     Represents a builder for properties, implementing the ISymbolBuilder interface.
 /// </summary>
-internal static class PropertyBuilder
+internal class PropertyBuilder(MockContext context)
 {
-    public static void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
+    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IPropertySymbol> symbols)
+    {
+        var builder = new PropertyBuilder(context);
+        builder.Build(classScope,symbols);
+    }
+
+    public void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
     {
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -24,7 +30,7 @@ internal static class PropertyBuilder
     /// <param name="classScope"></param>
     /// <param name="symbols">An array of property symbols representing the properties.</param>
     /// <returns>True if at least one property was built; otherwise, false.</returns>
-    private static void BuildProperties(CodeBuilder classScope, IPropertySymbol[] symbols)
+    private void BuildProperties(CodeBuilder classScope, IPropertySymbol[] symbols)
     {
         var name = symbols.First().Name;
 
@@ -45,7 +51,7 @@ internal static class PropertyBuilder
     /// <param name="builder">The code builder to add the property to.</param>
     /// <param name="symbol">The property symbol representing the property.</param>
     /// <param name="index">The index of the property.</param>
-    private static void BuildProperty(CodeBuilder builder, IPropertySymbol symbol, int index)
+    private void BuildProperty(CodeBuilder builder, IPropertySymbol symbol, int index)
     {
         if (symbol.ReturnsByRef)
         {
@@ -86,7 +92,7 @@ internal static class PropertyBuilder
             .Add($"private System.Action<{type}>? _{internalName}_set {{ get; set; }} = null;")
             .AddLineBreak();
 
-        builder.AddToConfig(config =>
+        builder.AddToConfig(context, config =>
         {
             var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{type}> set" : "");
 
@@ -96,33 +102,41 @@ internal static class PropertyBuilder
                 .Parameter("set", "Function to call when the property is set.", hasGet)
                 .Returns("The updated configuration object."));
 
-            config.AddConfigMethod(internalName, [p], codeBuilder => codeBuilder
+            config.AddConfigMethod(context, internalName, [p], codeBuilder => codeBuilder
                 .AddIf(hasGet, () => $"target._{internalName}_get = get;")
                 .AddIf(hasSet, () => $"target._{internalName}_set = set;")
             );
+
+            GeneratePropertyMockConfiguration(config, symbol);
         });
     }
 
-    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockDetails mock, IEnumerable<IPropertySymbol> properties)
+    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockContext mock, IEnumerable<IPropertySymbol> properties)
     {
+        return;
         foreach (var property in properties)
         {
-            var hasGet = property.GetMethod != null;
-            var hasSet = property.SetMethod != null;
-
-            codeBuilder.Documentation(doc => doc
-                .Summary($"Specifies a value to use for mocking the property {property.ToSeeCRef()}.")
-                .Parameter("value", "The value to use for the initial value of the property.")
-                .Returns("The updated configuration object."));
-
-            codeBuilder.AddConfigExtension(property, [$"{property.Type} value"], builder =>
-                {
-                    builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
-                    builder.AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
-                    builder.AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);");
-                    builder.AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
-                }
-            );
+            GeneratePropertyMockConfiguration(codeBuilder, property);
         }
+    }
+
+    private static void GeneratePropertyMockConfiguration(CodeBuilder codeBuilder, IPropertySymbol property)
+    {
+        var hasGet = property.GetMethod != null;
+        var hasSet = property.SetMethod != null;
+
+        codeBuilder.Documentation(doc => doc
+            .Summary($"Specifies a value to use for mocking the property {property.ToSeeCRef()}.")
+            .Parameter("value", "The value to use for the initial value of the property.")
+            .Returns("The updated configuration object."));
+
+        codeBuilder.AddConfigExtension(property, [$"{property.Type} value"], builder =>
+            {
+                builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
+                builder.AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
+                builder.AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);");
+                builder.AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
+            }
+        );
     }
 }
