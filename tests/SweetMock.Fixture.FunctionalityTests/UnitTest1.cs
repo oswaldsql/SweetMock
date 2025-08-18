@@ -91,7 +91,7 @@ public class CustomMockImplementation : ICustomMock
     public string CustomValue { get; set; }
 }
 
-internal class MockOf_ICustomMock(Action<WrapperMock<ICustomMock>.Config>? config, object? dummy = null) : WrapperMock<ICustomMock>(config)
+internal class MockOf_ICustomMock(Action<WrapperMock<ICustomMock>.MockConfig>? config, MockOptions? options = null) : WrapperMock<ICustomMock>(config, options)
 {
 }
 

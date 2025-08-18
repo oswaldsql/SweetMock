@@ -125,8 +125,8 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
-            .Scope($"(System.Action<{implementationType}.Config>? config = null, MockOptions? options = null){constraints}", methodScope => methodScope
-                .Add($"return new {implementationType}(config);"));
+            .Scope($"(System.Action<{implementationType}.MockConfig>? config = null, MockOptions? options = null){constraints}", methodScope => methodScope
+                .Add($"return new {implementationType}(config, options);"));
 
         mockScope.AddLineBreak();
 
@@ -137,9 +137,9 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
-            .Scope($"(out {implementationType}.Config config{type.Name}, MockOptions? options = null){constraints}", methodScope => methodScope
-                .Add($"{implementationType}.Config outConfig = null!;")
-                .Add($"var result = new {implementationType}(config => outConfig = config);")
+            .Scope($"(out {implementationType}.MockConfig config{type.Name}, MockOptions? options = null){constraints}", methodScope => methodScope
+                .Add($"{implementationType}.MockConfig outConfig = null!;")
+                .Add($"var result = new {implementationType}(config => outConfig = config, options);")
                 .Add($"config{type.Name} = outConfig;")
                 .Add("return result;"));
     }

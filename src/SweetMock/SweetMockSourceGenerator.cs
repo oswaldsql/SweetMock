@@ -82,7 +82,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
             var mockType = (INamedTypeSymbol)mock.Key!;
 
             var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
-            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, "Config", implementation);
+            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, "MockConfig", implementation);
         }
     }
 
@@ -121,7 +121,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
                 if (context != null)
                 {
-                    yield return new(context.Source, context.Source.ContainingNamespace + "." + context.MockType, MockKind.Generated, context.ConfigName);
+                    yield return new(context.Source, context.Source.ContainingNamespace + "." + context.MockName, MockKind.Generated, context.ConfigName);
                 }
             }
         }

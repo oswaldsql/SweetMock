@@ -165,7 +165,7 @@ public static class FixtureBuilder
                 .Summary($"Creates an instance of the {s.ToSeeCRef()} object using the initialized mock dependencies.")
                 .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
             )
-            .Add($"public {s} CreateSut() =>").Indent()
+            .Add($"public {s.ToDisplayString(ToFullNameFormat)} CreateSut() =>").Indent()
             .Add($"new {s.Name}{generics}({parametersString});")
             .Unindent();
 

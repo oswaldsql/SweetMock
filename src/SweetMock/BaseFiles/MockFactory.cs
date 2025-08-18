@@ -42,22 +42,21 @@ public class MockOptions
 
 internal class WrapperMock<TInterface>
 {
-    public static implicit operator TInterface(WrapperMock<TInterface>  d) => d.Value;
-
+    public MockOptions? Options { get; }
     protected virtual TInterface? value { get; set; } = default(TInterface);
 
-    internal class Config
+    internal class MockConfig
     {
         private readonly WrapperMock<TInterface> target;
         private TInterface? value;
 
-        public static void Init(WrapperMock<TInterface> target, Action<Config>? config = null)
+        public static void Init(WrapperMock<TInterface> target, Action<MockConfig>? config = null)
         {
-            var config1 = new Config(target);
+            var config1 = new MockConfig(target);
             config?.Invoke(config1);
         }
 
-        private Config(WrapperMock<TInterface> target)
+        private MockConfig(WrapperMock<TInterface> target)
         {
             this.target = target;
         }
@@ -73,14 +72,15 @@ internal class WrapperMock<TInterface>
         }
     }
 
-    public WrapperMock(Action<Config>? config)
+    public WrapperMock(Action<MockConfig>? config, MockOptions? options)
     {
-        Config.Init(this, config);
+        this.Options = options;
+        MockConfig.Init(this, config);
     }
 
     public WrapperMock(TInterface value)
     {
-        Config.Init(this, config => config.Value = value);
+        MockConfig.Init(this, config => config.Value = value);
     }
 
     internal TInterface Value
