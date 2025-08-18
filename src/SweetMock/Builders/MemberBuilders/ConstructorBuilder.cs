@@ -40,26 +40,26 @@ internal class ConstructorBuilder(MockContext context) {
             var parameterList = constructor.Parameters.ToString(p => $"{p.Type} {p.Name}, ", "");
             var baseArguments = constructor.Parameters.ToString(p => p.Name);
 
-            var constructorSignature = $"internal protected MockOf_{context.Source.Name}({parameterList}System.Action<Config>? config = null, SweetMock.MockOptions? options = null) : base({baseArguments})";
+            var constructorSignature = $"internal protected MockOf_{context.Source.Name}({parameterList}System.Action<{context.ConfigName}>? config = null, SweetMock.MockOptions? options = null) : base({baseArguments})";
 
             builder.Scope(constructorSignature, ctor => ctor
                 .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
                 .Add("_sweetMockCallLog = _sweetMockOptions.Logger;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
                 .BuildLogSegment(constructor)
-                .Add("new Config(this, config);")
+                .Add($"new {context.ConfigName}(this, config);")
             );
         }
     }
 
     private void BuildEmptyConstructor(CodeBuilder builder)
     {
-        builder.Scope($"internal protected MockOf_{context.Source.Name}(System.Action<Config>? config = null, SweetMock.MockOptions? options = null)", methodScope => methodScope
+        builder.Scope($"internal protected MockOf_{context.Source.Name}(System.Action<{context.ConfigName}>? config = null, SweetMock.MockOptions? options = null)", methodScope => methodScope
             .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
             .Add("_sweetMockCallLog = options?.Logger;")
             .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
             .Scope("if(_sweetMockCallLog != null)", b2 => b2
                 .Add($"_sweetMockCallLog.Add(\"{context.Source}.{context.Source.Name}()\");"))
-            .Add("new Config(this, config);"));
+            .Add($"new {context.ConfigName}(this, config);"));
     }
 }

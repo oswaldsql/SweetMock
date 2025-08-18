@@ -81,7 +81,7 @@ internal class MethodBuilder
             .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
         );
 
-        classScope.Add($"private Config.{delegateName}? {functionPointer} {{get;set;}} = null;");
+        classScope.Add($"private {context.ConfigName}.{delegateName}? {functionPointer} {{get;set;}} = null;");
 
         classScope.AddToConfig(this.context, config =>
         {
@@ -196,7 +196,7 @@ internal class MethodBuilder
                 returnType = "System.Object";
             }
 
-            result.AddConfigExtension(first, [returnType + " returns"], builder =>
+            result.AddConfigExtension(this.context, first, [returnType + " returns"], builder =>
             {
                 foreach (var m in candidate)
                 {
@@ -220,7 +220,7 @@ internal class MethodBuilder
                     .Parameter("returnAsTasks", $"The fixed {genericType.ToSeeCRef()} that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
                     .Returns("The updated configuration object."));
 
-                result.AddConfigExtension(first, [genericType + " returnAsTasks"], builder =>
+                result.AddConfigExtension(this.context, first, [genericType + " returnAsTasks"], builder =>
                 {
                     foreach (var m in candidate)
                     {
@@ -264,7 +264,7 @@ internal class MethodBuilder
 
             returnType = "System.Collections.Generic.IEnumerable<" + returnType + ">";
 
-            result.AddConfigExtension(candidate.First(), [returnType + " returnValues"], builder =>
+            result.AddConfigExtension(this.context, candidate.First(), [returnType + " returnValues"], builder =>
             {
                 var index = 0;
                 foreach (var m in candidate)
@@ -299,7 +299,7 @@ internal class MethodBuilder
                 .Summary("Configures the mock to accept any call to methods not returning values.", $"Configures {seeString}")
                 .Returns("The updated configuration object."));
 
-            result.AddConfigExtension(candidate.First(), [], builder =>
+            result.AddConfigExtension(this.context, candidate.First(), [], builder =>
             {
                 foreach (var m in candidate)
                 {
@@ -332,7 +332,7 @@ internal class MethodBuilder
                 .Parameter("throws", "The exception to be thrown when the method is called.")
                 .Returns("The updated configuration object."));
 
-            result.AddConfigExtension(methodGroup.First(), ["Exception throws"], builder =>
+            result.AddConfigExtension(this.context, methodGroup.First(), ["Exception throws"], builder =>
             {
                 foreach (var method in methodGroup)
                 {

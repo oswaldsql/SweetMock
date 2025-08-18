@@ -37,10 +37,10 @@ internal class BaseClassBuilder(MockContext context)
 
                     config
                         .Documentation(doc => doc
-                            .Summary($"Initializes a new instance of the <see cref=\"global::{context.Source.ToCRef()}.Config\">Config</see> class")
+                            .Summary($"Initializes a new instance of the <see cref=\"global::{context.Source.ToCRef()}.{context.ConfigName}\">{context.ConfigName}</see> class")
                             .Parameter("target", "The target mock class.")
-                            .Parameter("config", "Optional configuration method."))
-                        .Scope($"public Config({context.MockType} target, System.Action<Config>? config = null)", methodScope => methodScope
+                            .Parameter($"{context.ConfigName}", "Optional configuration method."))
+                        .Scope($"public {context.ConfigName}({context.MockType} target, System.Action<{context.ConfigName}>? config = null)", methodScope => methodScope
                             .Add("this.target = target;")
                             .Add("config?.Invoke(this);"));
                 });

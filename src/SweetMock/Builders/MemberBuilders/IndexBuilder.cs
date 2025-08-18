@@ -104,11 +104,11 @@ internal class IndexBuilder(MockContext context)
                 .AddIf(hasSet, () => $"target.{internalName}_set = set;")
             );
 
-            GenerateIndexerConfigExtensions(config, symbol);
+            this.GenerateIndexerConfigExtensions(config, symbol);
         });
     }
 
-    private static void GenerateIndexerConfigExtensions(CodeBuilder codeBuilder, IPropertySymbol indexer)
+    private void GenerateIndexerConfigExtensions(CodeBuilder codeBuilder, IPropertySymbol indexer)
     {
         var hasGet = indexer.GetMethod != null;
         var hasSet = indexer.SetMethod != null;
@@ -121,7 +121,7 @@ internal class IndexBuilder(MockContext context)
                 .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."))
-            .AddConfigExtension(indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
+            .AddConfigExtension(context, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
             {
                 builder.AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
                 builder.AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);");

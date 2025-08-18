@@ -31,7 +31,7 @@ public class TriggerEventFromConfiguration
     {
         // Arrange
         Version? actual = null;
-        MockOf_IVersionLibrary.Config? exposedConfig = null;
+        MockOf_IVersionLibrary.MockConfig? exposedConfig = null;
 
         var versionLibrary = Mock.IVersionLibrary(config => exposedConfig = config);
 

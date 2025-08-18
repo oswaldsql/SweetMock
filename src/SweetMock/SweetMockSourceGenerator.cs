@@ -83,7 +83,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
             var mockType = (INamedTypeSymbol)mock.Key!;
 
             var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
-            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, implementation);
+            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, implementation, "Config");
         }
     }
 
@@ -103,11 +103,12 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
             if (MockBuilder.CanBeMocked(mockType))
             {
+                MockContext? context = null;
                 try
                 {
                     var fileName = TypeToFileName(mockType);
 
-                    var code = mockBuilder.BuildFiles(mockType, out var context);
+                    var code = mockBuilder.BuildFiles(mockType, out context);
                     spc.AddSource($"{fileName}.g.cs", code);
                 }
                 catch (SweetMockException e)
@@ -119,7 +120,10 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                     spc.AddUnknownExceptionOccured(attributes, e.Message);
                 }
 
-                yield return new(mockType, mockType.ContainingNamespace + ".MockOf_" + mockType.ToDisplayString(Format), MockKind.Generated);
+                if (context != null)
+                {
+                    yield return new(context.Source, context.MockType, MockKind.Generated, null, context.ConfigName);
+                }
             }
         }
     }
@@ -192,7 +196,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
     private record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute, bool Explicit);
 }
 
-public record MockInfo(INamedTypeSymbol Target, string MockClass, MockKind Kind, INamedTypeSymbol? Implementation = null);
+public record MockInfo(INamedTypeSymbol Source, string MockClass, MockKind Kind, INamedTypeSymbol? Implementation = null, string contextConfigName = null);
 
 public enum MockKind
 {

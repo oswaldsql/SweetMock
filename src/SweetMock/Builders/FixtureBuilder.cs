@@ -22,7 +22,7 @@ public static class FixtureBuilder
     {
         try
         {
-            var infos = mockInfos.ToDictionary(t => t.Target, NamedSymbolEqualityComparer.Default);
+            var infos = mockInfos.ToDictionary(t => t.Source, NamedSymbolEqualityComparer.Default);
             var symbol = (INamedTypeSymbol)source;
             var fileScope = new CodeBuilder();
             var targetCtor = symbol.Constructors.First();
@@ -80,7 +80,7 @@ public static class FixtureBuilder
                             .AddLineBreak()
                             .Documentation(doc => doc
                                 .Summary($"Gets the configuration for {parameter.Name} used within the fixture."))
-                            .Add($"internal {info.MockClass}{generics}.Config {parameter.Name} {{get;private set;}}");
+                            .Add($"internal {info.MockClass}{generics}.{info.contextConfigName} {parameter.Name} {{get;private set;}}");
                     }
                     else
                     {
@@ -147,7 +147,7 @@ public static class FixtureBuilder
                     {
                         var generics = type.GetTypeGenerics();
                         ctorScope
-                            .Add($"{parameterInfo.MockClass}{generics}.Config temp_{parameter.Name} = null!;")
+                            .Add($"{parameterInfo.MockClass}{generics}.{parameterInfo.contextConfigName} temp_{parameter.Name} = null!;")
                             .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
                             .AddLineBreak();
                     }
@@ -214,7 +214,7 @@ public static class FixtureBuilder
             var generics = type.GetTypeGenerics();
             if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
             {
-                yield return $"{info.MockClass}{generics}.Config {parameter.Name}";
+                yield return $"{info.MockClass}{generics}.{info.contextConfigName} {parameter.Name}";
             }
             else
             {

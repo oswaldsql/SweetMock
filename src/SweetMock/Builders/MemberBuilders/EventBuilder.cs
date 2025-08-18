@@ -87,7 +87,7 @@ internal class EventBuilder(MockContext context)
                         .Add($"trigger = args => target._{eventName}?.Invoke(target, args);")
                     );
 
-                GenerateEventTriggerConfig(builder, symbol);
+                this.GenerateEventTriggerConfig(builder, symbol);
             }
         );
     }
@@ -105,7 +105,7 @@ internal class EventBuilder(MockContext context)
                     .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."))
-                .AddConfigExtension(eventSymbol, [types + " eventArgs"], config =>
+                .AddConfigExtension(context, eventSymbol, [types + " eventArgs"], config =>
                 {
                     config.Add($"this.{eventSymbol.Name}(out var trigger);");
                     config.Add("trigger.Invoke(eventArgs);");
@@ -117,7 +117,7 @@ internal class EventBuilder(MockContext context)
                 .Documentation(doc => doc
                     .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Returns("The updated configuration object."))
-                .AddConfigExtension(eventSymbol, [], config =>
+                .AddConfigExtension(context, eventSymbol, [], config =>
                 {
                     config.Add($"this.{eventSymbol.Name}(out var trigger);");
                     config.Add("trigger.Invoke();");

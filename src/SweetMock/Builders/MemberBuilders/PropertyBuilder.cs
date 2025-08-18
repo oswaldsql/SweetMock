@@ -111,16 +111,7 @@ internal class PropertyBuilder(MockContext context)
         });
     }
 
-    public static void BuildConfigExtensions(CodeBuilder codeBuilder, MockContext mock, IEnumerable<IPropertySymbol> properties)
-    {
-        return;
-        foreach (var property in properties)
-        {
-            GeneratePropertyMockConfiguration(codeBuilder, property);
-        }
-    }
-
-    private static void GeneratePropertyMockConfiguration(CodeBuilder codeBuilder, IPropertySymbol property)
+    private void GeneratePropertyMockConfiguration(CodeBuilder codeBuilder, IPropertySymbol property)
     {
         var hasGet = property.GetMethod != null;
         var hasSet = property.SetMethod != null;
@@ -130,7 +121,7 @@ internal class PropertyBuilder(MockContext context)
             .Parameter("value", "The value to use for the initial value of the property.")
             .Returns("The updated configuration object."));
 
-        codeBuilder.AddConfigExtension(property, [$"{property.Type} value"], builder =>
+        codeBuilder.AddConfigExtension(context, property, [$"{property.Type} value"], builder =>
             {
                 builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
                 builder.AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
