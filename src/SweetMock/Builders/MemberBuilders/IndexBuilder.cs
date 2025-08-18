@@ -19,7 +19,7 @@ internal class IndexBuilder(MockContext context)
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
         {
-            BuildIndexes(classScope, m.ToArray());
+            this.BuildIndexes(classScope, m.ToArray());
         }
     }
 

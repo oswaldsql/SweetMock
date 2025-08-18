@@ -74,7 +74,7 @@ public static class FactoryClassBuilder
     {
         var source = mockInfo.Source;
         var detailsNamespace = source.ContainingNamespace;
-        var generics = source.IsGenericType ? "<" + source.TypeArguments.ToString(t => t.Name) + ">" : "";
+        var generics = source.GetTypeGenerics();
         var detailsMockType = "MockOf_" + source.Name + generics;
         var detailsSourceName = source.ToString();
 
@@ -83,7 +83,7 @@ public static class FactoryClassBuilder
         var parameters = constructorParameters.ToString(t => $"{t.Type} {t.Name}, ", "");
         var arguments = constructorParameters.ToString(t => $"{t.Name}, ", "");
 
-        var constraints = source.TypeArguments.ToConstraints();
+        var constraints = source.ToConstraints();
 
         builder
             .Documentation(doc => doc
@@ -93,7 +93,7 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {source.ToSeeCRef()}."))
             .Add($"internal static {detailsSourceName} {source.Name}{generics}")
-            .Scope($"({parameters}System.Action<{detailsNamespace}.{detailsMockType}.{mockInfo.contextConfigName}>? config = null, MockOptions? options = null) {constraints}", methodScope => methodScope
+            .Scope($"({parameters}System.Action<{detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName}>? config = null, MockOptions? options = null) {constraints}", methodScope => methodScope
                 .Add($"return new {detailsNamespace}.{detailsMockType}({arguments}config, options);"));
 
         builder.AddLineBreak();
@@ -106,8 +106,8 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {source.ToSeeCRef()}."))
             .Add($"internal static {detailsSourceName} {source.Name}{generics}")
-            .Scope($"({parameters}out {detailsNamespace}.{detailsMockType}.{mockInfo.contextConfigName} config{source.Name}, MockOptions? options = null) {constraints}", methodScope => methodScope
-                .Add($"{detailsNamespace}.{detailsMockType}.{mockInfo.contextConfigName} outConfig = null!;")
+            .Scope($"({parameters}out {detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName} config{source.Name}, MockOptions? options = null) {constraints}", methodScope => methodScope
+                .Add($"{detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName} outConfig = null!;")
                 .Add($"var result = new {detailsNamespace}.{detailsMockType}({arguments}config => outConfig = config, options);")
                 .Add($"config{source.Name} = outConfig;;")
                 .Add("return result;"));
@@ -116,7 +116,7 @@ public static class FactoryClassBuilder
     private static void BuildCustomMockFactory(INamedTypeSymbol type, INamedTypeSymbol implementationType, CodeBuilder mockScope)
     {
         var generics = type.GetTypeGenerics();
-        var constraints = type.TypeArguments.ToConstraints();
+        var constraints = type.ToConstraints();
 
         mockScope
             .Documentation(doc => doc

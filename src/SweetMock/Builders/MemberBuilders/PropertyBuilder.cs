@@ -20,7 +20,7 @@ internal class PropertyBuilder(MockContext context)
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
         {
-            BuildProperties(classScope, m.ToArray());
+            this.BuildProperties(classScope, m.ToArray());
         }
     }
 
@@ -40,7 +40,7 @@ internal class PropertyBuilder(MockContext context)
             foreach (var symbol in symbols)
             {
                 index++;
-                BuildProperty(builder, symbol, index);
+                this.BuildProperty(builder, symbol, index);
             }
         });
     }
@@ -107,7 +107,7 @@ internal class PropertyBuilder(MockContext context)
                 .AddIf(hasSet, () => $"target._{internalName}_set = set;")
             );
 
-            GeneratePropertyMockConfiguration(config, symbol);
+            this.GeneratePropertyMockConfiguration(config, symbol);
         });
     }
 

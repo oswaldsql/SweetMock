@@ -26,7 +26,7 @@ public static class FixtureBuilder
             var fileScope = new CodeBuilder();
             var targetCtor = symbol.Constructors.First();
             var generics = symbol.GetTypeGenerics();
-            var constraints = ConstraintBuilder.ToConstraints(symbol.TypeArguments);
+            var constraints = symbol.ToConstraints();
 
             fileScope.AddFileHeader()
                 .Add("#nullable enable")
@@ -51,9 +51,9 @@ public static class FixtureBuilder
     {
         var configParameters = string.Join(", ", BuildFixtureConfigParameters(targetCtor, infos));
         classScope
-            .Scope($"internal class FixtureConfig", classScope =>
+            .Scope($"internal class FixtureConfig", configScope =>
             {
-                classScope.Documentation(builder =>
+                configScope.Documentation(builder =>
                     {
                         builder.Summary("Configuration object for the fixture");
                         builder.Parameter(targetCtor.Parameters, p => p.Name, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
@@ -72,15 +72,15 @@ public static class FixtureBuilder
                     var generics = type.GetTypeGenerics();
                     if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
                     {
-                        classScope
+                        configScope
                             .AddLineBreak()
                             .Documentation(doc => doc
                                 .Summary($"Gets the configuration for {parameter.Name} used within the fixture."))
-                            .Add($"internal global::{info.MockClass}{generics}.{info.contextConfigName} {parameter.Name} {{get;private set;}}");
+                            .Add($"internal global::{info.MockClass}{generics}.{info.ContextConfigName} {parameter.Name} {{get;private set;}}");
                     }
                     else
                     {
-                        classScope
+                        configScope
                             .AddLineBreak()
                             .Documentation(doc => doc
                                 .Summary($"Gets or sets {parameter.Name} used for configuration within the fixture."))
@@ -143,7 +143,7 @@ public static class FixtureBuilder
                     {
                         var generics = type.GetTypeGenerics();
                         ctorScope
-                            .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.contextConfigName} temp_{parameter.Name} = null!;")
+                            .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.ContextConfigName} temp_{parameter.Name} = null!;")
                             .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
                             .AddLineBreak();
                     }
@@ -210,7 +210,7 @@ public static class FixtureBuilder
             var generics = type.GetTypeGenerics();
             if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
             {
-                yield return $"global::{info.MockClass}{generics}.{info.contextConfigName} {parameter.Name}";
+                yield return $"global::{info.MockClass}{generics}.{info.ContextConfigName} {parameter.Name}";
             }
             else
             {
@@ -248,7 +248,7 @@ public static class FixtureBuilder
     private static CodeBuilder BuildForFixture(CodeBuilder classScope, INamedTypeSymbol symbol)
     {
         var generics = symbol.GetTypeGenerics();
-        var constraints = ConstraintBuilder.ToConstraints(symbol.TypeArguments);
+        var constraints = symbol.ToConstraints();
 
         return classScope
             .Documentation(d => d

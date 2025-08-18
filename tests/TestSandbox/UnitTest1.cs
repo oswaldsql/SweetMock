@@ -8,12 +8,14 @@ using SweetMock;
 
 [Fixture<TestFixture>]
 [Mock<MassTransit.ConsumeContext<Payload>, MockOf_ConsumeContext<Payload>>]
-//[Mock<ConsumeContext<string>>]
+[Mock<HttpClient>]
+[Mock<HttpMessageHandler>]
 public class UnitTest1
 {
     [Test]
     public void METHOD()
     {
+        
         Fixture.TestFixture(config =>
         {
             config.context.Value = new TestConsumeContext<string>("test");
@@ -51,6 +53,22 @@ public class UnitTest1
 //    {
 //        void Log<TState>(Func<TState, Exception?, string> formatter);
 //    }
+}
+
+public class Teste : System.Net.Http.HttpClient
+{
+    public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+
+public class Tester : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class TestFixture(ConsumeContext<string> context) {}

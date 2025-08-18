@@ -139,34 +139,35 @@ internal static class LogExtensionsBuilder
             return;
         }
 
-        result.Add($"public class {argsClass} : SweetMock.TypedArguments {{").Indent();
-        if (!ignoreArguments)
+        result.Scope($"public class {argsClass} : SweetMock.TypedArguments", logScope =>
         {
-            foreach (var l in lookup)
+            if (!ignoreArguments)
             {
-                if (l.Count() > 1)
+                foreach (var l in lookup)
                 {
-                    result.Documentation(doc => doc
-                        .Summary("The argument can be different types", string.Join(", ", l.Select(t => t.ToSeeCRef()))));
+                    var argumentTypes = l.Distinct(SymbolEqualityComparer.Default).ToArray();
+                    if (argumentTypes.Count() > 1)
+                    {
+                        logScope.Documentation(doc => doc
+                                .Summary("The argument can be different types", string.Join(", ", argumentTypes.Select(t => t.ToSeeCRef()).Distinct())))
+                            .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                    }
+                    else if (l.First() is ITypeParameterSymbol || l.First() is INamedTypeSymbol { IsGenericType: true })
+                    {
+                        logScope.Documentation(doc => doc
+                                .Summary("The argument is a generic type. (" + l.First() + ")"))
+                            .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
+                    }
+                    else
+                    {
+                        var p = l.First();
+                        logScope.Add($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
+                    }
 
-                    result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
-                }
-                else if (l.First() is ITypeParameterSymbol || l.First() is INamedTypeSymbol { IsGenericType: true })
-                {
-                    result.Documentation(doc => doc
-                        .Summary("The argument is a generic type. (" + l.First() + ")"));
-
-                    result.Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
-                }
-                else
-                {
-                    var p = l.First();
-                    result.Add($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
+                    logScope.AddLineBreak();
                 }
             }
-        }
-
-        result.Unindent().Add("}");
+        });
     }
 
     private static void BuildPredicateDocumentation(CodeBuilder result, IMethodSymbol[] symbols, ISymbol target) =>

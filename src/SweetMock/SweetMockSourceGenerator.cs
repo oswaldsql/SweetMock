@@ -4,8 +4,6 @@ using System.Collections.Immutable;
 using System.Text;
 using Builders;
 using Exceptions;
-using Generation;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Utils;
 
@@ -64,7 +62,8 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         var collectedMocks = CollectedMocks(mocks, fixtures, customMocks);
 
         var mockInfos = AddMocks(spc, collectedMocks).ToList();
-        mockInfos.AddRange(AddCustomMocks(spc, customMocks));
+        mockInfos.AddRange(AddCustomMocks(customMocks));
+
         AddFixtures(fixtures, spc, mockInfos);
         AddMockFactory(spc, mockInfos);
     }
@@ -75,15 +74,15 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         spc.AddSource("SweetMock.Mock.g.cs", code);
     }
 
-    private static IEnumerable<MockInfo> AddCustomMocks(SourceProductionContext spc, ImmutableArray<AttributeData> customMocks)
+    private static IEnumerable<MockInfo> AddCustomMocks(ImmutableArray<AttributeData> customMocks)
     {
-        var lookup = customMocks.ToLookup(data => FirstGenericType(data), SymbolEqualityComparer.Default);
+        var lookup = customMocks.ToLookup(FirstGenericType, SymbolEqualityComparer.Default);
         foreach (var mock in lookup)
         {
             var mockType = (INamedTypeSymbol)mock.Key!;
 
             var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
-            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, implementation, "Config");
+            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, "Config", implementation);
         }
     }
 
@@ -98,7 +97,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
             if (mock.Any(t => t.Explicit))
             {
-                MockBuilder.DiagnoseType(mockType, spc, mock.Where(t => t.Explicit == true).Select(t => t.Attribute));
+                MockBuilder.DiagnoseType(mockType, spc, mock.Where(t => t.Explicit).Select(t => t.Attribute));
             }
 
             if (MockBuilder.CanBeMocked(mockType))
@@ -122,7 +121,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
                 if (context != null)
                 {
-                    yield return new(context.Source, context.Source.ContainingNamespace + "." + context.MockType, MockKind.Generated, null, context.ConfigName);
+                    yield return new(context.Source, context.Source.ContainingNamespace + "." + context.MockType, MockKind.Generated, context.ConfigName);
                 }
             }
         }
@@ -196,7 +195,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
     private record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute, bool Explicit);
 }
 
-public record MockInfo(INamedTypeSymbol Source, string MockClass, MockKind Kind, INamedTypeSymbol? Implementation = null, string contextConfigName = null);
+public record MockInfo(INamedTypeSymbol Source, string MockClass, MockKind Kind, string ContextConfigName, INamedTypeSymbol? Implementation = null);
 
 public enum MockKind
 {

@@ -81,7 +81,7 @@ internal class MethodBuilder
             .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
         );
 
-        classScope.Add($"private {context.ConfigName}.{delegateName}? {functionPointer} {{get;set;}} = null;");
+        classScope.Add($"private {this.context.ConfigName}.{delegateName}? {functionPointer} {{get;set;}} = null;");
 
         classScope.AddToConfig(this.context, config =>
         {

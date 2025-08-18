@@ -52,8 +52,7 @@ internal class ConstructorBuilder(MockContext context) {
         }
     }
 
-    private void BuildEmptyConstructor(CodeBuilder builder)
-    {
+    private void BuildEmptyConstructor(CodeBuilder builder) =>
         builder.Scope($"internal protected MockOf_{context.Source.Name}(System.Action<{context.ConfigName}>? config = null, SweetMock.MockOptions? options = null)", methodScope => methodScope
             .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
             .Add("_sweetMockCallLog = options?.Logger;")
@@ -61,5 +60,4 @@ internal class ConstructorBuilder(MockContext context) {
             .Scope("if(_sweetMockCallLog != null)", b2 => b2
                 .Add($"_sweetMockCallLog.Add(\"{context.Source}.{context.Source.Name}()\");"))
             .Add($"new {context.ConfigName}(this, config);"));
-    }
 }

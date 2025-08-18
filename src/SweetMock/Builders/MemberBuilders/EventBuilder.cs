@@ -19,7 +19,7 @@ internal class EventBuilder(MockContext context)
         var lookup = events.ToLookup(t => t.Name);
         foreach (var m in lookup)
         {
-            BuildEvents(classScope, m.ToArray());
+            this.BuildEvents(classScope, m.ToArray());
         }
     }
 

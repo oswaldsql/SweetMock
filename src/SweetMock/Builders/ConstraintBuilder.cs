@@ -9,8 +9,12 @@ public static class ConstraintBuilder
     /// </summary>
     /// <param name="typeArguments">The type arguments to convert.</param>
     /// <returns>A string representing the constraints.</returns>
-    public static string ToConstraints(this ImmutableArray<ITypeSymbol> typeArguments) => 
+    public static string ToConstraints(this ImmutableArray<ITypeSymbol> typeArguments) =>
         string.Join(" ", typeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
+
+    public static string ToConstraints(this INamedTypeSymbol symbol) =>
+        string.Join(" ", symbol.TypeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
+
 
     /// <summary>
     ///     Converts a type parameter symbol to a constraint string.

@@ -1,18 +1,14 @@
 ﻿namespace SweetMock.Utils;
 
 using Exceptions;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 public static class Mappers
 {
-    internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
-        values == null ? "" : string.Join(separator, values.Select(mapper));
-
     private static readonly SymbolDisplayFormat ToCRefFormat = new(
         SymbolDisplayGlobalNamespaceStyle.Omitted,
         SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
     );
 
@@ -20,13 +16,24 @@ public static class Mappers
         SymbolDisplayGlobalNamespaceStyle.Omitted,
         SymbolDisplayTypeQualificationStyle.NameOnly,
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
     );
 
+    private static readonly SymbolDisplayFormat ToFullNameFormatWithGlobal = new(
+        SymbolDisplayGlobalNamespaceStyle.Included,
+        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
+    );
+
+    internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
+        values == null ? "" : string.Join(separator, values.Select(mapper));
+
     internal static string ToCRef(this ISymbol symbol) =>
-        symbol.ToDisplayString(ToCRefFormat).Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
+        symbol.ToDisplayString(ToCRefFormat).Replace(".this[", ".Item[").Replace('<', '{').Replace('>', '}');
 
     public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(ToFullNameFormat).Replace("<", "&lt;").Replace(">", "&gt;")}</see>""";
 
@@ -41,7 +48,7 @@ public static class Mappers
             Accessibility.Private => "private",
             Accessibility.ProtectedAndInternal => "protected internal",
             Accessibility.Protected => "protected",
-            Accessibility.ProtectedOrInternal => "protected internal",
+            Accessibility.ProtectedOrInternal => "protected",
             Accessibility.Public => "public",
             _ => throw new UnsupportedAccessibilityException(accessibility)
         };
@@ -82,38 +89,15 @@ public static class Mappers
         return new("", symbol.AccessibilityString() + " ", "override ");
     }
 
-    internal static string GetTypeGenerics(this INamedTypeSymbol type) => type.IsGenericType ? "<" + string.Join(", ", type.TypeArguments) + ">" : "";
+    internal static string GetTypeGenerics(this INamedTypeSymbol type) => type.IsGenericType ? "<" + string.Join(", ", type.TypeArguments.Select(t => t.ToDisplayString(ToFullNameFormatWithGlobal))) + ">" : "";
 }
 
 public sealed class NamedSymbolEqualityComparer : IEqualityComparer<INamedTypeSymbol>
 {
-    public static NamedSymbolEqualityComparer Default { get; } = new NamedSymbolEqualityComparer();
+    private static readonly SymbolEqualityComparer SymbolEqualityComparer = SymbolEqualityComparer.Default;
+    public static NamedSymbolEqualityComparer Default { get; } = new();
 
-    private static SymbolEqualityComparer symbolEqualityComparer = SymbolEqualityComparer.Default;
+    public bool Equals(INamedTypeSymbol x, INamedTypeSymbol y) => SymbolEqualityComparer.Equals(x, y);
 
-    public bool Equals(INamedTypeSymbol x, INamedTypeSymbol y) => symbolEqualityComparer.Equals(x,y);
-
-    public int GetHashCode(INamedTypeSymbol obj) => symbolEqualityComparer.GetHashCode(obj);
-}
-
-public sealed class ParameterSymbolEqualityComparer : IEqualityComparer<IParameterSymbol>
-{
-    public static ParameterSymbolEqualityComparer Default { get; } = new ParameterSymbolEqualityComparer();
-
-    private static SymbolEqualityComparer symbolEqualityComparer = SymbolEqualityComparer.Default;
-
-    public bool Equals(IParameterSymbol x, IParameterSymbol y) => symbolEqualityComparer.Equals(x,y);
-
-    public int GetHashCode(IParameterSymbol obj) => symbolEqualityComparer.GetHashCode(obj);
-}
-
-public sealed class TypeSymbolEqualityComparer : IEqualityComparer<ITypeSymbol>
-{
-    public static TypeSymbolEqualityComparer Default { get; } = new TypeSymbolEqualityComparer();
-
-    private static SymbolEqualityComparer symbolEqualityComparer = SymbolEqualityComparer.Default;
-
-    public bool Equals(ITypeSymbol x, ITypeSymbol y) => symbolEqualityComparer.Equals(x,y);
-
-    public int GetHashCode(ITypeSymbol obj) => symbolEqualityComparer.GetHashCode(obj);
+    public int GetHashCode(INamedTypeSymbol obj) => SymbolEqualityComparer.GetHashCode(obj);
 }
