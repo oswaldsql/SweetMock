@@ -1,6 +1,5 @@
 ﻿namespace SweetMock.Builders;
 
-using Exceptions;
 using Generation;
 using Utils;
 
@@ -57,10 +56,7 @@ public static class FixtureBuilder
                 classScope.Documentation(builder =>
                     {
                         builder.Summary("Configuration object for the fixture");
-                        foreach (var parameter in targetCtor.Parameters)
-                        {
-                            builder.Parameter(parameter.Name, $"Configuring the {parameter.Name} ({parameter.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
-                        }
+                        builder.Parameter(targetCtor.Parameters, p => p.Name, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
                     })
                     .Scope($"internal FixtureConfig({configParameters})", ctorScope =>
                     {
@@ -80,7 +76,7 @@ public static class FixtureBuilder
                             .AddLineBreak()
                             .Documentation(doc => doc
                                 .Summary($"Gets the configuration for {parameter.Name} used within the fixture."))
-                            .Add($"internal {info.MockClass}{generics}.{info.contextConfigName} {parameter.Name} {{get;private set;}}");
+                            .Add($"internal global::{info.MockClass}{generics}.{info.contextConfigName} {parameter.Name} {{get;private set;}}");
                     }
                     else
                     {
@@ -88,7 +84,7 @@ public static class FixtureBuilder
                             .AddLineBreak()
                             .Documentation(doc => doc
                                 .Summary($"Gets or sets {parameter.Name} used for configuration within the fixture."))
-                            .Add($"internal {parameter.Type}{generics} {parameter.Name} {{get; set;}}");
+                            .Add($"internal {parameter.Type.ToDisplayString(ToFullNameFormat)}{generics} {parameter.Name} {{get; set;}}");
                     }
                 }
             })
@@ -111,7 +107,7 @@ public static class FixtureBuilder
             if (infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
             {
                 var generics = type.GetTypeGenerics();
-                classScope.Add($"private readonly {parameterInfo.MockClass}{generics} _{parameter.Name};");
+                classScope.Add($"private readonly global::{parameterInfo.MockClass}{generics} _{parameter.Name};");
             }
         }
 
@@ -123,7 +119,7 @@ public static class FixtureBuilder
     private static CodeBuilder AddCallLog(this CodeBuilder classScope) =>
         classScope
             .Documentation(d => d.Summary("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests."))
-            .Add("public SweetMock.CallLog Log{get; private set;}")
+            .Add("public global::SweetMock.CallLog Log{get; private set;}")
             .AddLineBreak();
 
     private static CodeBuilder AddConstructor(this CodeBuilder classScope, INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
@@ -141,13 +137,13 @@ public static class FixtureBuilder
                     var type = parameter.Type as INamedTypeSymbol;
                     if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
                     {
-                        ctorScope.Add($"{parameter.Type} temp_{parameter.Name} = default;").AddLineBreak();
+                        ctorScope.Add($"{parameter.Type.ToDisplayString(ToFullNameFormat)} temp_{parameter.Name} = default;").AddLineBreak();
                     }
                     else
                     {
                         var generics = type.GetTypeGenerics();
                         ctorScope
-                            .Add($"{parameterInfo.MockClass}{generics}.{parameterInfo.contextConfigName} temp_{parameter.Name} = null!;")
+                            .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.contextConfigName} temp_{parameter.Name} = null!;")
                             .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
                             .AddLineBreak();
                     }
@@ -214,14 +210,22 @@ public static class FixtureBuilder
             var generics = type.GetTypeGenerics();
             if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
             {
-                yield return $"{info.MockClass}{generics}.{info.contextConfigName} {parameter.Name}";
+                yield return $"global::{info.MockClass}{generics}.{info.contextConfigName} {parameter.Name}";
             }
             else
             {
-                yield return $"{parameter.Type} {parameter.Name}";
+                yield return $"{parameter.Type.ToDisplayString(ToFullNameFormat)} {parameter.Name}";
             }
         }
     }
+
+    private static readonly SymbolDisplayFormat ToFullNameFormat = new(
+        SymbolDisplayGlobalNamespaceStyle.Included,
+        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
+    );
 
     public static string BuildFixturesFactory(IEnumerable<INamedTypeSymbol> source)
     {

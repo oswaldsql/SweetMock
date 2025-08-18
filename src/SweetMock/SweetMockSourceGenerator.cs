@@ -122,7 +122,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
                 if (context != null)
                 {
-                    yield return new(context.Source, context.MockType, MockKind.Generated, null, context.ConfigName);
+                    yield return new(context.Source, context.Source.ContainingNamespace + "." + context.MockType, MockKind.Generated, null, context.ConfigName);
                 }
             }
         }

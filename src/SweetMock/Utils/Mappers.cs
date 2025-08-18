@@ -28,7 +28,7 @@ public static class Mappers
     internal static string ToCRef(this ISymbol symbol) =>
         symbol.ToDisplayString(ToCRefFormat).Replace(".this[",".Item[").Replace('<', '{').Replace('>', '}');
 
-    public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(ToFullNameFormat)}</see>""";
+    public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(ToFullNameFormat).Replace("<", "&lt;").Replace(">", "&gt;")}</see>""";
 
     private static string AccessibilityString(this ISymbol method) =>
         method.DeclaredAccessibility.AccessibilityString();
