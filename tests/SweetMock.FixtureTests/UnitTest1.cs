@@ -7,7 +7,7 @@ using SweetMock;
 
 [Fixture<ShoppingBasket>]
 [Mock<TimeProvider, MockOf_TimeProvider>]
-//[Mock<ILogger<string>, MockOf_ILogger<string>>]
+[Mock<ILogger<string>, MockOf_ILogger<string>>]
 [Mock<Tests>]
 [Mock<ShoppingBasket>]
 [Mock<ISendEndpoint>]

@@ -83,8 +83,8 @@ public static class FixtureBuilder
                         configScope
                             .AddLineBreak()
                             .Documentation(doc => doc
-                                .Summary($"Gets or sets {parameter.Name} used for configuration within the fixture."))
-                            .Add($"internal {parameter.Type.ToDisplayString(ToFullNameFormat)}{generics} {parameter.Name} {{get; set;}}");
+                                .Summary($"Gets or sets the {parameter.Name} used for configuration within the fixture."))
+                            .Add($"internal {parameter.Type.ToDisplayString(ToFullNameFormat)}{generics}? {parameter.Name} {{get; set;}}");
                     }
                 }
             })
@@ -137,15 +137,26 @@ public static class FixtureBuilder
                     var type = parameter.Type as INamedTypeSymbol;
                     if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
                     {
-                        ctorScope.Add($"{parameter.Type.ToDisplayString(ToFullNameFormat)} temp_{parameter.Name} = default;").AddLineBreak();
+                        ctorScope.Add($"{parameter.Type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").AddLineBreak();
                     }
                     else
                     {
                         var generics = type.GetTypeGenerics();
-                        ctorScope
-                            .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.ContextConfigName} temp_{parameter.Name} = null!;")
-                            .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
-                            .AddLineBreak();
+                        if (parameterInfo.Kind == MockKind.Wrapper)
+                        {
+                            ctorScope
+                                .Add($"_{parameter.Name} = new global::{parameterInfo.MockClass}{generics}();")
+                                .Add($"var temp_{parameter.Name} = _{parameter.Name}.Config;")
+                                .Add($"_{parameter.Name}.Options = new global::SweetMock.MockOptions(Log, \"{parameter.Name}\");")
+                                .AddLineBreak();
+                        }
+                        else
+                        {
+                            ctorScope
+                                .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.ContextConfigName} temp_{parameter.Name} = null!;")
+                                .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
+                                .AddLineBreak();
+                        }
                     }
                 }
 
@@ -180,12 +191,14 @@ public static class FixtureBuilder
 
     private static string MockTypeToArgument(Dictionary<INamedTypeSymbol, MockInfo> infos, IParameterSymbol t)
     {
+        var canBeNull = t.Type.NullableAnnotation == NullableAnnotation.Annotated;
         var mockType = GetMockType(infos, t);
         return mockType switch
         {
             MockKind.Wrapper => $"_{t.Name}.Value",
             MockKind.Generated => $"_{t.Name}",
-            MockKind.Direct => $"Config.{t.Name}",
+            MockKind.Direct when canBeNull => $"Config.{t.Name}",
+            MockKind.Direct when !canBeNull => $"Config.{t.Name} ?? throw new NullReferenceException()",
             _ => ""
         };
     }
@@ -214,7 +227,7 @@ public static class FixtureBuilder
             }
             else
             {
-                yield return $"{parameter.Type.ToDisplayString(ToFullNameFormat)} {parameter.Name}";
+                yield return $"{parameter.Type.ToDisplayString(ToFullNameFormat)}? {parameter.Name}";
             }
         }
     }
@@ -234,7 +247,8 @@ public static class FixtureBuilder
             .Add("#nullable enable")
             .Scope("namespace SweetMock", namespaceScope =>
                 namespaceScope
-                    .Scope("internal static partial class Fixture", classScope =>
+                    .AddGeneratedCodeAttrib()
+                    .Scope("internal static class Fixture", classScope =>
                     {
                         foreach (var symbol in source)
                         {

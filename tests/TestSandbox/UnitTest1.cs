@@ -75,4 +75,4 @@ public class TestFixture(ConsumeContext<string> context) {}
 
 public class Payload {}
 
-internal class MockOf_ConsumeContext<T>(Action<WrapperMock<MassTransit.ConsumeContext<T>>.MockConfig>? config, MockOptions? options) : WrapperMock<MassTransit.ConsumeContext<T>>(config, options) where T : class;
+internal class MockOf_ConsumeContext<T>() : MockBase<MassTransit.ConsumeContext<T>>() where T : class;

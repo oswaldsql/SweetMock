@@ -1,12 +1,50 @@
 ﻿#nullable enable
-using System.Collections;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using System.CodeDom.Compiler;
 
-namespace SweetMock {
-    using System.Runtime.CompilerServices;
+namespace SweetMock
+{
+    #region attributes
+
+    /// <summary>
+    /// Instructs SweetMock to create a mock for a specific interface or class.
+    /// </summary>
+    /// <typeparam name="T">The type to create a mock based on.</typeparam>
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    [GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
+    internal class MockAttribute<T> : Attribute
+    {
+    }
+
+    /// <summary>
+    /// Specifies that a mock should use a specific custom implementation.
+    /// </summary>
+    /// <typeparam name="T">Type of class to mock.</typeparam>
+    /// <typeparam name="TImplementation">Concrete type of use for mocking.</typeparam>
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    [GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
+    internal class MockAttribute<T, TImplementation> : Attribute
+        where TImplementation : MockBase<T>, new()
+    ;
+
+    /// <summary>
+    /// Instructs SweetMock to create a fixture for a specific class.
+    /// </summary>
+    /// <typeparam name="T">The type to create a fixture for.</typeparam>
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    [GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
+    internal class FixtureAttribute<T> : Attribute where T : class
+    {
+    }
+
+    #endregion
+
+    #region CallLog
 
     public class CallLogItem
     {
@@ -38,7 +76,7 @@ namespace SweetMock {
         internal void Init(Arguments arguments) =>
             this.Arguments = arguments;
 
-        protected Arguments Arguments { get;private set; } = Arguments.Empty;
+        protected Arguments Arguments { get; private set; } = Arguments.Empty;
     }
 
     public class Arguments
@@ -64,6 +102,7 @@ namespace SweetMock {
                 {
                     return value;
                 }
+
                 throw new KeyNotFoundException(key);
             }
         }
@@ -77,6 +116,7 @@ namespace SweetMock {
         private int index;
         private readonly List<CallLogItem> logs = new();
         private readonly object @lock = new();
+
         public void Add(string signature, Arguments? arguments = null)
         {
             lock (this.@lock)
@@ -85,7 +125,7 @@ namespace SweetMock {
 
                 arguments ??= Arguments.Empty;
 
-                this.logs.Add(new CallLogItem(){Index = this.index, MethodSignature = signature, Arguments = arguments });
+                this.logs.Add(new CallLogItem() { Index = this.index, MethodSignature = signature, Arguments = arguments });
             }
         }
 
@@ -102,10 +142,35 @@ namespace SweetMock {
                 .Where(t => predicate == null || predicate(t));
     }
 
+    #endregion
+
     public class NotExplicitlyMockedException(string memberName, string instanceName) : System.InvalidOperationException($"'{memberName}' in '{instanceName}' is not explicitly mocked.")
     {
         public string MemberName => memberName;
 
         public string InstanceName => instanceName;
+    }
+
+    public class ValueBox<T>
+    {
+        public ValueBox(T value) =>
+            this.Value = value;
+
+        public T Value { get; set; }
+    }
+
+    public class MockOptions
+    {
+        public MockOptions(CallLog? logger = null, string? instanceName = null)
+        {
+            this.Logger = logger;
+            this.InstanceName = instanceName;
+        }
+
+        public static MockOptions Default => new();
+
+        public CallLog? Logger { get; init; } = null;
+
+        public string? InstanceName { get; init; } = null;
     }
 }

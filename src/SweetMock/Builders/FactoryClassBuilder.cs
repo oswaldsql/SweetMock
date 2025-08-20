@@ -21,7 +21,8 @@ public static class FactoryClassBuilder
         builder.Scope("namespace SweetMock", namespaceScope => namespaceScope
             .Documentation(doc => doc
                 .Summary("Factory for creating mock objects."))
-            .Scope("internal static partial class Mock", mockScope =>
+            .AddGeneratedCodeAttrib()
+            .Scope("internal static class Mock", mockScope =>
             {
                 foreach (var t in mocks)
                 {
@@ -126,7 +127,11 @@ public static class FactoryClassBuilder
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
             .Scope($"(System.Action<{implementationType}.MockConfig>? config = null, MockOptions? options = null){constraints}", methodScope => methodScope
-                .Add($"return new {implementationType}(config, options);"));
+                .Add($"var result = new {implementationType}();")
+                .Add("config?.Invoke(result.Config);")
+                .Add("result.Options = options ?? result.Options;")
+                .Add($"return result;")
+            );
 
         mockScope.AddLineBreak();
 
@@ -138,9 +143,9 @@ public static class FactoryClassBuilder
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
             .Scope($"(out {implementationType}.MockConfig config{type.Name}, MockOptions? options = null){constraints}", methodScope => methodScope
-                .Add($"{implementationType}.MockConfig outConfig = null!;")
-                .Add($"var result = new {implementationType}(config => outConfig = config, options);")
-                .Add($"config{type.Name} = outConfig;")
+                .Add($"var result = new {implementationType}();")
+                .Add($"config{type.Name} = result.Config;")
+                .Add("result.Options = options ?? result.Options;")
                 .Add("return result;"));
     }
 }
