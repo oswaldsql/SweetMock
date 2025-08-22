@@ -1,51 +1,69 @@
-﻿namespace SweetMock.FixtureTests.CustomMocks;
+﻿namespace SweetMock.FixtureTests;
 
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 
-internal partial class MockOf_TimeProvider() : MockBase<TimeProvider>(TimeProvider.System);
+    [System.CodeDom.Compiler.GeneratedCode("SweetMock","0.9.25.0")]
+    internal class MockOf_ILogger<TCategoryName>() : MockBase<ILogger<TCategoryName>>(){
+        internal override ILogger<TCategoryName> Value => new MockLogger<TCategoryName>(this.Options);
 
-[Mock<ILogger<string>, MockOf_ILogger<string>>]
-internal class MockOf_ILogger<TCategoryName>() : MockBase<ILogger<TCategoryName>>(NullLogger<TCategoryName>.Instance);
+        private class MockLogger<TMCategoryName> : ILogger<TMCategoryName>{
+            private readonly MockOptions options;
 
-//internal class MockOf_ILogger<TCategoryName>(Action<MockOf_ILogger<TCategoryName>.MockConfig>? action = null, MockOptions options = null)
-//    : SweetMock.WrapperMock<ILogger<TCategoryName>>(action,options)
-//{
-//    protected override ILogger<TCategoryName>? value { get; set; } = NullLogger<TCategoryName>.Instance;
-//}
+            public MockLogger(MockOptions options)
+            {
+                this.options = options;
+                options.Logger?.Add($"Microsoft.Extensions.Logging.ILogger<{options.InstanceName}>");
+            }
 
-public static class Mock2
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter){
+                var message = formatter(state, exception);
+                var arguments = Arguments.With("message", message).And("logLevel", logLevel).And("eventId", eventId).And("Exception", exception).And("State", state);
+                options.Logger?.Add($"Log : {logLevel} : {message}", arguments);
+            }
+
+            public bool IsEnabled(LogLevel logLevel){
+                return true;
+            }
+
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull{
+                options.Logger?.Add("BeginScope : " + state, global::SweetMock.Arguments.With("state", state));
+                return new IDisposeWrapper(() => options.Logger?.Add("EndScope : " + state, Arguments.With("state", state)));
+            }
+        }
+
+        public class IDisposeWrapper(Action action) : IDisposable{
+            public void Dispose() => action();
+        }
+    }
+
+
+
+// IServiceProvider
+// IMemoryCache
+// IOptionsMonitor
+// HTTPClient ?
+// EF?
+
+
+internal class MockOf_IMemoryCache : MockBase<IMemoryCache>
 {
-    #region System.TimeProvider
-    /// <summary>
-    ///    Creates a mock object for <see cref="global::System.TimeProvider">TimeProvider</see>.
-    /// </summary>
-    /// <param name="config">Optional configuration for the mock object.</param>
-    /// <param name="options">Options for the mock object.</param>
-    /// <returns>The mock object for <see cref="global::System.TimeProvider">TimeProvider</see>.</returns>
-    internal static SweetMock.FixtureTests.CustomMocks.MockOf_TimeProvider2 TimeProvider
-        (System.Action<SweetMock.FixtureTests.CustomMocks.MockOf_TimeProvider2.MockConfig>? config = null, MockOptions? options = null)
+    TimeProvider _provider = TimeProvider.System;
+    
+    public MockOf_IMemoryCache() : base()
     {
-        var result = new SweetMock.FixtureTests.CustomMocks.MockOf_TimeProvider2();
-        config?.Invoke(result.Config);
-        result.MockInitialize(config, options);
-        return result;
+        ISystemClock? clock = new MockSystemClock(_provider);
+        var options = new MemoryCacheOptions() { Clock = clock};
+        this.Config.Value = new MemoryCache(options, new NullLoggerFactory());
     }
 
-    /// <summary>
-    ///    Creates a mock object for <see cref="global::System.TimeProvider">TimeProvider</see>.
-    /// </summary>
-    /// <param name="configTimeProvider">Outputs configuration for the mock object.</param>
-    /// <param name="options">Options for the mock object.</param>
-    /// <returns>The mock object for <see cref="global::System.TimeProvider">TimeProvider</see>.</returns>
-    internal static SweetMock.FixtureTests.CustomMocks.MockOf_TimeProvider2 TimeProvider
-        (out SweetMock.FixtureTests.CustomMocks.MockOf_TimeProvider2.MockConfig configTimeProvider, MockOptions? options = null){
-        var result = new SweetMock.FixtureTests.CustomMocks.MockOf_TimeProvider2();
-        result.MockInitialize(_ => {}, options);
-        configTimeProvider = result.Config;
-        return result;
+    internal class MockSystemClock(TimeProvider timeProvider) : ISystemClock
+    {
+        public DateTimeOffset UtcNow => 
+            timeProvider.GetUtcNow();
     }
-    #endregion
 }
-
-public class MockOf_TimeProvider2() : MockBase<TimeProvider>(TimeProvider.System);

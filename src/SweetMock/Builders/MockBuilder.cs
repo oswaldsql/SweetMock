@@ -13,10 +13,8 @@ public class MockBuilder
         result.AddFileHeader();
 
         result
-            .Add("#nullable enable")
-            .Add("using System.Linq;")
-            .Add("using System;")
-            .AddLineBreak()
+            .Nullable()
+            .Usings("global::System.Linq","global::System")
             .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope =>
             {
                 var builder = new BaseClassBuilder(mockContext);

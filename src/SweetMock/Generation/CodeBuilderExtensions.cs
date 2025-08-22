@@ -49,4 +49,19 @@ internal static class CodeBuilderExtensions
             .Apply(action)
             .Unindent()
             .Add("}");
+
+    public static CodeBuilder Usings(this CodeBuilder source, params string[] namespaces)
+    {
+        foreach (var ns in namespaces)
+        {
+            source.Add("using " + ns + ";");
+        }
+
+        return source.AddLineBreak();
+    }
+
+    public static CodeBuilder Nullable(this CodeBuilder source) =>
+        source.Add("#nullable enable").AddLineBreak();
+
+    public static void End(this CodeBuilder source) {}
 }

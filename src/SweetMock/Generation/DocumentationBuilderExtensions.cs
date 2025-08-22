@@ -17,6 +17,9 @@ internal static class DocumentationBuilderExtensions
         return builder;
     }
 
+    public static CodeBuilder Documentation(this CodeBuilder builder, params string[] summary) =>
+        builder.Documentation(d => d.Summary(summary));
+
     public static DocumentationBuilder Summary(this DocumentationBuilder doc, params string[] summaries)
     {
         doc.Builder.Add("/// <summary>");

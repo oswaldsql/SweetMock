@@ -29,7 +29,7 @@ public static class FixtureBuilder
             var constraints = symbol.ToConstraints();
 
             fileScope.AddFileHeader()
-                .Add("#nullable enable")
+                .Nullable()
                 .Scope($"namespace {symbol.ContainingNamespace}", namespaceScope => namespaceScope
                     .AddGeneratedCodeAttrib()
                     .Scope($"internal class FixtureFor_{symbol.Name}{generics}{constraints}", classScope => classScope
@@ -37,7 +37,8 @@ public static class FixtureBuilder
                         .AddPrivateMockObjects(targetCtor, infos)
                         .AddCallLog()
                         .AddConstructor(symbol, targetCtor, infos)
-                        .AddCreateSutMethod(targetCtor, symbol, infos)));
+                        .AddCreateSutMethod(targetCtor, symbol, infos)
+                        .End()));
 
             return fileScope.ToString();
         }
@@ -142,7 +143,7 @@ public static class FixtureBuilder
                     else
                     {
                         var generics = type.GetTypeGenerics();
-                        if (parameterInfo.Kind == MockKind.Wrapper)
+                        if (parameterInfo.Kind is MockKind.Wrapper or MockKind.BuildIn)
                         {
                             ctorScope
                                 .Add($"_{parameter.Name} = new global::{parameterInfo.MockClass}{generics}();")
@@ -196,6 +197,7 @@ public static class FixtureBuilder
         return mockType switch
         {
             MockKind.Wrapper => $"_{t.Name}.Value",
+            MockKind.BuildIn => $"_{t.Name}.Value",
             MockKind.Generated => $"_{t.Name}",
             MockKind.Direct when canBeNull => $"Config.{t.Name}",
             MockKind.Direct when !canBeNull => $"Config.{t.Name} ?? throw new NullReferenceException()",
@@ -244,7 +246,7 @@ public static class FixtureBuilder
     {
         var fileScope = new CodeBuilder();
         fileScope.AddFileHeader()
-            .Add("#nullable enable")
+            .Nullable()
             .Scope("namespace SweetMock", namespaceScope =>
                 namespaceScope
                     .AddGeneratedCodeAttrib()
@@ -259,12 +261,12 @@ public static class FixtureBuilder
         return fileScope.ToString();
     }
 
-    private static CodeBuilder BuildForFixture(CodeBuilder classScope, INamedTypeSymbol symbol)
+    private static void BuildForFixture(CodeBuilder classScope, INamedTypeSymbol symbol)
     {
         var generics = symbol.GetTypeGenerics();
         var constraints = symbol.ToConstraints();
 
-        return classScope
+        classScope
             .Documentation(d => d
                 .Summary($"Represents a test fixture designed for the {symbol.ToSeeCRef()} class, leveraging mocked dependencies for unit testing.")
                 .Parameter("config", "An optional configuration action to customize the mocked dependencies or fixture setup.")

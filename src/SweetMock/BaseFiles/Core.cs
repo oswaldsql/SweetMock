@@ -1,4 +1,7 @@
-﻿#nullable enable
+﻿// ReSharper disable RedundantUsingDirective
+// ReSharper disable RedundantNullableDirective
+// ReSharper disable ArrangeNamespaceBody
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -144,7 +147,7 @@ namespace SweetMock
 
     #endregion
 
-    public class NotExplicitlyMockedException(string memberName, string instanceName) : System.InvalidOperationException($"'{memberName}' in '{instanceName}' is not explicitly mocked.")
+    public class NotExplicitlyMockedException(string memberName, string instanceName) : InvalidOperationException($"'{memberName}' in '{instanceName}' is not explicitly mocked.")
     {
         public string MemberName => memberName;
 
@@ -169,8 +172,8 @@ namespace SweetMock
 
         public static MockOptions Default => new();
 
-        public CallLog? Logger { get; init; } = null;
+        public CallLog? Logger { get; init; }
 
-        public string? InstanceName { get; init; } = null;
+        public string? InstanceName { get; init; }
     }
 }

@@ -61,30 +61,17 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
         var collectedMocks = CollectedMocks(mocks, fixtures, customMocks);
 
-        var mockInfos = AddMocks(spc, collectedMocks).ToList();
+        var mockInfos = AddBuildInMocks(spc, collectedMocks).ToList();
+
+        mockInfos.AddRange(AddMocks(spc, collectedMocks));
         mockInfos.AddRange(AddCustomMocks(customMocks));
 
         AddFixtures(fixtures, spc, mockInfos);
         AddMockFactory(spc, mockInfos);
     }
 
-    private static void AddMockFactory(SourceProductionContext spc, List<MockInfo> mocks)
-    {
-        var code = FactoryClassBuilder.Build(mocks);
-        spc.AddSource("SweetMock.Mock.g.cs", code);
-    }
-
-    private static IEnumerable<MockInfo> AddCustomMocks(ImmutableArray<AttributeData> customMocks)
-    {
-        var lookup = customMocks.ToLookup(FirstGenericType, SymbolEqualityComparer.Default);
-        foreach (var mock in lookup)
-        {
-            var mockType = (INamedTypeSymbol)mock.Key!;
-
-            var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
-            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, "MockConfig", implementation);
-        }
-    }
+    private static IEnumerable<MockInfo> AddBuildInMocks(SourceProductionContext spc, List<MockTypeWithLocation> collectedMocks) =>
+        BuildInMockBuilder.CreateBuildinMocks(collectedMocks, spc);
 
     private static IEnumerable<MockInfo> AddMocks(SourceProductionContext spc, List<MockTypeWithLocation> collectedMocks)
     {
@@ -125,6 +112,24 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                 }
             }
         }
+    }
+
+    private static IEnumerable<MockInfo> AddCustomMocks(ImmutableArray<AttributeData> customMocks)
+    {
+        var lookup = customMocks.ToLookup(FirstGenericType, SymbolEqualityComparer.Default);
+        foreach (var mock in lookup)
+        {
+            var mockType = (INamedTypeSymbol)mock.Key!;
+
+            var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
+            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, "MockConfig", implementation);
+        }
+    }
+
+    private static void AddMockFactory(SourceProductionContext spc, List<MockInfo> mocks)
+    {
+        var code = FactoryClassBuilder.Build(mocks);
+        spc.AddSource("SweetMock.Mock.g.cs", code);
     }
 
     private static void AddFixtures(ImmutableArray<AttributeData> fixtures, SourceProductionContext spc, List<MockInfo> mockInfos)
@@ -191,9 +196,9 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
         return null;
     }
-
-    private record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute, bool Explicit);
 }
+
+internal record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute, bool Explicit);
 
 public record MockInfo(INamedTypeSymbol Source, string MockClass, MockKind Kind, string ContextConfigName, INamedTypeSymbol? Implementation = null);
 
@@ -201,5 +206,6 @@ public enum MockKind
 {
     Generated,
     Wrapper,
-    Direct
+    Direct,
+    BuildIn
 }

@@ -42,7 +42,7 @@ public class MockBase<TInterface>
     public MockBase() => MockInitialize(config => {});
 
     private bool isInitialized;
-    public void MockInitialize(Action<MockConfig>? config = null, MockOptions? options = null)
+    public virtual void MockInitialize(Action<MockConfig>? config = null, MockOptions? options = null)
     {
         if (isInitialized)
         {
@@ -57,5 +57,5 @@ public class MockBase<TInterface>
 
     public MockConfig Config { get; private set; } = null!;
 
-    internal TInterface Value { get; private set; } = default!;
+    internal virtual TInterface Value { get; private set; } = default!;
 }

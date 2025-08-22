@@ -1,20 +1,17 @@
 ﻿namespace SweetMock.FixtureTests;
 
-using CustomMocks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SweetMock;
 
 [Fixture<ShoppingBasket>]
-[Mock<TimeProvider, MockOf_TimeProvider>]
-[Mock<ILogger<string>, MockOf_ILogger<string>>]
 [Mock<Tests>]
 [Mock<ShoppingBasket>]
 [Mock<ISendEndpoint>]
 public class Tests
 {
-    [SetUp]
-    public void Setup()
+    [Fact]
+    public void TestIsATest()
     {
         var fixture = Fixture.ShoppingBasket(config =>
         {
