@@ -11,6 +11,10 @@ public class MockBase<TInterface>
 {
     public MockOptions Options { get; set; } = new MockOptions() {InstanceName = typeof(TInterface).Name};
 
+    public MockConfig Config { get; private set; } = null!;
+
+    internal virtual TInterface Value { get; private set; } = default!;
+
     public partial class MockConfig
     {
         private readonly MockBase<TInterface> target;
@@ -19,7 +23,7 @@ public class MockBase<TInterface>
         public static MockConfig Init(MockBase<TInterface> target) =>
             new(target);
 
-        private MockConfig(MockBase<TInterface> target)
+        protected MockConfig(MockBase<TInterface> target)
         {
             this.target = target;
         }
@@ -54,8 +58,4 @@ public class MockBase<TInterface>
         this.Config = MockConfig.Init(this);
         config?.Invoke(this.Config);
     }
-
-    public MockConfig Config { get; private set; } = null!;
-
-    internal virtual TInterface Value { get; private set; } = default!;
 }

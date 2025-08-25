@@ -157,7 +157,6 @@ public static class FactoryClassBuilder
     {
         var generics = mockInfo.Source.GetTypeGenerics();
         var constraints = mockInfo.Source.ToConstraints();
-        var implementationType = mockInfo.Source.ToDisplayString();
 
         mockScope
             .Documentation(doc => doc

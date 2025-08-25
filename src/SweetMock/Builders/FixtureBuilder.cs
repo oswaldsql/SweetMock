@@ -178,7 +178,7 @@ public static class FixtureBuilder
                 .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
             )
             .Add($"public {s.ToDisplayString(ToFullNameFormat)} CreateSut() =>").Indent()
-            .Add($"new {s.Name}{generics}({parametersString});")
+            .Add($"new {s.ToDisplayString(ToFullNameFormat)}({parametersString});")
             .Unindent();
 
         return classScope;
