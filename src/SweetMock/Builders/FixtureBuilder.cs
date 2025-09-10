@@ -169,26 +169,31 @@ public static class FixtureBuilder
 
     private static CodeBuilder AddCreateSutMethod(this CodeBuilder classScope, IMethodSymbol targetCtor, INamedTypeSymbol s, Dictionary<INamedTypeSymbol, MockInfo> infos)
     {
-        var parametersString = BuildParametersString(targetCtor, infos);
-        var generics = s.GetTypeGenerics();
+        var parameters = targetCtor.Parameters;
+
+        var arguments = parameters.ToString(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
 
         classScope
             .Documentation(d => d
                 .Summary($"Creates an instance of the {s.ToSeeCRef()} object using the initialized mock dependencies.")
+                .Parameter(parameters, symbol => symbol.Name, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
                 .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
             )
-            .Add($"public {s.ToDisplayString(ToFullNameFormat)} CreateSut() =>").Indent()
-            .Add($"new {s.ToDisplayString(ToFullNameFormat)}({parametersString});")
-            .Unindent();
+            .Scope($"public {s.ToDisplayString(ToFullNameFormat)} CreateSut({arguments})", methodScope =>
+            {
+                foreach (var parameter in parameters)
+                {
+                    methodScope.Add($"var argument_{parameter.Name} = {parameter.Name} ?? {MockTypeToArgument(infos, parameter)};");
+                }
+
+                methodScope
+                    .Add($"return new {s.ToDisplayString(ToFullNameFormat)}({parameters.ToString(symbol => "argument_" + symbol.Name)});");
+            });
 
         return classScope;
     }
 
-    private static string BuildParametersString(IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos)
-    {
-        var arguments = targetCtor.Parameters.Select(t => MockTypeToArgument(infos, t));
-        return string.Join(", ", arguments);
-    }
+    private static string AsNullable(this ITypeSymbol type) => $"{type}?";
 
     private static string MockTypeToArgument(Dictionary<INamedTypeSymbol, MockInfo> infos, IParameterSymbol t)
     {

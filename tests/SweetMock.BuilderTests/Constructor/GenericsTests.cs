@@ -3,7 +3,7 @@
 
 namespace SweetMock.BuilderTests.Constructor;
 
-using Microsoft.Extensions.Logging;
+//using Microsoft.Extensions.Logging;
 
 public class GenericsTests(ITestOutputHelper testOutputHelper)
 {

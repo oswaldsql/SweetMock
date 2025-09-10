@@ -10,19 +10,19 @@ using Utils;
 internal class MethodBuilder
 {
     private readonly MockContext context;
-    private readonly ILookup<string, IMethodSymbol> methodGroups;
     private readonly Dictionary<IMethodSymbol, string> methodDelegateName = new(SymbolEqualityComparer.Default);
-
-    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IMethodSymbol> methods)
-    {
-        var methodBuilder = new MethodBuilder(methods, context);
-        methodBuilder.Render(classScope);
-    }
+    private readonly ILookup<string, IMethodSymbol> methodGroups;
 
     public MethodBuilder(IEnumerable<IMethodSymbol> methods, MockContext context)
     {
         this.context = context;
         this.methodGroups = methods.ToLookup(t => t.Name);
+    }
+
+    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IMethodSymbol> methods)
+    {
+        var methodBuilder = new MethodBuilder(methods, context);
+        methodBuilder.Render(classScope);
     }
 
     public void Render(CodeBuilder classScope)
@@ -127,8 +127,7 @@ internal class MethodBuilder
             {
                 yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
             }
-            else
-            if (((INamedTypeSymbol)parameter.Type).IsGenericType)
+            else if (((INamedTypeSymbol)parameter.Type).IsGenericType)
             {
                 yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
             }
@@ -168,6 +167,7 @@ internal class MethodBuilder
     private void BuildConfigExtensions(CodeBuilder builder, IGrouping<string, IMethodSymbol> methods)
     {
         this.AddReturnsExtensions(builder, methods);
+        this.AddTaskReturnsExtensions(builder, methods);
         this.AddReturnValuesExtensions(builder, methods);
         this.AddNoReturnValueExtensions(builder, methods);
         this.AddThrowExtensions(builder, methods);
@@ -207,11 +207,23 @@ internal class MethodBuilder
                     builder.Add($"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => returns));");
                 }
             });
+        }
+    }
+
+    private void AddTaskReturnsExtensions(CodeBuilder result, IGrouping<string, IMethodSymbol> methods)
+    {
+        var methodSymbols = methods.Where(m => !m.ReturnsVoid && !m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
+        var candidates = methodSymbols.ToLookup(t => t.ReturnType, SymbolEqualityComparer.Default);
+        foreach (var candidate in candidates)
+        {
+            var firstReturnType = (ITypeSymbol)candidate.Key!;
 
             var isGenericTask = firstReturnType.IsGenericTask();
             var isGenericValueTask = firstReturnType.IsGenericValueTask();
             if (isGenericTask || isGenericValueTask)
             {
+                var seeString = string.Join(", ", candidate.Select(t => t.ToSeeCRef()));
+                var first = candidate.First();
                 var genericType = ((INamedTypeSymbol)firstReturnType).TypeArguments.First();
 
                 result.AddLineBreak();

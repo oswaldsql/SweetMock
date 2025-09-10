@@ -9,28 +9,24 @@ using Repo;
 [Mock<ICustomMock, MockOf_ICustomMock>]
 public class UnitTest1
 {
-    /// <summary>
-    /// this is a test <see cref="global::Repo.IRepo"/> <see cref="C:System.String"/>
-    /// </summary>
     [Fact]
     public void Test1()
     {
         var fix = Fixture.TestTarget(config =>
         {
-            config.directValue = "directValue";
+//            config.directValue = "directValue";
             config.imp.ImplicitValue("ImplicitValue");
             config.explicitMock.ExplicitValue("ExplicitValue");
             config.customMock.Value = new CustomMockImplementation();
         });
 
-        var sut = fix.CreateSut();
+        var sut = fix.CreateSut(directValue:"directValue");
 
         Assert.Equal("directValue", sut.GetDirectValue());
         var actual = Assert.Throws<NotExplicitlyMockedException>(() => sut.GetImplicitValue());
         Assert.Equal("'ImplicitMethod' in 'imp' is not explicitly mocked.", actual.Message);
         Assert.Equal("ImplicitMethod", actual.MemberName);
         Assert.Equal("imp", actual.InstanceName);
-        
         
         Assert.True(true);
 

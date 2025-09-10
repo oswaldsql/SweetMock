@@ -2,33 +2,32 @@
 
 using MassTransit;
 using MassTransit.TestFramework;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using SweetMock;
 
 [Fixture<TestFixture>]
-[Mock<MassTransit.ConsumeContext<Payload>, MockOf_ConsumeContext<Payload>>]
+[Mock<ConsumeContext<Payload>, MockOf_ConsumeContext<Payload>>]
 [Mock<HttpClient>]
 [Mock<HttpMessageHandler>]
 public class UnitTest1
 {
     [Test]
-    public void METHOD()
+    public void ValidateThatHttpClientCanBeMocked()
     {
-        
         Fixture.TestFixture(config =>
         {
             config.context.Value = new TestConsumeContext<string>("test");
+            config.client.SendAsync(new HttpResponseMessage());
         });
     }
-    
+
 //    [Fact]
 //    [Mock<ISlimLogger<UnitTest1>>]
 //    public void Test1()
 //    {
 //        var mock = Mock.ISlimLogger<UnitTest1>();
 //    }
-    
+
 //    public class SlimLogger2<T> : ISlimLogger<T> 
 //    {
 //        private SweetMock.CallLog? _sweetMockCallLog = new SweetMock.CallLog();
@@ -55,24 +54,12 @@ public class UnitTest1
 //    }
 }
 
-public class Teste : System.Net.Http.HttpClient
+public class TestFixture(ConsumeContext<string> context, HttpClient client)
 {
-    public override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        return base.SendAsync(request, cancellationToken);
-    }
 }
 
-public class Tester : HttpMessageHandler
+public class Payload
 {
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
 }
 
-public class TestFixture(ConsumeContext<string> context) {}
-
-public class Payload {}
-
-internal class MockOf_ConsumeContext<T>() : MockBase<MassTransit.ConsumeContext<T>>() where T : class;
+internal class MockOf_ConsumeContext<T> : MockBase<ConsumeContext<T>> where T : class;
