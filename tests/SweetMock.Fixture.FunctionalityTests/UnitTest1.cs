@@ -20,7 +20,7 @@ public class UnitTest1
             config.customMock.Value = new CustomMockImplementation();
         });
 
-        var sut = fix.CreateSut(directValue:"directValue");
+        var sut = fix.CreateTestTarget(directValue:"directValue");
 
         Assert.Equal("directValue", sut.GetDirectValue());
         var actual = Assert.Throws<NotExplicitlyMockedException>(() => sut.GetImplicitValue());

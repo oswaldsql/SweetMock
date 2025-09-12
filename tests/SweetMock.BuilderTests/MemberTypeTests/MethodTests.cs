@@ -37,7 +37,7 @@ using SweetMock.BuilderTests;
 using SweetMock;
 using System;
 
-[Mock<SweetMock.BuilderTests.MemberTypeTests.MethodTests.IGeneric<string>>]
+[Mock<SweetMock.BuilderTests.MemberTypeTests.MethodTests.IGeneric<string>>(""tst"")]
 public class TestClass{
 }";
 

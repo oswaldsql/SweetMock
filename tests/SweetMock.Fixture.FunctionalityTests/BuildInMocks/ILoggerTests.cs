@@ -10,7 +10,7 @@ public class ILoggerTests
     {
         // Arrange
         var fixture = Fixture.ILoggerTarget();
-        var sut = fixture.CreateSut();
+        var sut = fixture.CreateILoggerTarget();
 
         // ACT
         sut.SomeMethod("Some name");

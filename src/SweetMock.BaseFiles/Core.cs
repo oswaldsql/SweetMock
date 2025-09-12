@@ -1,14 +1,14 @@
-﻿// ReSharper disable RedundantUsingDirective
+﻿// ReSharper disable RedundantNameQualifier
+// ReSharper disable RedundantUsingDirective
 // ReSharper disable RedundantNullableDirective
 // ReSharper disable ArrangeNamespaceBody
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using System.CodeDom.Compiler;
+using global::System;
+using global::System.Collections.Generic;
+using global::System.Linq;
+using global::System.Runtime.CompilerServices;
+using global::System.CodeDom.Compiler;
 
 namespace SweetMock
 {
@@ -20,8 +20,9 @@ namespace SweetMock
     /// <typeparam name="T">The type to create a mock based on.</typeparam>
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
     [GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
-    internal class MockAttribute<T> : Attribute
+    internal class MockAttribute<T>(string? mockName = null) : Attribute
     {
+        public string? MockName { get; } = mockName ?? typeof(T).Name;
     }
 
     /// <summary>
@@ -41,8 +42,9 @@ namespace SweetMock
     /// <typeparam name="T">The type to create a fixture for.</typeparam>
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
     [GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
-    internal class FixtureAttribute<T> : Attribute where T : class
+    internal class FixtureAttribute<T>(string? fixtureName = null) : Attribute where T : class
     {
+        private string FixtureName { get; } = fixtureName ?? typeof(T).Name;
     }
 
     #endregion

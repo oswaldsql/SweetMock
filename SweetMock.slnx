@@ -6,6 +6,8 @@
     <Project Path="doc\SweetMock.Documentation.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" Type="Classic C#" />
+    <Project Path="src\SweetMock.BuildInMocks\SweetMock.BuildInMocks.csproj" Type="Classic C#" />
     <Project Path="src\SweetMock\SweetMock.csproj" />
   </Folder>
   <Folder Name="/tests/">

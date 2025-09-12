@@ -179,7 +179,7 @@ public static class FixtureBuilder
                 .Parameter(parameters, symbol => symbol.Name, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
                 .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
             )
-            .Scope($"public {s.ToDisplayString(ToFullNameFormat)} CreateSut({arguments})", methodScope =>
+            .Scope($"public {s.ToDisplayString(ToFullNameFormat)} Create{s.Name}({arguments})", methodScope =>
             {
                 foreach (var parameter in parameters)
                 {

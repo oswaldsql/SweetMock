@@ -19,7 +19,7 @@ public class Tests
             config.user.GetUserName("fds");
             config.time.Value = TimeProvider.System;
         });
-        var sut = fixture.CreateSut();
+        var sut = fixture.CreateShoppingBasket();
         
         Console.WriteLine(sut.Name);
         

@@ -9,8 +9,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>SweetMock</RootNamespace>
     <PackageId>SweetMock</PackageId>
-    <Version>0.9.27</Version>
-    <AssemblyVersion>0.9.27</AssemblyVersion>
+    <Version>0.9.29</Version>
+    <AssemblyVersion>0.9.29</AssemblyVersion>
     <Title>Sweet mock</Title>
     <Authors>Lasse Sjørup</Authors>
     <Description>Source generator for creating mocks and fixtures for testing. SweetMock is a tool that automatically generates test fixtures and mock implementations of interfaces or classes helping in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
@@ -39,10 +39,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="BaseFiles/*"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\..\Icon.png" Pack="true" Visible="false" PackagePath=""/>
     <None Include="..\..\LICENSE" Pack="true" PackagePath="\"/>
     <None Include="..\..\README.md" Pack="true" PackagePath=""/>
@@ -50,6 +46,11 @@
 
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\SweetMock.BaseFiles\*.cs" Link="BaseFiles\%(Filename)"/>
+    <EmbeddedResource Include="..\SweetMock.BuildInMocks\*.cs" Link="Builders\BuildInMocks\%(Filename)%(Extension)"/>
   </ItemGroup>
 
 </Project>

@@ -9,7 +9,7 @@ using Microsoft.Extensions.Primitives;
 
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","0.9.25.0")]
     internal class MockOf_ILogger<TCategoryName>() : MockBase<ILogger<TCategoryName>>(){
-        internal override ILogger<TCategoryName> Value => new MockLogger<TCategoryName>(this.Options);
+        public override ILogger<TCategoryName> Value => new MockLogger<TCategoryName>(this.Options);
 
         private class MockLogger<TMCategoryName> : ILogger<TMCategoryName>{
             private readonly MockOptions options;

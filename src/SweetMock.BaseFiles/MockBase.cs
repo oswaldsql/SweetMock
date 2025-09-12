@@ -1,10 +1,7 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.CodeAnalysis;
-using System.Runtime.CompilerServices;
+
 namespace SweetMock;
 
 public class MockBase<TInterface>
@@ -13,7 +10,7 @@ public class MockBase<TInterface>
 
     public MockConfig Config { get; private set; } = null!;
 
-    internal virtual TInterface Value { get; private set; } = default!;
+    public virtual TInterface Value { get; private set; } = default!;
 
     public partial class MockConfig
     {

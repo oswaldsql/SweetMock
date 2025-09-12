@@ -50,6 +50,13 @@ internal static class CodeBuilderExtensions
             .Unindent()
             .Add("}");
 
+    public static CodeBuilder Lambda(this CodeBuilder source, string prefix, Action<CodeBuilder> action) =>
+        source
+            .Add(prefix + " =>")
+            .Indent()
+            .Apply(action)
+            .Unindent();
+
     public static CodeBuilder Usings(this CodeBuilder source, params string[] namespaces)
     {
         foreach (var ns in namespaces)

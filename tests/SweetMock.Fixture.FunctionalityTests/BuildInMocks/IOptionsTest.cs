@@ -11,7 +11,7 @@ public class IOptionsTest
     {
         // Arrange
         var fixture = Fixture.OptionsTarget();
-        var sut = fixture.CreateSut();
+        var sut = fixture.CreateOptionsTarget();
 
         // ACT
         var actual = sut.ReturnOptionValue();
@@ -26,7 +26,7 @@ public class IOptionsTest
         // Arrange
         var fixture = Fixture.OptionsTarget(config => 
             config.options.Set(new() { SomeProperty = "Set value" }));
-        var sut = fixture.CreateSut();
+        var sut = fixture.CreateOptionsTarget();
 
         // ACT
         var actual = sut.ReturnOptionValue();
@@ -42,7 +42,7 @@ public class IOptionsTest
         var fixture = Fixture.OptionsTarget2();
         
         // ACT
-        var actual = Record.Exception(() => fixture.CreateSut());
+        var actual = Record.Exception(() => fixture.CreateOptionsTarget2());
 
         // Assert
         var actualException = Assert.IsType<ArgumentNullException>(actual);
@@ -56,7 +56,7 @@ public class IOptionsTest
         // Arrange
         var fixture = Fixture.OptionsTarget2(config => 
             config.options.Set(new("Ctor value")));
-        var sut = fixture.CreateSut();
+        var sut = fixture.CreateOptionsTarget2();
 
         // ACT
         var actual = sut.ReturnOptionValue();

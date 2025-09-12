@@ -71,7 +71,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
     }
 
     private static IEnumerable<MockInfo> AddBuildInMocks(SourceProductionContext spc, List<MockTypeWithLocation> collectedMocks) =>
-        BuildInMockBuilder.CreateBuildinMocks(collectedMocks, spc);
+        BuildInMockBuilder.CreateBuildInMocks(collectedMocks, spc);
 
     private static IEnumerable<MockInfo> AddMocks(SourceProductionContext spc, List<MockTypeWithLocation> collectedMocks)
     {
@@ -79,6 +79,12 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         var requestedMocks = collectedMocks.ToLookup(t => t.Type, a => a, SymbolEqualityComparer.Default);
         foreach (var mock in requestedMocks)
         {
+//            var attributeNamedArguments = mock.First().Attribute.ConstructorArguments;
+//            foreach (var attributeNamedArgument in attributeNamedArguments)
+//            {
+//                Console.WriteLine(attributeNamedArgument.Value?.ToString());
+//            }
+
             var mockType = (INamedTypeSymbol)mock.Key!;
             var attributes = mock.Select(t => t.Attribute).ToArray();
 

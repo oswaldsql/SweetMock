@@ -12,7 +12,7 @@ public class TestOfILogger
     public void METHOD()
     {
         var fixture = Fixture.Target(config => config.dependency.GetName("tester"));
-        var sut = fixture.CreateSut();
+        var sut = fixture.CreateTarget();
         
         sut.LogSomething();
 
