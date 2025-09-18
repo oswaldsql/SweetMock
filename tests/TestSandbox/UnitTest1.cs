@@ -56,6 +56,8 @@ public class UnitTest1
 
 public class TestFixture(ConsumeContext<string> context, HttpClient client)
 {
+    public ConsumeContext<string> Context { get; } = context;
+    public HttpClient Client { get; } = client;
 }
 
 public class Payload

@@ -1,12 +1,15 @@
-﻿#nullable enable
+﻿// ReSharper disable RedundantNullableDirective
+#nullable enable
 
 using System;
+// ReSharper disable VirtualMemberCallInConstructor
+// ReSharper disable PartialTypeWithSinglePart
 
 namespace SweetMock;
 
 public class MockBase<TInterface>
 {
-    public MockOptions Options { get; set; } = new MockOptions() {InstanceName = typeof(TInterface).Name};
+    public MockOptions Options { get; set; } = new global::SweetMock.MockOptions() {InstanceName = typeof(TInterface).Name};
 
     public MockConfig Config { get; private set; } = null!;
 
@@ -20,10 +23,8 @@ public class MockBase<TInterface>
         public static MockConfig Init(MockBase<TInterface> target) =>
             new(target);
 
-        protected MockConfig(MockBase<TInterface> target)
-        {
+        protected MockConfig(MockBase<TInterface> target) =>
             this.target = target;
-        }
 
         public TInterface Value
         {
@@ -36,21 +37,21 @@ public class MockBase<TInterface>
         }
     }
 
-    public MockBase(Action<MockConfig> config, MockOptions options) => MockInitialize(config, options);
+    public MockBase(Action<MockConfig> config, MockOptions options) => this.MockInitialize(config, options);
 
-    public MockBase(TInterface value) => MockInitialize(config => config.Value = value);
+    public MockBase(TInterface value) => this.MockInitialize(config => config.Value = value);
 
-    public MockBase() => MockInitialize(config => {});
+    public MockBase() => this.MockInitialize(_ => {});
 
     private bool isInitialized;
     public virtual void MockInitialize(Action<MockConfig>? config = null, MockOptions? options = null)
     {
-        if (isInitialized)
+        if (this.isInitialized)
         {
             throw new TypeInitializationException(typeof(TInterface).Name, null);
         }
 
-        isInitialized = true;
+        this.isInitialized = true;
         this.Options = options ?? this.Options;
         this.Config = MockConfig.Init(this);
         config?.Invoke(this.Config);

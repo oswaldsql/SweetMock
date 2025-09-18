@@ -8,8 +8,7 @@ internal class BaseClassBuilder(MockContext context)
 {
     internal CodeBuilder BuildMockClass(CodeBuilder namespaceScope)
     {
-        namespaceScope.Documentation(doc => doc
-            .Summary($"Mock implementation of {context.Source.ToSeeCRef()}.", "Should only be used for testing purposes."));
+        namespaceScope.Documentation($"Mock implementation of {context.Source.ToSeeCRef()}.", "Should only be used for testing purposes.");
 
         // TODO : Fix this uglyness
         var className = context.Source.ToString().Substring(context.Source.ContainingNamespace.ToString().Length + 1);
@@ -29,15 +28,14 @@ internal class BaseClassBuilder(MockContext context)
         result.Region("Configuration", builder =>
         {
             builder
-                .Documentation(doc => doc
-                    .Summary("Configuration class for the mock."))
+                .Documentation("Configuration class for the mock.")
                 .AddToConfig(context, config =>
                 {
                     config.Add($"private readonly {context.MockType} target;");
 
                     config
                         .Documentation(doc => doc
-                            .Summary($"Initializes a new instance of the <see cref=\"global::{context.Source.ToCRef()}.{context.ConfigName}\">{context.ConfigName}</see> class")
+                            .Summary($"Initializes the configuration for {context.Source.ToSeeCRef()} instance of the {context.ConfigName} class")
                             .Parameter("target", "The target mock class.")
                             .Parameter($"config", "Optional configuration method."))
                         .Scope($"public {context.ConfigName}({context.MockType} target, System.Action<{context.ConfigName}>? config = null)", methodScope => methodScope

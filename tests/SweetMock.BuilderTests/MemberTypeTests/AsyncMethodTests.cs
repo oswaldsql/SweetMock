@@ -64,7 +64,7 @@ public class MethodsWithGenericFunctionsTests(ITestOutputHelper testOutputHelper
     [Fact]
     public void CanCreateMockForINotifyPropertyChanged()
     {
-        var source = Build.TestClass("SweetMock.BuilderTests.MemberTypeTests.MethodsWithGenericFunctionsTests.IG<string>", "");
+        var source = Build.TestClass("SweetMock.BuilderTests.MemberTypeTests.MethodsWithGenericFunctionsTests.IG<string>");
 
         var generate = new SweetMockSourceGenerator().Generate(source);
 
@@ -73,9 +73,10 @@ public class MethodsWithGenericFunctionsTests(ITestOutputHelper testOutputHelper
         Assert.Empty(generate.GetWarnings());
     }
     
+    // ReSharper disable once UnusedType.Global
     public interface IG<T>
     {
 //    void Do<TU>(TU u);
-        void Do2<TU>(Func<TU> u);
+        void Do2<Tu>(Func<Tu> u);
     }
 }

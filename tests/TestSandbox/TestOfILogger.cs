@@ -39,6 +39,8 @@ public class Settings{}
 
 public class Target(IDependency dependency, ILogger<Target> logger, IOptions<Settings> settings)
 {
+    public IOptions<Settings> Settings { get; } = settings;
+
     public void LogSomething()
     {
         dependency.GetName(12);

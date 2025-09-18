@@ -68,11 +68,9 @@ public class BookRepositoryTests2
         {
             config.user.Id(userGuid);
             var basket1 = Mock.IBasket(c => c.Add());
-            config.basketRepo.TryGetUserBasket((Guid id, out IBasket basket, CancellationToken token) =>
-            {
-                basket = basket1;
-                return Task.FromResult(true);
-            }).Save();
+            config.basketRepo
+                .TryGetUserBasket(Task.FromResult(true), basket1)
+                .Save();
             config.bookRepo
                 .IsAvailable(true)
                 .InStock(42)
@@ -80,7 +78,7 @@ public class BookRepositoryTests2
             config.messageBroker.SendMessage();
         });
 
-        var sut = fixture.CreateSut();
+        var sut = fixture.CreateShoppingBasket();
 
         await sut.AddBookToBasket("isbn 0-434-00348-4", CancellationToken.None);
 
@@ -116,31 +114,31 @@ public class ShoppingBasket(IUser user, IBasketRepo basketRepo, IBookRepository 
 
 public interface IMessageBroker
 {
-    void SendMessage(Guid userId, string message);
+    public void SendMessage(Guid userId, string message);
 }
 
 public interface IBasketRepo
 {
-    Task<bool> TryGetUserBasket(Guid userId, out IBasket basket, CancellationToken token);
-    Task<IBasket> CreateUserBasket(Guid userId, CancellationToken token);
-    Task Save(IBasket basket, CancellationToken token);
+    public Task<bool> TryGetUserBasket(Guid userId, out IBasket basket, CancellationToken token);
+    public Task<IBasket> CreateUserBasket(Guid userId, CancellationToken token);
+    public Task Save(IBasket basket, CancellationToken token);
 }
 
 public interface IBasket
 {
-    void Add(string isbn);
+    public void Add(string isbn);
 }
 
 public interface IUser
 {
-    Guid Id { get; set; }
+    public Guid Id { get; set; }
 }
 
 public interface IBookRepository
 {
-    Task<Book> GetByISBN(string isbn, CancellationToken token);
-    Task<bool> IsAvailable(string isbn, CancellationToken token);
-    ValueTask<int> InStock(string isbn, CancellationToken token);
+    public Task<Book> GetByISBN(string isbn, CancellationToken token);
+    public Task<bool> IsAvailable(string isbn, CancellationToken token);
+    public ValueTask<int> InStock(string isbn, CancellationToken token);
 }
 
 public record Book(

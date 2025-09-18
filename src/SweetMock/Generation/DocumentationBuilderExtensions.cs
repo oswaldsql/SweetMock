@@ -18,7 +18,7 @@ internal static class DocumentationBuilderExtensions
     }
 
     public static CodeBuilder Documentation(this CodeBuilder builder, params string[] summary) =>
-        builder.Documentation(d => d.Summary(summary));
+        builder.Documentation(doc => doc.Summary(summary));
 
     public static DocumentationBuilder Summary(this DocumentationBuilder doc, params string[] summaries)
     {
@@ -42,6 +42,9 @@ internal static class DocumentationBuilderExtensions
 
         return doc;
     }
+
+    public static DocumentationBuilder Parameter(this DocumentationBuilder doc, IEnumerable<IParameterSymbol> source, Func<IParameterSymbol, string> description) =>
+        doc.Parameter(source, t => t.Name, description);
 
     public static DocumentationBuilder Parameter<T>(this DocumentationBuilder doc, IEnumerable<T> source, Func<T, string> name, Func<T, string> description)
     {

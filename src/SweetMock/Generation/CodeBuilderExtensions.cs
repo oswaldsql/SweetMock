@@ -35,6 +35,23 @@ internal static class CodeBuilderExtensions
             .Unindent().Add("}");
     }
 
+    internal static void AddConfigLambda(this CodeBuilder result, MockContext context, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
+    {
+        var name = symbol.Name;
+        if (name == "this[]")
+        {
+            name = "Indexer";
+        }
+
+        var args = string.Join(" , ", arguments);
+
+        result.Add($"public {context.ConfigName} {name}({args}) =>")
+            .Indent()
+            .Apply(build)
+            .Unindent()
+            .AddLineBreak();
+    }
+
     public static CodeBuilder Region(this CodeBuilder source, string region, Action<CodeBuilder> action) =>
         source
             .AddUnindented("#region " + region)

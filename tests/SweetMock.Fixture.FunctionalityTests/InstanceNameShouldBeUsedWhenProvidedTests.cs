@@ -1,6 +1,6 @@
 ﻿namespace SweetMock.FixtureGenerator.FunctionalityTests;
 
-[Mock<InstanceNameShouldBeUsedWhenProvidedTests.IInstanceName>]
+[Mock<IInstanceName>]
 public class InstanceNameShouldBeUsedWhenProvidedTests
 {
     [Fact]

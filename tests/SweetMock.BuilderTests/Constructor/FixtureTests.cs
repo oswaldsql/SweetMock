@@ -2,32 +2,28 @@
 
 public class FixtureTests(ITestOutputHelper testOutputHelper)
 {
-    [Fact(Skip = "Something wrong with the test")]
-    public void METHOD()
+    [Fact]
+    public void SpecifyingOnlyFixtureShouldAddDependencies()
     {
         // Arrange
-        var source = $$$"""
-                        namespace Demo;
+        var source = """
+                     namespace Demo;
 
-                        using SweetMock.BuilderTests;
-                        using SweetMock;
-                        using System;
+                     using SweetMock.BuilderTests;
+                     using SweetMock;
+                     using System;
 
-                        [Fixture<ShoppingBasket>]
-                        [Mock<IBasketRepo>]
-                        [Mock<IStockHandler>]
-                        [Mock<IUser>]
-                        [Mock<ILogger<ShoppingBasket>>]
-                        public class ShoppingBasket(IUser user, IStockHandler stockHandler, IBasketRepo repo, ILogger<ShoppingBasket> logger) { }
+                     [Fixture<ShoppingBasket>]
+                     public class ShoppingBasket(IUser user, IStockHandler stockHandler, IBasketRepo repo, ILogger<ShoppingBasket> logger) { }
 
-                        public interface IBasketRepo { }
+                     public interface IBasketRepo { }
 
-                        public interface IStockHandler { }
+                     public interface IStockHandler { }
 
-                        public interface IUser { }
-                        
-                        public interface ILogger<T> {}
-                        """;
+                     public interface IUser { }
+
+                     public interface ILogger<T> {}
+                     """;
 
         var generate = new SweetMockSourceGenerator().Generate(source);
 

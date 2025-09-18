@@ -1,14 +1,15 @@
 ﻿namespace SweetMock.FixtureTests;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using SweetMock;
+using Xunit.Abstractions;
 
 [Fixture<ShoppingBasket>]
 [Mock<Tests>]
 [Mock<ShoppingBasket>]
 [Mock<ISendEndpoint>]
-public class Tests
+public class Tests(ITestOutputHelper testOutputHelper)
 {
     [Fact]
     public void TestIsATest()
@@ -21,11 +22,11 @@ public class Tests
         });
         var sut = fixture.CreateShoppingBasket();
         
-        Console.WriteLine(sut.Name);
+        testOutputHelper.WriteLine(sut.Name);
         
         foreach (var callLogItem in fixture.Log.GetLogs())
         {
-            Console.WriteLine(callLogItem);
+            testOutputHelper.WriteLine(callLogItem.ToString());
         }
     }
 }
@@ -36,8 +37,13 @@ public interface IG<T>
     void Do2<TU>(Func<TU> u);
 }
 
-public class ShoppingBasket(string name, TimeProvider time, IUser user, IStockHandler stockHandler, IBasketRepo repo, ILogger<ShoppingBasket> logger)
+public class ShoppingBasket([ServiceKey] string name, TimeProvider time, IUser user, IStockHandler stockHandler, IBasketRepo repo, ILogger<ShoppingBasket> logger)
 {
+    public TimeProvider Time { get; } = time;
+    public IUser User { get; } = user;
+    public IStockHandler StockHandler { get; } = stockHandler;
+    public IBasketRepo Repo { get; } = repo;
+    public ILogger<ShoppingBasket> Logger { get; } = logger;
     public string Name => name;
 }
 

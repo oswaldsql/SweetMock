@@ -148,20 +148,18 @@ internal static class LogExtensionsBuilder
                     var argumentTypes = l.Distinct(SymbolEqualityComparer.Default).ToArray();
                     if (argumentTypes.Length > 1)
                     {
-                        logScope.Documentation(doc => doc
-                                .Summary($"Enables filtering on the {l.Key} argument.", "The argument can be different types", string.Join(", ", argumentTypes.Select(t => t!.ToSeeCRef()).Distinct())))
+                        logScope.Documentation($"Enables filtering on the {l.Key} argument.", "The argument can be different types", string.Join(", ", argumentTypes.Select(t => t!.ToSeeCRef()).Distinct()))
                             .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                     }
                     else if (l.First() is ITypeParameterSymbol || l.First() is INamedTypeSymbol { IsGenericType: true })
                     {
-                        logScope.Documentation(doc => doc
-                                .Summary($"Enables filtering on the {l.Key} argument.", $"The argument is a generic type. ({l.First()})"))
+                        logScope.Documentation($"Enables filtering on the {l.Key} argument.", $"The argument is a generic type. ({l.First()})")
                             .Add($"public object? {l.Key} => base.Arguments[\"{l.Key}\"]!;");
                     }
                     else
                     {
                         var p = l.First();
-                        logScope.Documentation(d => d.Summary($"Enables filtering on the {l.Key} argument."))
+                        logScope.Documentation($"Enables filtering on the {l.Key} argument.")
                             .Add($"public {p} {l.Key} => ({p})base.Arguments[\"{l.Key}\"]!;");
                     }
 
@@ -172,8 +170,7 @@ internal static class LogExtensionsBuilder
     }
 
     private static void BuildPredicateDocumentation(CodeBuilder result, IMethodSymbol[] symbols, ISymbol target) =>
-        result.Documentation(doc => doc
-            .Summary(GetArgumentSummery(symbols[0], target)));
+        result.Documentation(GetArgumentSummery(symbols[0], target));
 
     private static string GetArgumentSummery(IMethodSymbol symbol, ISymbol target) =>
         symbol switch

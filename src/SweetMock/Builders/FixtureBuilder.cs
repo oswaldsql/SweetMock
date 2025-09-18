@@ -54,10 +54,10 @@ public static class FixtureBuilder
         classScope
             .Scope($"internal class FixtureConfig", configScope =>
             {
-                configScope.Documentation(builder =>
+                configScope.Documentation(doc =>
                     {
-                        builder.Summary("Configuration object for the fixture");
-                        builder.Parameter(targetCtor.Parameters, p => p.Name, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
+                        doc.Summary("Configuration object for the fixture");
+                        doc.Parameter(targetCtor.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
                     })
                     .Scope($"internal FixtureConfig({configParameters})", ctorScope =>
                     {
@@ -75,16 +75,14 @@ public static class FixtureBuilder
                     {
                         configScope
                             .AddLineBreak()
-                            .Documentation(doc => doc
-                                .Summary($"Gets the configuration for {parameter.Name} used within the fixture."))
+                            .Documentation($"Gets the configuration for {parameter.Name} used within the fixture.")
                             .Add($"internal global::{info.MockClass}{generics}.{info.ContextConfigName} {parameter.Name} {{get;private set;}}");
                     }
                     else
                     {
                         configScope
                             .AddLineBreak()
-                            .Documentation(doc => doc
-                                .Summary($"Gets or sets the {parameter.Name} used for configuration within the fixture."))
+                            .Documentation($"Gets or sets the {parameter.Name} used for configuration within the fixture.")
                             .Add($"internal {parameter.Type.ToDisplayString(ToFullNameFormat)}{generics}? {parameter.Name} {{get; set;}}");
                     }
                 }
@@ -92,8 +90,7 @@ public static class FixtureBuilder
             .AddLineBreak();
 
         classScope
-            .Documentation(d => d
-                .Summary("Gets or sets the configuration object for the fixture used in the test setup process.", "This property enabled configuration and management of the mocked dependencies."))
+            .Documentation("Gets or sets the configuration object for the fixture used in the test setup process.", "This property enabled configuration and management of the mocked dependencies.")
             .Add("internal FixtureConfig Config{get; private set;}")
             .AddLineBreak();
 
@@ -119,13 +116,13 @@ public static class FixtureBuilder
 
     private static CodeBuilder AddCallLog(this CodeBuilder classScope) =>
         classScope
-            .Documentation(d => d.Summary("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests."))
+            .Documentation("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests.")
             .Add("public global::SweetMock.CallLog Log{get; private set;}")
             .AddLineBreak();
 
     private static CodeBuilder AddConstructor(this CodeBuilder classScope, INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
         classScope
-            .Documentation(d => d
+            .Documentation(doc => doc
                 .Summary($"Provides a fixture for the {s.ToSeeCRef()} object, setting up mocks and a call log for testing purposes.")
                 .Parameter("config", "Optional configuration of the mocked dependencies.")
             )
@@ -174,9 +171,9 @@ public static class FixtureBuilder
         var arguments = parameters.ToString(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
 
         classScope
-            .Documentation(d => d
+            .Documentation(doc => doc
                 .Summary($"Creates an instance of the {s.ToSeeCRef()} object using the initialized mock dependencies.")
-                .Parameter(parameters, symbol => symbol.Name, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
+                .Parameter(parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
                 .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
             )
             .Scope($"public {s.ToDisplayString(ToFullNameFormat)} Create{s.Name}({arguments})", methodScope =>
@@ -272,7 +269,7 @@ public static class FixtureBuilder
         var constraints = symbol.ToConstraints();
 
         classScope
-            .Documentation(d => d
+            .Documentation(doc => doc
                 .Summary($"Represents a test fixture designed for the {symbol.ToSeeCRef()} class, leveraging mocked dependencies for unit testing.")
                 .Parameter("config", "An optional configuration action to customize the mocked dependencies or fixture setup.")
                 .Returns($"Returns a fixture object configured for testing the {symbol.ToSeeCRef()} class.")

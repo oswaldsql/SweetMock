@@ -10,7 +10,7 @@ public class OutMethodTests
     public void OutParameterWithReturnValueShouldWork()
     {
         var sut = Mock.IMethodWithOutArgument(config =>
-            config.OutWithReturn((string s, out int i) => int.TryParse(s, out i))
+            config.OutWithReturn((string s, out int i) => int.TryParse(s, out i)).OutWithReturn(true, 10)
         );
 
         var result = sut.OutWithReturn("10", out var actual);
@@ -26,7 +26,7 @@ public class OutMethodTests
     {
         var sut = Mock.IMethodWithOutArgument(config =>
             config
-                .OutWithVoid((string s, out int i) => i = int.Parse(s))
+                .OutWithVoid((string s, out int i) => i = int.Parse(s)).OutWithVoid(10)
         );
 
         sut.OutWithVoid("10", out var actual);

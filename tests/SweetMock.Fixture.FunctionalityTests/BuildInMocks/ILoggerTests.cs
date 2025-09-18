@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 public class ILoggerTests
 {
     [Fact]
-    public void METHOD()
+    public void LogMessagesAreWrittenToTheCallLog()
     {
         // Arrange
         var fixture = Fixture.ILoggerTarget();

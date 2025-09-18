@@ -1,6 +1,5 @@
-﻿namespace Repo;
-
-using SweetMock;
+﻿// ReSharper disable CheckNamespace
+namespace Repo;
 
 public class Repo
 {

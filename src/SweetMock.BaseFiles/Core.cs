@@ -33,7 +33,7 @@ namespace SweetMock
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
     [GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
     internal class MockAttribute<T, TImplementation> : Attribute
-        //where TImplementation : MockBase<T>, new()
+        where TImplementation : MockBase<T>, new()
     ;
 
     /// <summary>
@@ -44,7 +44,7 @@ namespace SweetMock
     [GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
     internal class FixtureAttribute<T>(string? fixtureName = null) : Attribute where T : class
     {
-        private string FixtureName { get; } = fixtureName ?? typeof(T).Name;
+        internal string FixtureName { get; } = fixtureName ?? typeof(T).Name;
     }
 
     #endregion

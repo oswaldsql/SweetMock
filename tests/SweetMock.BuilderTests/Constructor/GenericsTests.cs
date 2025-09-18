@@ -98,7 +98,7 @@ public class TestClass{{
         T ReturnGeneric<T>(string value) where T : struct;
         //IEnumerable<T> ReturnDerived<T>(string value) where T : struct;
         void ReturnVoid<T>(string value) where T : struct;
-        T ReturnTwoGenerics<T, TU>(string value) where T : struct where TU : struct;
+        T ReturnTwoGenerics<T, Tu>(string value) where T : struct where Tu : struct;
     }
 
     public interface IGeneric<out TKey, in TValue> where TKey : IComparable<TKey>? //, IEnumerable<string>?

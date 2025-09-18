@@ -85,17 +85,17 @@ internal class MethodBuilder
 
         classScope.AddToConfig(this.context, config =>
         {
-            config.Documentation(doc => doc
-                .Summary($"Delegate for mocking calls to {symbol.ToSeeCRef()}."));
-            config.Add($"public delegate {delegateType} {delegateName}({delegateParameters});");
+            config
+                .Documentation($"Delegate for mocking calls to {symbol.ToSeeCRef()}.")
+                .Add($"public delegate {delegateType} {delegateName}({delegateParameters});");
 
-            config.Documentation(doc => doc
-                .Summary($"Configures the mock to execute the specified action when calling {symbol.ToSeeCRef()}.")
-                .Parameter("call", "The action or function to execute when the method is called.")
-                .Returns("The updated configuration object."));
-
-            config.AddConfigMethod(this.context, name, [$"{delegateName} call"], builder => builder
-                .Add($"target.{functionPointer} = call;"));
+            config
+                .Documentation(doc => doc
+                    .Summary($"Configures the mock to execute the specified action when calling {symbol.ToSeeCRef()}.")
+                    .Parameter("call", "The action or function to execute when the method is called.")
+                    .Returns("The updated configuration object."))
+                .AddConfigMethod(this.context, name, [$"{delegateName} call"], methodScope => methodScope
+                    .Add($"target.{functionPointer} = call;"));
         });
     }
 
@@ -170,7 +170,46 @@ internal class MethodBuilder
         this.AddTaskReturnsExtensions(builder, methods);
         this.AddReturnValuesExtensions(builder, methods);
         this.AddNoReturnValueExtensions(builder, methods);
+        this.AddOutArgumentExtensions(builder, methods);
         this.AddThrowExtensions(builder, methods);
+    }
+
+    private void AddOutArgumentExtensions(CodeBuilder builder, IGrouping<string, IMethodSymbol> methods)
+    {
+        var methodSymbols = methods.Where(m => m.Parameters.Any(symbol => symbol.RefKind == RefKind.Out));
+
+        foreach (var method in methodSymbols)
+        {
+            builder
+                .Documentation(doc => doc
+                    .Summary("Configures the mock to return the specified values.")
+                    .Parameter("returns", "The return value of the method.", !method.ReturnsVoid)
+                    .Parameter(method.Parameters.Where(t => t.RefKind == RefKind.Out), symbol => "out_" + symbol.Name, argument => $"Value to set for the out argument {argument.Name}")
+                    .Returns("The updated configuration object."));
+
+            var arguments = method.Parameters.Where(t => t.RefKind == RefKind.Out).ToString(p => $"{p.Type.ToDisplayString()} out_{p.Name}");
+            if (!method.ReturnsVoid)
+                arguments = method.ReturnType.ToDisplayString() + " returns, " + arguments;
+
+            builder.AddConfigLambda(this.context, method, [arguments], configScope =>
+            {
+                    var parameters = GetParameterInfos(method);
+
+                    var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} {p.Name}");
+
+                    configScope.Add($"this.{method.Name}(call: ({this.methodDelegateName[method]})(({parameterList}) => {{").Indent();
+
+                    foreach (var symbol in method.Parameters.Where(t => t.RefKind == RefKind.Out))
+                    {
+                        configScope.Add($"{symbol.Name} = out_{symbol.Name};");
+                    }
+
+                    if (!method.ReturnsVoid)
+                        configScope.Add("return returns;");
+
+                    configScope.Unindent().Add("}));");
+            });
+        }
     }
 
     private void AddReturnsExtensions(CodeBuilder result, IGrouping<string, IMethodSymbol> methods)

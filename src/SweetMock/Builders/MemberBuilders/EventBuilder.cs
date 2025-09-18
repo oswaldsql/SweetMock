@@ -76,8 +76,7 @@ internal class EventBuilder(MockContext context)
 
         builder.AddToConfig(context, config =>
             {
-                config.Documentation(doc => doc
-                    .Summary($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered."));
+                config.Documentation($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered.");
 
                 if (types == "System.EventArgs")
                     config.AddConfigMethod(context, eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
