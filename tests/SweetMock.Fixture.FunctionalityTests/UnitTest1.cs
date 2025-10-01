@@ -42,7 +42,7 @@ public class CreateSutArgumentsTest
 
         // Assert 
         Assert.NotNull(actual);
-        Assert.IsType<NotExplicitlyMockedException>(actual);
+        Assert.IsType<NullReferenceException>(actual);
     }
 
     [Fact]

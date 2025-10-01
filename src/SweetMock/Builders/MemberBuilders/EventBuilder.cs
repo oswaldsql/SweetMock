@@ -67,10 +67,10 @@ internal class EventBuilder(MockContext context)
         var signature = $"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}";
         builder.Scope(signature, eventScope => eventScope
             .Scope("add", addScope => addScope
-                .BuildLogSegment(symbol.AddMethod, true)
+                .BuildLogSegment(context, symbol.AddMethod, true)
                 .Add($"this._{eventFunction} += value;"))
             .Scope("remove", removeScope => removeScope
-                .BuildLogSegment(symbol.RemoveMethod, true)
+                .BuildLogSegment(context, symbol.RemoveMethod, true)
                 .Add($"this._{eventFunction} -= value;"))
         );
 

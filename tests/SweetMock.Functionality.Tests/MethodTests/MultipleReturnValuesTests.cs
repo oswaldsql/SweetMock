@@ -13,7 +13,7 @@ public class MultipleReturnValuesTests
         var first = sut.Method();
         var second = sut.Method();
         var third = sut.Method();
-        var shouldFail = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.Method());
+        var shouldFail = Assert.Throws<NotExplicitlyMockedException>(() => sut.Method());
 
         // Assert
         Assert.Equal("1", first);
@@ -34,7 +34,7 @@ public class MultipleReturnValuesTests
         var firstAsync = await sut.MethodAsync(token);
         var secondAsync = await sut.MethodAsync(token);
         var thirdAsync = await sut.MethodAsync(token);
-        var shouldFailAsync = await Assert.ThrowsAsync<SweetMock.NotExplicitlyMockedException>(() => sut.MethodAsync(token));
+        var shouldFailAsync = await Assert.ThrowsAsync<NotExplicitlyMockedException>(() => sut.MethodAsync(token));
 
         // Assert
         Assert.Equal("1", firstAsync);
@@ -61,13 +61,10 @@ public class MultipleReturnValuesTests
     {
         // Arrange
         var enumerable = new string[] { };
-        var sut = Mock.IMultipleReturnValues(config =>
-        {
-            config.Method(enumerable);
-        });
+        var sut = Mock.IMultipleReturnValues(config => { config.Method(enumerable); });
 
         // Act
-        var shouldFail = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.Method());
+        var shouldFail = Assert.Throws<NotExplicitlyMockedException>(() => sut.Method());
 
         // Assert
         Assert.NotNull(shouldFail);
@@ -93,7 +90,7 @@ public class MultipleReturnValuesTests
     {
         // Arrange
 //        var sut = Mock.IMultipleReturnValues(config => config.MethodAsync(returnValues: ["1", "2", "3"]));
-        var sut = Mock.IMultipleReturnValues(config => config.MethodAsync(returnValues: [Task.FromResult("1"), Task.FromResult("2"), Task.FromResult("3")]));
+        var sut = Mock.IMultipleReturnValues(config => config.MethodAsync([Task.FromResult("1"), Task.FromResult("2"), Task.FromResult("3")]));
 
         // ACT
         var first = await sut.MethodAsync(CancellationToken.None);

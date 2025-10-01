@@ -109,31 +109,27 @@ public class GenericInterfaceTests
 
 public class GenericMethodTest
 {
-    //[Mock<IGenericMethod>]
+    [Mock<IGenericMethod>]
     [Fact]
     public void MockCallFunctionGetTheTypeOfTheGenericAsParameter()
     {
-//        var sut = Mock.IGenericMethod(config => config.ReturnGeneric(ReturnGeneric));
-//
-//        // ACT
-//        var actualInt = sut.ReturnGeneric<int>("test");
-//        var actualBool = sut.ReturnGeneric<bool>("test");
-//
-//        // Assert
-//        Assert.Equal(10, actualInt);
-//        Assert.True(actualBool);
-//        return;
-//
-//        // Arrange
-//        object ReturnGeneric(string value, Type t)
-//        {
-//            if (t == typeof(int))
-//            {
-//                return 10;
-//            }
-//
-//            return true;
-//        }
+        // ACT
+        var sut = Mock.IGenericMethod(config => config.ReturnGeneric(ReturnGeneric));
+        var actualInt = sut.ReturnGeneric<int>("test");
+        var actualBool = sut.ReturnGeneric<bool>("test");
+        // Assert
+        Assert.Equal(10, actualInt);
+        Assert.True(actualBool);
+        return;
+        // Arrange
+        object ReturnGeneric(string value, Type t)
+        {
+            if (t == typeof(int))
+            {
+                return 10;
+            }
+            return true;
+        }
     }
 
     public interface IGenericMethod
@@ -142,6 +138,6 @@ public class GenericMethodTest
         T ReturnGeneric<T>(string value) where T : struct;
         IEnumerable<T> ReturnDerived<T>(string value) where T : struct;
         void ReturnVoid<T>(string value) where T : struct;
-        T ReturnTwoGenerics<T, TU>(string value) where T : struct where TU : struct;
+        T ReturnTwoGenerics<T, Tu>(string value) where T : struct where Tu : struct;
     }
 }

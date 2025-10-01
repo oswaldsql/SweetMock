@@ -46,7 +46,7 @@ internal class ConstructorBuilder(MockContext context) {
                 .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
                 .Add("_sweetMockCallLog = _sweetMockOptions.Logger;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
-                .BuildLogSegment(constructor)
+                .BuildLogSegment(context, constructor)
                 .Add($"new {context.ConfigName}(this, config);")
             );
         }

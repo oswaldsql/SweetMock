@@ -65,35 +65,35 @@ public class ValueTaskMethodTests
         // Assert
         Assert.NotNull(actualException);
         Assert.Equal(ValueTask.CompletedTask, actual);
-        Assert.IsType<SweetMock.NotExplicitlyMockedException>(actualException);
+        Assert.IsType<NotExplicitlyMockedException>(actualException);
     }
 
     [Fact]
     public void SimpleValueTaskWithoutParametersCanGiveAException()
     {
         // Arrange
-        var sut = Mock.IValueTasks(t => t.SimpleTask(() => ValueTask.FromException(new Exception())));
- 
+        var sut = Mock.IValueTasks(t => t.SimpleTask(() => ValueTask.FromException(new())));
+
         // ACT
         var actual = Record.ExceptionAsync(async () => await sut.SimpleTask());
- 
+
         // Assert
         Assert.IsType<ValueTask<Exception>>(actual);
     }
- 
+
     [Fact]
     public async Task SimpleValueTaskWithoutParametersCanBeCancled()
     {
         // Arrange
-        var sut = Mock.IValueTasks(t => t.SimpleTask(() => ValueTask.FromCanceled(new CancellationToken(true))));
- 
+        var sut = Mock.IValueTasks(t => t.SimpleTask(() => ValueTask.FromCanceled(new(true))));
+
         // ACT
         var actual = await Record.ExceptionAsync(async () => await sut.SimpleTask());
- 
+
         // Assert
         Assert.IsType<TaskCanceledException>(actual);
     }
- 
+
     [Fact]
     public async Task SimpleValueTaskShouldHaveAllTheExpectedHelperMethods()
     {
@@ -135,12 +135,12 @@ public class ValueTaskMethodTests
     {
         // Arrange
         var sut = Mock.IValueTasks(t => t
-            .TaskWithResult(call: () => ValueTask.FromResult("name"))
-            .TaskWithResult(ValueTask.FromResult("name"))
-            .TaskWithResult([ValueTask.FromResult("name1"), ValueTask.FromResult("name2")])
-            //.TaskWithResult(["name1", "name2"])
-            //.TaskWithResult(() => "name")
-            .TaskWithResult(new InvalidOperationException())
+                .TaskWithResult(() => ValueTask.FromResult("name"))
+                .TaskWithResult(ValueTask.FromResult("name"))
+                .TaskWithResult([ValueTask.FromResult("name1"), ValueTask.FromResult("name2")])
+                //.TaskWithResult(["name1", "name2"])
+                //.TaskWithResult(() => "name")
+                .TaskWithResult(new InvalidOperationException())
             //.TaskWithResult("name")
         );
 
@@ -157,14 +157,14 @@ public class ValueTaskMethodTests
     {
         // Arrange
         var sut = Mock.IValueTasks(t => t
-            .TaskWithResultWithArgs((name, _) => ValueTask.FromResult(name))
-            .TaskWithResultWithArgs(ValueTask.FromResult("name"))
-            .TaskWithResultWithArgs([ValueTask.FromResult("name1"), ValueTask.FromResult("name2")])
-            //.TaskWithResultWithArgs(["name1", "name2"])
-            .TaskWithResultWithArgs(new InvalidOperationException())
+                .TaskWithResultWithArgs((name, _) => ValueTask.FromResult(name))
+                .TaskWithResultWithArgs(ValueTask.FromResult("name"))
+                .TaskWithResultWithArgs([ValueTask.FromResult("name1"), ValueTask.FromResult("name2")])
+                //.TaskWithResultWithArgs(["name1", "name2"])
+                .TaskWithResultWithArgs(new InvalidOperationException())
             //.TaskWithResultWithArgs("name")
         );
-        
+
         // ACT
         var result = await sut.TaskWithResultWithArgs("name", CancellationToken.None);
 
@@ -180,31 +180,5 @@ public class ValueTaskMethodTests
 
         ValueTask<string> TaskWithResult();
         ValueTask<string> TaskWithResultWithArgs(string name, CancellationToken ct = default);
-    }
-}
-
-[Mock<IArrayParameters>]
-public class ArrayParameterTests
-{
-    [Fact]
-    public void METHOD()
-    {
-        // Arrange
-        string[] readOnlySpan = ["1", "2"];
-        var sut = Mock.IArrayParameters(config => config
-            .RevertArray(returnAsTasks: readOnlySpan)
-            .RevertArray2(returns: readOnlySpan)
-        );
-
-        // ACT
-
-        // Assert 
-
-    }
-    
-    public interface IArrayParameters
-    {
-        Task<string[]> RevertArray(string[] array);        
-        string[] RevertArray2(string[] array);
     }
 }

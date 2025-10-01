@@ -68,7 +68,7 @@ internal class IndexBuilder(MockContext context)
         classScope.Scope(signature, indexerScope => indexerScope
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
-                    .BuildLogSegment(symbol.GetMethod)
+                    .BuildLogSegment(context, symbol.GetMethod)
                     .Scope($"if (this.{internalName}_get is null)", ifScope =>
                     {
                         ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
@@ -77,7 +77,7 @@ internal class IndexBuilder(MockContext context)
                 ))
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
-                    .BuildLogSegment(symbol.SetMethod)
+                    .BuildLogSegment(context,symbol.SetMethod)
                     .Scope($"if (this.{internalName}_set is null)", ifScope =>
                     {
                         ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");

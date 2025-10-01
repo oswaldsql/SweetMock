@@ -24,7 +24,7 @@ public class Tests(ITestOutputHelper testOutputHelper)
         
         testOutputHelper.WriteLine(sut.Name);
         
-        foreach (var callLogItem in fixture.Log.GetLogs())
+        foreach (var callLogItem in fixture.Log)
         {
             testOutputHelper.WriteLine(callLogItem.ToString());
         }

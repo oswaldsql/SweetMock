@@ -14,7 +14,7 @@ public class MockBuilder
 
         result
             .Nullable()
-            .Usings("global::System.Linq","global::System")
+            .Usings("global::System.Linq","global::System","global::SweetMock")
             .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope =>
             {
                 var builder = new BaseClassBuilder(mockContext);

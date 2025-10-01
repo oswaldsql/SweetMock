@@ -1,5 +1,6 @@
 ﻿namespace SweetMock.FixtureGenerator.FunctionalityTests.BuildInMocks;
 
+using System.Net;
 using Microsoft.Extensions.Options;
 
 [Fixture<OptionsTarget>]
@@ -84,4 +85,71 @@ public class IOptionsTest
     {
         public string SomeProperty { get; set; } = inputValue;
     }
+}
+
+[Fixture<HttpTestService>]
+public class HttpClientTests
+{
+    [Fact]
+    public void CanCreateService()
+    {
+        // Arrange
+        var fixture = Fixture.HttpTestService();
+        var sut = fixture.CreateHttpTestService();
+
+        // ACT
+        HttpMessageHandler handler = new MockHandler();
+        
+        var t = new HttpClient(handler);
+
+        // Assert 
+
+    }
+    
+    public class HttpTestService(HttpClient httpClient)
+    {
+        
+    }
+}
+
+public class MockHandler : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var status = request switch
+        {
+            { RequestUri.AbsolutePath: "test1", Method: { Method: "GET" } } => HttpStatusCode.OK,
+            { RequestUri.AbsolutePath: var p } when p.Contains("test2") => HttpStatusCode.BadRequest,
+            { RequestUri.Query: "test3" } => HttpStatusCode.AlreadyReported,
+            { Version.Major: 1, Version.Minor: 0 } => HttpStatusCode.ExpectationFailed,
+            _ => HttpStatusCode.NotFound
+        };
+
+        return Task.FromResult(new HttpResponseMessage(status));
+    }
+    
+    protected HttpStatusCode Send(HttpRequestMessage request)
+    {
+        var status = request switch
+        {
+            { RequestUri.AbsolutePath: "test1", Method: { Method: "GET" } } => HttpStatusCode.OK,
+            { RequestUri.AbsolutePath: var p } when p.Contains("test2") => HttpStatusCode.BadRequest,
+            { RequestUri.Query: "test3" } => HttpStatusCode.AlreadyReported,
+            { Version.Major: 1, Version.Minor: 0 } => HttpStatusCode.ExpectationFailed,
+            _ => HttpStatusCode.NotFound
+        };
+
+        return status;
+    }
+
+    protected HttpResponseMessage Send2(HttpRequestMessage request, CancellationToken cancellationToken) =>
+        request switch
+        {
+            { RequestUri.AbsolutePath: "test1", Method: { Method: "GET" } } => request.ReplyNotFound(),
+            { RequestUri.AbsolutePath: var p } when p.Contains("test2") => new HttpResponseMessage(HttpStatusCode.BadRequest),
+            { RequestUri.Query: "test3" } => new HttpResponseMessage(HttpStatusCode.AlreadyReported),
+            { Version.Major: 1, Version.Minor: 0 } => new HttpResponseMessage(HttpStatusCode.ExpectationFailed),
+
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound)
+        };
 }

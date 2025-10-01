@@ -32,7 +32,8 @@ internal static class CodeBuilderExtensions
             .Add("{").Indent()
             .Apply(build)
             .Add("return this;")
-            .Unindent().Add("}");
+            .Unindent().Add("}")
+            .AddLineBreak();
     }
 
     internal static void AddConfigLambda(this CodeBuilder result, MockContext context, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)

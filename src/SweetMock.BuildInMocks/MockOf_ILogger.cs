@@ -7,6 +7,8 @@
 #nullable enable
 
 namespace Microsoft.Extensions.Logging{
+    using SweetMock;
+
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
     internal class MockOf_ILogger<TCategoryName> : global::SweetMock.MockBase<ILogger<TCategoryName>>{
         public override ILogger<TCategoryName> Value => new MockLogger<TCategoryName>(this.Options);

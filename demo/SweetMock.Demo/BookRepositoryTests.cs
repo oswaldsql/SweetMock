@@ -82,7 +82,7 @@ public class BookRepositoryTests2
 
         await sut.AddBookToBasket("isbn 0-434-00348-4", CancellationToken.None);
 
-        foreach (var item in fixture.Log.GetLogs())
+        foreach (var item in fixture.Log)
         {
             Console.WriteLine(item);
         }

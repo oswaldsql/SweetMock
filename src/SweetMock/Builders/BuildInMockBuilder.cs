@@ -8,8 +8,10 @@ public static class BuildInMockBuilder
     {
         {"Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger},
         {"System.TimeProvider", TimeProvider},
-        {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions}
+        {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions},
+        {"System.Net.Http.HttpClient", HttpClient}
     };
+
     internal static IEnumerable<MockInfo> CreateBuildInMocks(List<MockTypeWithLocation> collectedMocks, SourceProductionContext spc)
     {
         var candidates = collectedMocks.Where(t => t.Type != null).ToLookup(t => t.Type, SymbolEqualityComparer.Default);
@@ -39,4 +41,8 @@ public static class BuildInMockBuilder
 
     private static string IOptions() =>
         ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_IOptions.cs");
+
+    private static string HttpClient() =>
+        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_HttpClient.cs");
+
 }
