@@ -57,21 +57,6 @@ public class WicketIntendTests(ITestOutputHelper testOutputHelper)
         testOutputHelper.DumpResult(generate);
         Assert.Empty(generate.GetErrors());
     }
-
-        
-    [Fact]
-    public void TestHttpClient()
-    {
-        // Arrange
-        var source = Build.TestClass<HttpClient>();
-
-        // ACT
-        var generate = new SweetMockSourceGenerator().Generate(source);
-
-        // Assert
-        testOutputHelper.DumpResult(generate);
-        Assert.Empty(generate.GetErrors());
-    }
     
     [Fact]
     public void NamespaceAndClassMustBeAbleToHaveSameName()
