@@ -11,7 +11,7 @@ public class LogFilterTests
         // Arrange
         var logger = new CallLog();
         Dictionary<string, Version> dic = new Dictionary<string, Version>();
-        Action<Version> trigger = null;
+        Action<Version>? trigger = null;
         var sut = Mock.IVersionLibrary(config =>
         {
             config.DownloadLinkAsync(new Uri("https://github.com"));
@@ -27,10 +27,11 @@ public class LogFilterTests
         await sut.DownloadLinkAsync("1.2.3.4");
         sut.CurrentVersion = new Version(1,2,3,4);
         sut.DownloadExists("2.3.4.5");
-
+        trigger!(new Version(1,2,3,4));
+        
         // Assert 
         Assert.Single(logger.IVersionLibrary().DownloadLinkAsync(args => args.version == "1.2.3.4"));
         Assert.Single(logger.IVersionLibrary().CurrentVersion_Set(args => args.value == new Version(1, 2, 3, 4)));
-        Assert.Single(logger.IVersionLibrary().DownloadExists(args => args.version.ToString() == "2.3.4.5"));
+        Assert.Single(logger.IVersionLibrary().DownloadExists(args => args.version?.ToString() == "2.3.4.5"));
     }
 }

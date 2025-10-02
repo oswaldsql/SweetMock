@@ -9,7 +9,7 @@ public class Demo
 
     internal class DemoImplementation : IDemoDependency
     {
-        public string StringProperty { get; set; }
+        public string StringProperty { get; set; } = "Demo";
     }
 
     internal class DemoService(IDemoDependency demoDependency)
