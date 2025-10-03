@@ -9,7 +9,7 @@ public class GenericClassTests
         Action<Guid> trigger = null!;
         // Arrange & Act
         var callLog = new CallLog();
-        var options = new MockOptions() {Logger = callLog};
+        var options = new MockOptions(callLog);
         
         var sut = Mock.Repo<Guid>(config => config
             .SomeMethod(Guid.NewGuid())

@@ -8,8 +8,9 @@
 
 namespace Microsoft.Extensions.Options{
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
-    internal class MockOf_IOptions<TOptions> where TOptions : class{
-        public global::SweetMock.MockOptions Options { get; set; } = new() {InstanceName = typeof(TOptions).Name};
+    internal class MockOf_IOptions<TOptions> where TOptions : class
+    {
+        public global::SweetMock.MockOptions Options { get; set; } = new(instanceName: typeof(TOptions).Name);
         public MockConfig Config { get; } = new MockConfig();
         internal IOptions<TOptions> Value => this.Config.Value ?? throw new global::System.ArgumentNullException(this.Options.InstanceName, $"'{this.Options.InstanceName}' must have a value before being used.");
 

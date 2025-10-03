@@ -9,7 +9,7 @@ namespace SweetMock;
 
 public class MockBase<TInterface>
 {
-    public MockOptions Options { get; set; } = new global::SweetMock.MockOptions() {InstanceName = typeof(TInterface).Name};
+    public MockOptions Options { get; set; } = new global::SweetMock.MockOptions(instanceName: typeof(TInterface).Name);
 
     public MockConfig Config { get; private set; } = null!;
 

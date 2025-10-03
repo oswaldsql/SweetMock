@@ -26,7 +26,7 @@ namespace System.Net.Http{
             this.Value = new HttpClient(handler);
         }
 
-        public global::SweetMock.MockOptions Options { get; set; } = new() { InstanceName = "HttpClient" };
+        public global::SweetMock.MockOptions Options { get; set; } = new(instanceName: "HttpClient" );
 
         public MockConfig Config { get; init; }
         internal HttpClient Value { get; init; }

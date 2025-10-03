@@ -28,6 +28,7 @@
     </ItemGroup>
     
     <ItemGroup>
+        <ProjectReference Include="..\..\src\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
         <ProjectReference Include="..\..\src\SweetMock\SweetMock.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 </Project>

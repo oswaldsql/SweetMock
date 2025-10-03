@@ -28,6 +28,9 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
 
     <IncludeBuiltOutput>false</IncludeBuiltOutput>
+    <UsingToolXliff>true</UsingToolXliff>
+    <AnalyzerLanguage>cs</AnalyzerLanguage>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,11 +49,15 @@
 
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"/>
+    <None Include="$(OutputPath)\SweetMock.BaseFiles.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\SweetMock.BaseFiles\*.cs" Link="BaseFiles\%(Filename)"/>
     <EmbeddedResource Include="..\SweetMock.BuildInMocks\*.cs" Link="Builders\BuildInMocks\%(Filename)%(Extension)"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
   </ItemGroup>
 
 </Project>

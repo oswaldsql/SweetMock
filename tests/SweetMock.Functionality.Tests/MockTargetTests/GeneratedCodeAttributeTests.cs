@@ -8,21 +8,6 @@ public class GeneratedCodeAttributeTests
     private const string CurrentVersion = "0.9.33.0";
 
     [Fact]
-    public void MockAttributeShouldHaveAttribute()
-    {
-        // Arrange
-        var sut = typeof(MockAttribute<string>);
-
-        // ACT
-        var actual = sut.GetCustomAttributes<GeneratedCodeAttribute>();
-
-        // Assert
-        var actualAttribute = Assert.Single(actual);
-        Assert.Equal("SweetMock", actualAttribute.Tool);
-        Assert.Equal(CurrentVersion, actualAttribute.Version);
-    }
-
-    [Fact]
     public void MockClassShouldHaveAttribute()
     {
         // Arrange

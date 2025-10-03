@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 //[Mock<IOptionsMonitor<string>, MockOf_OptionsMonitor<string>>]
 internal class MockOf_OptionsMonitor<TOptions> where TOptions : class
 {
-    public MockOptions Options { get; set; } = new MockOptions() {InstanceName = typeof(TOptions).Name};
+    public MockOptions Options { get; set; } = new MockOptions(instanceName: typeof(TOptions).Name);
 
     public MockConfig Config { get; } = new MockConfig();
 
