@@ -14,8 +14,6 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        AddBaseFiles(context);
-
         var fixtureAttributes = context.SyntaxProvider
                 .ForAttributeWithMetadataName("SweetMock.FixtureAttribute`1", (node, _) => node != null, (syntaxContext, _) => syntaxContext.Attributes)
                 .Where(attribute => !attribute.IsDefaultOrEmpty)
@@ -39,18 +37,6 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
         var flattenedAttributes = customMockAttributes.Combine(mockAttributes).Combine(fixtureAttributes);
         context.RegisterSourceOutput(flattenedAttributes, BuildFileList);
-    }
-
-    private static void AddBaseFiles(IncrementalGeneratorInitializationContext context)
-    {
-        foreach (var name in ResourceReader.GetResourceNames(t => t.StartsWith("SweetMock.BaseFiles")))
-        {
-            var content = ResourceReader.ReadEmbeddedResource(name);
-            content = content.Replace("{{SweetMockVersion}}", SourceGeneratorMetadata.Version.ToString());
-            context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-                name,
-                SourceText.From(content, Encoding.UTF8)));
-        }
     }
 
     private static void BuildFileList(SourceProductionContext spc, ((ImmutableArray<AttributeData> Left, ImmutableArray<AttributeData> Right) Left, ImmutableArray<AttributeData> Right) attributes)
