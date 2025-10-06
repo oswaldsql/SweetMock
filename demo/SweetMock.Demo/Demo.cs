@@ -155,6 +155,7 @@ public class Demo
     // - ILogger
     // - TimeProvider
     // - IOptions
+    // - HttpClient
 
     // Advanced
     // - Extension methods

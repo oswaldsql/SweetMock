@@ -8,40 +8,61 @@ Reference the NuGet package in your test project:
 dotnet add package SweetMock
 ```
 
-- Specify which interface to mock by using the `[Mock<IMyRepository>]` attribute before your test or test class:
-- Create a new instance of the mock using the `Mock.IMyRepository()` factory method.
-- Configure the mock using the `config` parameter of the factory method.
-- Specify how the relevant members should behave using the member name and specify the behavior using the parameters. 
-- Use the mock in your test as you see fit.
+## Create a test fixture
 
-As code:
+- Specify the system under test (sut) class to test by using the `[Fixture<MyService>]`.
+- Create the test fixture by calling `Fixture.MyService()`.
+- Use `Fixture.MyService(config => {<mock dependency>})` to configure how the different dependency mocks should behave.
+- Create an instance of the service with mock dependencies by calling `var sut = Fixture.CreateMyService()`.
+- Perform the test actions of your system under test.
+- Use the CallLog for assertions by using `fixture.Log`
 
 ```csharp
+[Fixture<ShoppingBasket>] // Use the Fixture attribute to specify the system under test (sut) class
 [Fact]
-[Mock<IMyRepository>] // Specify which interface to mock
-public void MyTest() {
-    var mockRepo = Mock.IMyRepository(// Create a new instance of the mock using the mock factory
-        config => config // Configure the mock using the config parameter
-            .CreateCustomerAsync(return: Guid.NewGuid()) // Specify how the relevant members should behave
-        );
-    var sut = new CustomerMaintenance(mockRepo); // Use the mock in your test as you see fit
+public async Task TheGuideShouldAlwaysBeAvailable()
+{
+    // Arrange
+    var fixture = Fixture.ShoppingBasket(config => // Create the test fixture
+    {
+        config.bookRepo.GetByISBN(new Book("isbn 0-434-00348-4", "The Hitch Hiker's Guide to the Galaxy", "Douglas Adams")); // configure the dependency mocks
+        config.messageBroker.SendMessage();
+    });
     
-    sut.Create(customerDTO, cancellationToken);
+    var sut = fixture.CreateShoppingBasket(); // Create an instance of the sut
+    
+    // Act
+    await sut.AddBookToBasket("isbn 0-434-00348-4", CancellationToken.None); // Execute the test
+    
+    // Assert
+    var sendMessage = Assert.Single(fixture.Log.IMessageBroker().SendMessage()); // Assert using the CallLog
+    Assert.Equal("The book The Hitch Hiker's Guide to the Galaxy by Douglas Adams was added to your basket", sendMessage.message);
 }
 ```
 
-## Quality of Life
+### Create mocks yourself
 
-SweetMock is **extremely strict** but **fair**, requiring you to specify all features you want to mock but giving you fair warnings if you don't.
-This is by design to make sure you are aware of what you are mocking and not introduce unexpected behaviour.
+- Specify the interface or class to create a mock for by using `[Mock<IBookRepository>]`
+- Create an instance of the mock object by calling `Mock.IBookRepository()`
+- Configure the mock `Mock.IBookRepository(config => config.<mock configuation>);`
+- Inject the mock into your sut as if it was a standard dependency.
 
-![exception](Exception.png)
+```csharp
+[Mock<IBookRepository>] // Use the Mock attribute to indicate the interface or class to mock.
+[Fact]
+public void TheGuideShouldAlwaysBeAvailable() {
+    // Arrange
+    var mockRepo = Mock.IBookRepository(config => config // Get a new instance of the mock 
+        .IsAvailable(returns: true)); // Configure what should happen when specific actions are performed
+    
+    // Act
+    var sut = new ShoppingBasket(MockRepo);
+    var actual = sut.IsAvailable("isbn 0-434-00348-4"); 
+    
+    // Assert
+    Assert.True(actual); // Use your chosen way of assertion 
+}
+```
 
-All mockable members are available through a **fluent interface** with **IntelliSense**, **type safety**, and **documentation**.
-
-![documentation](Documentation.png)
-
-## Please note
-
-- Any member (method, property, indexer) not explicitly configured will throw an `InvalidOperationException` with a clear message.
-- This is by design to ensure strictness and avoid unintentional test behavior.
+For more details on specific aspects you can read about [Construction](construction.md), [Methods](methods.md), [Properties](properties.md), [Events](events.md) or
+[Indexers](indexers.md).

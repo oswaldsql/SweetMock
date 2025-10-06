@@ -59,6 +59,7 @@ public class BookRepositoryTests
 [Fixture<ShoppingBasket>]
 public class BookRepositoryTests2
 {
+    [Fixture<ShoppingBasket>]
     [Fact]
     public async Task TheGuideShouldAlwaysBeAvailable()
     {
@@ -87,7 +88,7 @@ public class BookRepositoryTests2
             Console.WriteLine(item);
         }
 
-        var sendMessage = Assert.Single(fixture.Log.SendMessage());
+        var sendMessage = Assert.Single(fixture.Log.IMessageBroker().SendMessage());
         Assert.Equal("The book The Hitch Hiker's Guide to the Galaxy by Douglas Adams was added to your basket", sendMessage.message);
     }
 }

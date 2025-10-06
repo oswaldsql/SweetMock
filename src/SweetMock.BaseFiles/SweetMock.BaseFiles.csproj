@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-      <IsPackable>false</IsPackable>
+      <IsPackable>true</IsPackable>
       <ImplicitUsings>false</ImplicitUsings>
       <RootNamespace>SweetMock</RootNamespace>
       <LangVersion>12</LangVersion>

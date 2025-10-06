@@ -8,6 +8,13 @@ The overall goal is to balance flexibility and functionality while maintaining a
 
 ---
 
+### Support for Fixture
+
+- **Bulk creation** : Creation of mocks for use as dependencies in **system under test** classes
+- **Creation of SUT** : Build in factory for creating System under tests classes
+- **Mock overwrite** : For greater control user which objects to use.
+- **Shared CallLog** : For tracking the flow through the calls.
+
 ### Supported Targets for Mocking
 
 - **Classes and Interfaces**:

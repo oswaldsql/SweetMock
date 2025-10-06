@@ -2,19 +2,26 @@
 
 A source generator for creating mocks and fixtures for testing. SweetMock automatically generates fixture and mock implementations of interfaces or classes to help in unit testing by providing a way to simulate the behavior of complex dependencies.
 
-``` csharp
-[Mock<IBookRepository>] // Use the Mock attribute to indicate the interface or class to mock.
-public class BookRepositoryTests
+```csharp
+[Fixture<ShoppingBasket>]
+[Fact]
+public async Task TheGuideShouldAlwaysBeAvailable()
 {
-  [Fact]
-  public void TheGuideShouldAlwaysBeAvailable() {
-    var sut = Mock.IBookRepository(config => config // Get a new instance of the mock 
-      .IsAvailable(returns: true)); // Configure what should happen when specific actions are performed
-
-    var actual = sut.IsAvailable("isbn 0-434-00348-4"); 
-
-    Assert.True(actual); // Use your chosen way of assertion 
-  }
+    // Arrange
+    var fixture = Fixture.ShoppingBasket(config =>
+    {
+        config.bookRepo.GetByISBN(new Book("isbn 0-434-00348-4", "The Hitch Hiker's Guide to the Galaxy", "Douglas Adams"));
+        config.messageBroker.SendMessage();
+    });
+    
+    var sut = fixture.CreateShoppingBasket();
+    
+    // Act
+    await sut.AddBookToBasket("isbn 0-434-00348-4", CancellationToken.None);
+    
+    // Assert
+    var sendMessage = Assert.Single(fixture.Log.IMessageBroker().SendMessage());
+    Assert.Equal("The book The Hitch Hiker's Guide to the Galaxy by Douglas Adams was added to your basket", sendMessage.message);
 }
 ```
 
@@ -22,27 +29,26 @@ public class BookRepositoryTests
 
 Install the package via NuGet:
 
-```
+```sh
 dotnet add package SweetMock
 ```
 
 ## Features
 
-- Source generator-based mocking
-- Support for interface mocking
-- Support for a subset of class mocking
-- No runtime dependencies
-- Lightweight and fast
-- Native C# code generation
+__SweetMock__ offers a comprehensive set of features designed to streamline unit testing in __C#__ projects. 
+Its __source generator code__ simplifies security scanning and ensures that mock implementations are both __fast, reliable and maintainable__.
 
-## Usage
+The __fixture__ system enables bulk creation of mock dependencies, making it easy to set up complex test scenarios while direct access to creating individual __mock__ object allows for more advanced scenarios.
 
-Simple example of how to use SweetMock:
+SweetMock supports both __interface__ and __class__ mocking, providing flexibility for a wide range of dependency types. __Built-in mocks__ cover common scenarios, reducing the need for custom implementations.
+
+Extensive __logging__ features allow for detailed assertions, helping you verify interactions and outcomes with precision.
+
+Additionally, SweetMock is test framework __agnostic__, working seamlessly with __XUnit__, __NUnit__, __TUnit__, and other popular frameworks.
 
 ## Requirements
 
-- .NET Standard 2.0+
-- C# 13.0 or higher
+- C# 12.0 (.net 8 and above)
 
 ## License
 
