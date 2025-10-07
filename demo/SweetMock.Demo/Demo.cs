@@ -137,7 +137,28 @@ public class Demo
         Assert.Equal("demoDependency", actualException.InstanceName);
     }
 
-    // Constructor
+    /// <summary>
+    ///     When constructing a fixture, the first constructor is selected. When using default constructors, this will be used.
+    ///     Specifying a specific implementation for the dependency while creating the sut will overwrite the mock implementation.
+    /// </summary>
+    /// <remarks>
+    ///     Note that if no configuration is provided, the config parameter of the fixture creation can be omitted
+    /// </remarks>
+    [Fact]
+    public void Constructor()
+    {
+        // Arrange
+        var fixture = Fixture.DemoService();
+        var demoImplementation = new DemoImplementation(){StringProperty = "Implementation value"};
+        var sut = fixture.CreateDemoService(demoDependency: demoImplementation);
+
+        // ACT
+        var actual = sut.GetStringProperty();
+
+        // Assert
+        Assert.Equal("Implementation value", actual);
+    }
+
     // Methode
     // - Generic
     // - Basic usage
