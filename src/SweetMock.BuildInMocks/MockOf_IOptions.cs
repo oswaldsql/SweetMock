@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.Options{
     internal class MockOf_IOptions<TOptions> where TOptions : class
     {
         public global::SweetMock.MockOptions Options { get; set; } = new(instanceName: typeof(TOptions).Name);
-        public MockConfig Config { get; } = new MockConfig();
+        public MockConfig Config { get; } = new();
         internal IOptions<TOptions> Value => this.Config.Value ?? throw new global::System.ArgumentNullException(this.Options.InstanceName, $"'{this.Options.InstanceName}' must have a value before being used.");
 
         public class MockConfig{

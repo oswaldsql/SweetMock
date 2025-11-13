@@ -6,24 +6,26 @@ public class MockBuilder
 {
     public string BuildFiles(INamedTypeSymbol target, out MockContext context)
     {
-        var mockContext = new MockContext(target);
-
         var result = new CodeBuilder();
 
-        result.AddFileHeader();
+        var mockContext = new MockContext(target);
+        //context = mockContext;
 
         result
+            .AddFileHeader()
             .Nullable()
             .Usings("global::System.Linq","global::System","global::SweetMock")
             .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope =>
             {
                 var builder = new BaseClassBuilder(mockContext);
-                builder.BuildMockClass(namespaceScope)
+                builder
+                    .BuildMockClass(namespaceScope)
                     .AddLineBreak()
                     .BuildLogExtensionsClass(mockContext);
             });
 
         context = mockContext;
+
         return result.ToString();
     }
 

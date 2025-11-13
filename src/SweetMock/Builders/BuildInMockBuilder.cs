@@ -26,7 +26,7 @@ public static class BuildInMockBuilder
                     var source = func();
                     spc.AddSource(symbol.ToCRef() + ".g.cs", source);
 
-                    yield return new MockInfo(symbol, symbol.ContainingNamespace + ".MockOf_" + symbol.Name, MockKind.BuildIn, "MockConfig");
+                    yield return new(symbol, symbol.ContainingNamespace + ".MockOf_" + symbol.Name, MockKind.BuildIn, "MockConfig");
                     collectedMocks.RemoveAll(t => SymbolEqualityComparer.Default.Equals(t.Type, symbol));
                 }
             }

@@ -37,7 +37,7 @@ internal class BaseClassBuilder(MockContext context)
                         .Documentation(doc => doc
                             .Summary($"Initializes the configuration for {context.Source.ToSeeCRef()} instance of the {context.ConfigName} class")
                             .Parameter("target", "The target mock class.")
-                            .Parameter($"config", "Optional configuration method."))
+                            .Parameter("config", "Optional configuration method."))
                         .Scope($"public {context.ConfigName}({context.MockType} target, System.Action<{context.ConfigName}>? config = null)", methodScope => methodScope
                             .Add("this.target = target;")
                             .Add("config?.Invoke(this);"));

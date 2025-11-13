@@ -2,7 +2,7 @@
 
 using System.Collections.Generic;
 
-public interface ICallLog_Filter
+public interface ICallLogFilter
 {
     public IEnumerable<CallLogItem> Filter();
 }

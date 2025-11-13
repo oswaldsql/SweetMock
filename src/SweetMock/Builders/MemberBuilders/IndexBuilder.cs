@@ -14,7 +14,7 @@ internal class IndexBuilder(MockContext context)
         builder.Build(classScope, symbols);
     }
 
-    public void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
+    private void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
     {
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -69,19 +69,16 @@ internal class IndexBuilder(MockContext context)
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
                     .BuildLogSegment(context, symbol.GetMethod)
-                    .Scope($"if (this.{internalName}_get is null)", ifScope =>
-                    {
-                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
-                    })
+                    .Scope($"if (this.{internalName}_get is null)", ifScope => ifScope
+                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"return this.{internalName}_get({argName});")
                 ))
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
                     .BuildLogSegment(context,symbol.SetMethod)
-                    .Scope($"if (this.{internalName}_set is null)", ifScope =>
-                    {
-                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
-                    }).Add($"this.{internalName}_set({argName}, value);")
+                    .Scope($"if (this.{internalName}_set is null)", ifScope => ifScope
+                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                    .Add($"this.{internalName}_set({argName}, value);")
                 )));
 
         classScope
@@ -121,11 +118,9 @@ internal class IndexBuilder(MockContext context)
                 .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."))
-            .AddConfigExtension(context, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder =>
-            {
-                builder.AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
-                builder.AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);");
-                builder.AddIf(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);");
-            });
+            .AddConfigExtension(context, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder => builder
+                .AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);")
+                .AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);")
+                .AddIf(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);"));
     }
 }

@@ -1,10 +1,8 @@
 ﻿namespace SweetMock;
 
 using System.Collections.Immutable;
-using System.Text;
 using Builders;
 using Exceptions;
-using Microsoft.CodeAnalysis.Text;
 using Utils;
 
 [Generator]

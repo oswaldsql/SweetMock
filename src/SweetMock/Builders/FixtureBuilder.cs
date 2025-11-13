@@ -48,149 +48,141 @@ public static class FixtureBuilder
         }
     }
 
-    private static CodeBuilder AddFixtureConfigObject(this CodeBuilder classScope, IMethodSymbol targetCtor, INamedTypeSymbol s, Dictionary<INamedTypeSymbol, MockInfo> infos)
+    extension(CodeBuilder builder)
     {
-        var configParameters = string.Join(", ", BuildFixtureConfigParameters(targetCtor, infos));
-        classScope
-            .Scope($"internal class FixtureConfig", configScope =>
-            {
-                configScope.Documentation(doc =>
-                    {
-                        doc.Summary("Configuration object for the fixture");
-                        doc.Parameter(targetCtor.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
-                    })
-                    .Scope($"internal FixtureConfig({configParameters})", ctorScope =>
-                    {
-                        foreach (var parameter in targetCtor.Parameters)
-                        {
-                            ctorScope.Add($"this.{parameter.Name} = {parameter.Name};");
-                        }
-                    });
-
-                foreach (var parameter in targetCtor.Parameters)
-                {
-                    var type = (INamedTypeSymbol)parameter.Type;
-                    var generics = type.GetTypeGenerics();
-                    if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
-                    {
-                        configScope
-                            .AddLineBreak()
-                            .Documentation($"Gets the configuration for {parameter.Name} used within the fixture.")
-                            .Add($"internal global::{info.MockClass}{generics}.{info.ContextConfigName} {parameter.Name} {{get;private set;}}");
-                    }
-                    else
-                    {
-                        configScope
-                            .AddLineBreak()
-                            .Documentation($"Gets or sets the {parameter.Name} used for configuration within the fixture.")
-                            .Add($"internal {parameter.Type.ToDisplayString(ToFullNameFormat)}{generics}? {parameter.Name} {{get; set;}}");
-                    }
-                }
-            })
-            .AddLineBreak();
-
-        classScope
-            .Documentation("Gets or sets the configuration object for the fixture used in the test setup process.", "This property enabled configuration and management of the mocked dependencies.")
-            .Add("internal FixtureConfig Config{get; private set;}")
-            .AddLineBreak();
-
-        return classScope;
-    }
-
-    private static CodeBuilder AddPrivateMockObjects(this CodeBuilder classScope, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos)
-    {
-        foreach (var parameter in targetCtor.Parameters)
+        private CodeBuilder AddFixtureConfigObject(IMethodSymbol targetCtor, INamedTypeSymbol s, Dictionary<INamedTypeSymbol, MockInfo> infos)
         {
-            var type = parameter.Type as INamedTypeSymbol;
-            if (infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
-            {
-                var generics = type.GetTypeGenerics();
-                classScope.Add($"private readonly global::{parameterInfo.MockClass}{generics} _{parameter.Name};");
-            }
-        }
-
-        classScope.AddLineBreak();
-
-        return classScope;
-    }
-
-    private static CodeBuilder AddCallLog(this CodeBuilder classScope) =>
-        classScope
-            .Documentation("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests.")
-            .Add("public global::SweetMock.CallLog Log{get; private set;}")
-            .AddLineBreak();
-
-    private static CodeBuilder AddConstructor(this CodeBuilder classScope, INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
-        classScope
-            .Documentation(doc => doc
-                .Summary($"Provides a fixture for the {s.ToSeeCRef()} object, setting up mocks and a call log for testing purposes.")
-                .Parameter("config", "Optional configuration of the mocked dependencies.")
-            )
-            .Scope($"public FixtureFor_{s.Name}(System.Action<FixtureConfig>? config = null)", ctorScope =>
-            {
-                ctorScope.Add("Log = new SweetMock.CallLog();").AddLineBreak();
-
-                foreach (var parameter in targetCtor.Parameters)
+            var configParameters = string.Join(", ", BuildFixtureConfigParameters(targetCtor, infos));
+            builder
+                .Scope($"internal class FixtureConfig", configScope =>
                 {
-                    var type = parameter.Type as INamedTypeSymbol;
-                    if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
-                    {
-                        ctorScope.Add($"{parameter.Type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").AddLineBreak();
-                    }
-                    else
-                    {
-                        var generics = type.GetTypeGenerics();
-                        if (parameterInfo.Kind is MockKind.Wrapper or MockKind.BuildIn)
+                    configScope.Documentation(doc =>
                         {
-                            ctorScope
-                                .Add($"_{parameter.Name} = new global::{parameterInfo.MockClass}{generics}();")
-                                .Add($"var temp_{parameter.Name} = _{parameter.Name}.Config;")
-                                .Add($"_{parameter.Name}.Options = new global::SweetMock.MockOptions(Log, \"{parameter.Name}\");")
-                                .AddLineBreak();
+                            doc.Summary("Configuration object for the fixture");
+                            doc.Parameter(targetCtor.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
+                        })
+                        .Scope($"internal FixtureConfig({configParameters})", ctorScope =>
+                            ctorScope.Add(targetCtor.Parameters, parameter => $"this.{parameter.Name} = {parameter.Name};"));
+
+                    foreach (var parameter in targetCtor.Parameters)
+                    {
+                        var type = (INamedTypeSymbol)parameter.Type;
+                        var generics = type.GetTypeGenerics();
+                        if (infos.TryGetValue((INamedTypeSymbol)parameter.Type.OriginalDefinition, out var info))
+                        {
+                            configScope
+                                .AddLineBreak()
+                                .Documentation($"Gets the configuration for {parameter.Name} used within the fixture.")
+                                .Add($"internal global::{info.MockClass}{generics}.{info.ContextConfigName} {parameter.Name} {{get;private set;}}");
                         }
                         else
                         {
-                            ctorScope
-                                .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.ContextConfigName} temp_{parameter.Name} = null!;")
-                                .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
-                                .AddLineBreak();
+                            configScope
+                                .AddLineBreak()
+                                .Documentation($"Gets or sets the {parameter.Name} used for configuration within the fixture.")
+                                .Add($"internal {parameter.Type.ToDisplayString(ToFullNameFormat)}{generics}? {parameter.Name} {{get; set;}}");
                         }
                     }
-                }
+                })
+                .AddLineBreak();
 
-                var parametersString = targetCtor.Parameters.ToString(t => "temp_" + t.Name);
-                classScope
-                    .Add($"Config = new FixtureConfig({parametersString});")
-                    .Add("config?.Invoke(Config);");
-            }).AddLineBreak();
+            builder
+                .Documentation("Gets or sets the configuration object for the fixture used in the test setup process.", "This property enabled configuration and management of the mocked dependencies.")
+                .Add("internal FixtureConfig Config{get; private set;}")
+                .AddLineBreak();
 
-    private static CodeBuilder AddCreateSutMethod(this CodeBuilder classScope, IMethodSymbol targetCtor, INamedTypeSymbol s, Dictionary<INamedTypeSymbol, MockInfo> infos)
-    {
-        var parameters = targetCtor.Parameters;
+            return builder;
+        }
 
-        var arguments = parameters.ToString(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
-
-        classScope
-            .Documentation(doc => doc
-                .Summary($"Creates an instance of the {s.ToSeeCRef()} object using the initialized mock dependencies.")
-                .Parameter(parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
-                .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
-            )
-            .Scope($"public {s.ToDisplayString(ToFullNameFormat)} Create{s.Name}({arguments})", methodScope =>
+        private CodeBuilder AddPrivateMockObjects(IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos)
+        {
+            foreach (var parameter in targetCtor.Parameters)
             {
-                foreach (var parameter in parameters)
+                var type = parameter.Type as INamedTypeSymbol;
+                if (infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
                 {
-                    methodScope.Add($"var argument_{parameter.Name} = {parameter.Name} ?? {MockTypeToArgument(infos, parameter)};");
+                    var generics = type.GetTypeGenerics();
+                    builder.Add($"private readonly global::{parameterInfo.MockClass}{generics} _{parameter.Name};");
                 }
+            }
 
-                methodScope
-                    .Add($"return new {s.ToDisplayString(ToFullNameFormat)}({parameters.ToString(symbol => "argument_" + symbol.Name)});");
-            });
+            builder.AddLineBreak();
 
-        return classScope;
+            return builder;
+        }
+
+        private CodeBuilder AddCallLog() =>
+            builder
+                .Documentation("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests.")
+                .Add("public global::SweetMock.CallLog Log{get; private set;}")
+                .AddLineBreak();
+
+        private CodeBuilder AddConstructor(INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
+            builder
+                .Documentation(doc => doc
+                    .Summary($"Provides a fixture for the {s.ToSeeCRef()} object, setting up mocks and a call log for testing purposes.")
+                    .Parameter("config", "Optional configuration of the mocked dependencies.")
+                )
+                .Scope($"public FixtureFor_{s.Name}(System.Action<FixtureConfig>? config = null)", ctorScope =>
+                {
+                    ctorScope.Add("Log = new SweetMock.CallLog();").AddLineBreak();
+
+                    foreach (var parameter in targetCtor.Parameters)
+                    {
+                        var type = parameter.Type as INamedTypeSymbol;
+                        if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
+                        {
+                            ctorScope.Add($"{parameter.Type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").AddLineBreak();
+                        }
+                        else
+                        {
+                            var generics = type.GetTypeGenerics();
+                            if (parameterInfo.Kind is MockKind.Wrapper or MockKind.BuildIn)
+                            {
+                                ctorScope
+                                    .Add($"_{parameter.Name} = new global::{parameterInfo.MockClass}{generics}();")
+                                    .Add($"var temp_{parameter.Name} = _{parameter.Name}.Config;")
+                                    .Add($"_{parameter.Name}.Options = new global::SweetMock.MockOptions(Log, \"{parameter.Name}\");")
+                                    .AddLineBreak();
+                            }
+                            else
+                            {
+                                ctorScope
+                                    .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.ContextConfigName} temp_{parameter.Name} = null!;")
+                                    .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
+                                    .AddLineBreak();
+                            }
+                        }
+                    }
+
+                    var parametersString = targetCtor.Parameters.ToString(t => "temp_" + t.Name);
+                    builder
+                        .Add($"Config = new FixtureConfig({parametersString});")
+                        .Add("config?.Invoke(Config);");
+                }).AddLineBreak();
+
+        private CodeBuilder AddCreateSutMethod(IMethodSymbol targetCtor, INamedTypeSymbol s, Dictionary<INamedTypeSymbol, MockInfo> infos)
+        {
+            var parameters = targetCtor.Parameters;
+
+            var arguments = parameters.ToString(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
+
+            builder
+                .Documentation(doc => doc
+                    .Summary($"Creates an instance of the {s.ToSeeCRef()} object using the initialized mock dependencies.")
+                    .Parameter(parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
+                    .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
+                )
+                .Scope($"public {s.ToDisplayString(ToFullNameFormat)} Create{s.Name}({arguments})", methodScope =>
+                {
+                    methodScope
+                        .Add(parameters, parameter => $"var argument_{parameter.Name} = {parameter.Name} ?? {MockTypeToArgument(infos, parameter)};")
+                        .Add($"return new {s.ToDisplayString(ToFullNameFormat)}({parameters.ToString(symbol => "argument_" + symbol.Name)});");
+                });
+
+            return builder;
+        }
     }
-
-    private static string AsNullable(this ITypeSymbol type) => $"{type}?";
 
     private static string MockTypeToArgument(Dictionary<INamedTypeSymbol, MockInfo> infos, IParameterSymbol t)
     {

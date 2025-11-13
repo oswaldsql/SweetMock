@@ -48,7 +48,7 @@ namespace System.Net.Http{
                 this.SendAsync((_, _) =>
                 {
                     enumerator.MoveNext();
-                    return Task.FromResult((HttpResponseMessage)enumerator.Current);
+                    return Task.FromResult((HttpResponseMessage)enumerator.Current!);
                 });
             }
         }
@@ -163,23 +163,23 @@ namespace System.Net.Http{
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
     internal static class MockOf_HttpMessageHandler_LogExtensions{
         public static HttpClient_Filter HttpClient(this global::System.Collections.Generic.IEnumerable<CallLogItem> source) => new(source);
-        public class HttpClient_Filter(global::System.Collections.Generic.IEnumerable<CallLogItem> source) : CallLog_Filter(source){
+        public class HttpClient_Filter(global::System.Collections.Generic.IEnumerable<CallLogItem> source) : CallLogFilter(source){
             protected override string SignatureStart => "global::System.Net.Http.HttpClient.";
         }
 #region Constructors
         public class HttpClient_Args : SweetMock.TypedArguments { }
 
         /// <summary>
-        ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient.HttpClient()">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
+        ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this HttpClient_Filter log, Func<HttpClient_Args, bool>? predicate = null) =>
-             ((ICallLog_Filter)log).Filter().HttpClient(predicate);
+             ((ICallLogFilter)log).Filter().HttpClient(predicate);
 
         /// <summary>
-        ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient.HttpClient()">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
+        ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this global::System.Collections.Generic.IEnumerable<CallLogItem> log, Func<HttpClient_Args, bool>? HttpClient_HttpClient_Predicate = null) =>
-            log.Matching<HttpClient_Args>("global::System.Net.Http.HttpClient.HttpClient()", HttpClient_HttpClient_Predicate);
+            log.Matching("global::System.Net.Http.HttpClient.HttpClient()", HttpClient_HttpClient_Predicate);
 
 #endregion
 
@@ -200,13 +200,13 @@ namespace System.Net.Http{
         ///     Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this HttpClient_Filter log, Func<SendAsync_Args, bool>? predicate = null) =>
-             ((ICallLog_Filter)log).Filter().SendAsync(predicate);
+             ((ICallLogFilter)log).Filter().SendAsync(predicate);
 
         /// <summary>
         ///    Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this global::System.Collections.Generic.IEnumerable<CallLogItem> log, Func<SendAsync_Args, bool>? HttpMessageHandler_SendAsync_Predicate = null) =>
-            log.Matching<SendAsync_Args>("global::System.Net.Http.HttpClient.SendAsync(HttpRequestMessage, CancellationToken)", HttpMessageHandler_SendAsync_Predicate);
+            log.Matching("global::System.Net.Http.HttpClient.SendAsync(HttpRequestMessage, CancellationToken)", HttpMessageHandler_SendAsync_Predicate);
 
 #endregion
 

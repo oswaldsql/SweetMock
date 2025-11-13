@@ -1,20 +1,12 @@
 ﻿namespace SweetMock.Builders;
 
-using System.Collections.Immutable;
-
 public static class ConstraintBuilder
 {
-    /// <summary>
-    ///     Converts an array of type arguments to a constraints string.
-    /// </summary>
-    /// <param name="typeArguments">The type arguments to convert.</param>
-    /// <returns>A string representing the constraints.</returns>
-    public static string ToConstraints(this ImmutableArray<ITypeSymbol> typeArguments) =>
-        string.Join(" ", typeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
-
-    public static string ToConstraints(this INamedTypeSymbol symbol) =>
-        string.Join(" ", symbol.TypeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
-
+    extension(INamedTypeSymbol symbol)
+    {
+        public string ToConstraints() =>
+            string.Join(" ", symbol.TypeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
+    }
 
     /// <summary>
     ///     Converts a type parameter symbol to a constraint string.
@@ -28,38 +20,41 @@ public static class ConstraintBuilder
         return results.Length == 0 ? "" : " where " + symbol.Name + " : " + results;
     }
 
-    private static IEnumerable<string> ToConstraintElements(this ITypeParameterSymbol symbol)
+    extension(ITypeParameterSymbol symbol)
     {
-        foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToString()))
+        private IEnumerable<string> ToConstraintElements()
         {
-            yield return ct;
-        }
-
-        if (symbol.HasUnmanagedTypeConstraint)
-        {
-            yield return "unmanaged";
-        }
-        else
-        {
-            if (symbol.HasConstructorConstraint)
+            foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToString()))
             {
-                yield return "new()";
+                yield return ct;
             }
 
-            if (symbol.HasValueTypeConstraint)
+            if (symbol.HasUnmanagedTypeConstraint)
             {
-                yield return "struct";
+                yield return "unmanaged";
             }
-        }
+            else
+            {
+                if (symbol.HasConstructorConstraint)
+                {
+                    yield return "new()";
+                }
 
-        if (symbol.HasReferenceTypeConstraint)
-        {
-            yield return "class";
-        }
+                if (symbol.HasValueTypeConstraint)
+                {
+                    yield return "struct";
+                }
+            }
 
-        if (symbol.HasNotNullConstraint)
-        {
-            yield return "notnull";
+            if (symbol.HasReferenceTypeConstraint)
+            {
+                yield return "class";
+            }
+
+            if (symbol.HasNotNullConstraint)
+            {
+                yield return "notnull";
+            }
         }
     }
 }

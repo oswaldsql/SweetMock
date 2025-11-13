@@ -15,7 +15,7 @@ internal class PropertyBuilder(MockContext context)
         builder.Build(classScope,symbols);
     }
 
-    public void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
+    private void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
     {
         var lookup = symbols.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -73,18 +73,14 @@ internal class PropertyBuilder(MockContext context)
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
                     .BuildLogSegment(context, symbol.GetMethod)
-                    .Scope($"if (this._{internalName}_get is null)", ifScope =>
-                    {
-                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
-                    })
+                    .Scope($"if (this._{internalName}_get is null)", ifScope => ifScope
+                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"return this._{internalName}_get();")))
             .AddIf(hasSet, set => set
                 .Scope(setType, setScope => setScope
                     .BuildLogSegment(context, symbol.SetMethod)
-                    .Scope($"if (this._{internalName}_set is null)", ifScope =>
-                    {
-                        ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);");
-                    })
+                    .Scope($"if (this._{internalName}_set is null)", ifScope => ifScope
+                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"this._{internalName}_set(value);"))));
 
         builder
@@ -121,13 +117,10 @@ internal class PropertyBuilder(MockContext context)
             .Parameter("value", "The value to use for the initial value of the property.")
             .Returns("The updated configuration object."));
 
-        codeBuilder.AddConfigExtension(context, property, [$"{property.Type} value"], builder =>
-            {
-                builder.Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);");
-                builder.AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);");
-                builder.AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);");
-                builder.AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);");
-            }
-        );
+        codeBuilder.AddConfigExtension(context, property, [$"{property.Type} value"], builder => builder
+            .Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);")
+            .AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);")
+            .AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);")
+            .AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);"));
     }
 }

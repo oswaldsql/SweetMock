@@ -7,7 +7,7 @@ public class TypedCallLogItem<T> : CallLogItem where T : TypedArguments, new()
         this.Index = source.Index;
         this.MethodSignature = source.MethodSignature;
         this.Arguments = source.Arguments;
-        this.TypedArguments = new T();
+        this.TypedArguments = new();
         this.TypedArguments.Init(source.Arguments);
     }
 

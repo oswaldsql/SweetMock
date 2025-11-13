@@ -1,14 +1,13 @@
-﻿namespace SweetMock.FixtureTests;
+﻿// ReSharper disable RedundantNameQualifier
+namespace SweetMock.FixtureTests;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","0.9.25.0")]
-    internal class MockOf_ILogger<TCategoryName>() : MockBase<ILogger<TCategoryName>>(){
+    internal class MockOf_ILogger<TCategoryName> : MockBase<ILogger<TCategoryName>>{
         public override ILogger<TCategoryName> Value => new MockLogger<TCategoryName>(this.Options);
 
         private class MockLogger<TMCategoryName> : ILogger<TMCategoryName>{
@@ -41,12 +40,9 @@ using Microsoft.Extensions.Primitives;
         }
     }
 
-
-
 // IServiceProvider
 // IMemoryCache
 // IOptionsMonitor
-// HTTPClient ?
 // EF?
 
 

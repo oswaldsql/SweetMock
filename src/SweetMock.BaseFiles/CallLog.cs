@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class CallLog : IEnumerable<CallLogItem>
 {
     private int index;
-    private readonly List<CallLogItem> logs = new();
+    private readonly List<CallLogItem> logs = [];
     private readonly object @lock = new();
 
     public void Add(string signature, Arguments? arguments = null)
@@ -17,7 +17,7 @@ public class CallLog : IEnumerable<CallLogItem>
 
             arguments ??= Arguments.Empty;
 
-            this.logs.Add(new CallLogItem() { Index = this.index, MethodSignature = signature, Arguments = arguments });
+            this.logs.Add(new() { Index = this.index, MethodSignature = signature, Arguments = arguments });
         }
     }
 

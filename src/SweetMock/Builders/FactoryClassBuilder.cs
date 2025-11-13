@@ -51,6 +51,10 @@ public static class FactoryClassBuilder
                             case MockKind.BuildIn:
                                 BuildBuildInMockFactory(mockInfo, mockScope);
                                 break;
+                            case MockKind.Direct:
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
                         }
                     });
                 }
@@ -133,7 +137,7 @@ public static class FactoryClassBuilder
                 .Add($"var result = new {implementationType}();")
                 .Add("config?.Invoke(result.Config);")
                 .Add("result.Options = options ?? result.Options;")
-                .Add($"return result;")
+                .Add("return result;")
             );
 
         mockScope.AddLineBreak();
@@ -168,7 +172,7 @@ public static class FactoryClassBuilder
                 .Add($"var result = new {mockInfo.MockClass}{generics}();")
                 .Add("config?.Invoke(result.Config);")
                 .Add("result.Options = options ?? result.Options;")
-                .Add($"return result;")
+                .Add("return result;")
             );
 
         mockScope.AddLineBreak();

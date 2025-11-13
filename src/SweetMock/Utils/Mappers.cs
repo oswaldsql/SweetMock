@@ -32,13 +32,30 @@ public static class Mappers
     internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
         values == null ? "" : string.Join(separator, values.Select(mapper));
 
-    internal static string ToCRef(this ISymbol symbol) =>
-        symbol.ToDisplayString(ToCRefFormat).Replace(".this[", ".Item[").Replace('<', '{').Replace('>', '}');
+    extension(ISymbol symbol)
+    {
+        internal string ToCRef() =>
+            symbol.ToDisplayString(ToCRefFormat).Replace(".this[", ".Item[").Replace('<', '{').Replace('>', '}');
 
-    public static string ToSeeCRef(this ISymbol symbol) => $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(ToFullNameFormat).Replace("<", "&lt;").Replace(">", "&gt;")}</see>""";
+        public string ToSeeCRef() =>
+            $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(ToFullNameFormat).Replace("<", "&lt;").Replace(">", "&gt;")}</see>""";
 
-    private static string AccessibilityString(this ISymbol method) =>
-        method.DeclaredAccessibility.AccessibilityString();
+        private string AccessibilityString() =>
+            symbol.DeclaredAccessibility.AccessibilityString();
+
+        internal OverwriteString Overwrites()
+        {
+            if (symbol.ContainingType.TypeKind == TypeKind.Interface)
+            {
+                return new("global::" + symbol.ContainingSymbol + ".", "", "");
+            }
+
+            return new("", symbol.AccessibilityString() + " ", "override ");
+        }
+
+        public string AsNullable() =>
+            $"{symbol}?";
+    }
 
     private static string AccessibilityString(this Accessibility accessibility) =>
         accessibility switch
@@ -77,16 +94,6 @@ public static class Mappers
         var nameList = parameters.ToString(p => $"{p.OutString}{p.Function}");
 
         return new(methodParameters, nameList);
-    }
-
-    internal static OverwriteString Overwrites(this ISymbol symbol)
-    {
-        if (symbol.ContainingType.TypeKind == TypeKind.Interface)
-        {
-            return new("global::" + symbol.ContainingSymbol + ".", "", "");
-        }
-
-        return new("", symbol.AccessibilityString() + " ", "override ");
     }
 
     internal static string GetTypeGenerics(this INamedTypeSymbol type) => type.IsGenericType ? "<" + string.Join(", ", type.TypeArguments.Select(t => t.ToDisplayString(ToFullNameFormatWithGlobal))) + ">" : "";

@@ -1,17 +1,13 @@
 ﻿namespace TestSandbox;
 
 using System.Net;
-using MassTransit;
-using MassTransit.TestFramework;
-using NUnit.Framework;
 using SweetMock;
-using Assert = Xunit.Assert;
+using Xunit.Abstractions;
 
 [Fixture<TestFixture>]
-[Mock<ConsumeContext<Payload>, MockOfConsumeContext<Payload>>]
-public class HttpClientMockTests
+public class HttpClientMockTests(ITestOutputHelper testOutputHelper)
 {
-    [Test]
+    [Fact]
     public async Task ValidateThatHttpClientCanBeMocked()
     {
         var fixture = Fixture.TestFixture(config =>
@@ -31,7 +27,7 @@ public class HttpClientMockTests
         });
 
         var sut = fixture.CreateTestFixture();
-        Console.WriteLine(await sut.GetResult());
+        testOutputHelper.WriteLine(await sut.GetResult());
         
         //await sut.Client.GetAsync("http://localhost/");
         //await sut.Client.GetAsync("http://localhost/");
@@ -41,7 +37,7 @@ public class HttpClientMockTests
 
         foreach (var callLogItem in fixture.Log)
         {
-            Console.WriteLine(callLogItem.ToString());
+            testOutputHelper.WriteLine(callLogItem.ToString());
         }
 
         Assert.Single(fixture.Log.HttpClient().SendAsync(t => t.request.Method == HttpMethod.Get));
@@ -66,9 +62,3 @@ public class TestFixture(HttpClient client)
         return await client.GetStringAsync("http://localhost/tester");
     }
 }
-
-public class Payload
-{
-}
-
-internal class MockOfConsumeContext<T> : MockBase<ConsumeContext<T>> where T : class;

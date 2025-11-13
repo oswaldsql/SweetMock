@@ -14,7 +14,7 @@ internal class EventBuilder(MockContext context)
         builder.Build(classScope, events);
     }
 
-    public void Build(CodeBuilder classScope, IEnumerable<IEventSymbol> events)
+    private void Build(CodeBuilder classScope, IEnumerable<IEventSymbol> events)
     {
         var lookup = events.ToLookup(t => t.Name);
         foreach (var m in lookup)
@@ -47,11 +47,11 @@ internal class EventBuilder(MockContext context)
     /// <summary>
     ///     Builds an individual event and adds it to the code builder.
     /// </summary>
-    /// <param name="builder">The code builder to add the event to.</param>
+    /// <param name="regionScope">The code builder to add the event to.</param>
     /// <param name="symbol">The event symbol to build.</param>
     /// <param name="eventCount">The count of the event being built.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
-    private void BuildEvent(CodeBuilder builder, IEventSymbol symbol, int eventCount)
+    private void BuildEvent(CodeBuilder regionScope, IEventSymbol symbol, int eventCount)
     {
         var eventName = symbol.Name;
         var invokeMethod = symbol.Type.GetMembers().OfType<IMethodSymbol>().First(t => t.Name == "Invoke");
@@ -62,33 +62,38 @@ internal class EventBuilder(MockContext context)
 
         var (containingSymbol, accessibilityString, overrideString) = symbol.Overwrites();
 
-        builder.Add($"private event {typeSymbol}? _{eventFunction};");
-
         var signature = $"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}";
-        builder.Scope(signature, eventScope => eventScope
-            .Scope("add", addScope => addScope
-                .BuildLogSegment(context, symbol.AddMethod, true)
-                .Add($"this._{eventFunction} += value;"))
-            .Scope("remove", removeScope => removeScope
-                .BuildLogSegment(context, symbol.RemoveMethod, true)
-                .Add($"this._{eventFunction} -= value;"))
-        );
+        regionScope
+            .Add($"private event {typeSymbol}? _{eventFunction};")
+            .Scope(signature, eventScope => eventScope
+                .Scope("add", addScope => addScope
+                    .BuildLogSegment(context, symbol.AddMethod, true)
+                    .Add($"this._{eventFunction} += value;"))
+                .Scope("remove", removeScope => removeScope
+                    .BuildLogSegment(context, symbol.RemoveMethod, true)
+                    .Add($"this._{eventFunction} -= value;"))
+            )
+            .AddToConfig(context, config =>
+                {
+                    config.Documentation($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered.");
 
-        builder.AddToConfig(context, config =>
-            {
-                config.Documentation($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered.");
+                    if (types == "System.EventArgs")
+                    {
+                        config
+                            .AddConfigMethod(context, eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
+                                .Add($"trigger = () => target._{eventName}?.Invoke(target, System.EventArgs.Empty);"));
+                    }
+                    else
+                    {
+                        config
+                            .AddConfigMethod(context, eventName, [$"out System.Action<{types}> trigger"], codeBuilder => codeBuilder
+                                .Add($"trigger = args => target._{eventName}?.Invoke(target, args);")
+                            );
+                    }
 
-                if (types == "System.EventArgs")
-                    config.AddConfigMethod(context, eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
-                        .Add($"trigger = () => target._{eventName}?.Invoke(target, System.EventArgs.Empty);"));
-                else
-                    config.AddConfigMethod(context, eventName, [$"out System.Action<{types}> trigger"], codeBuilder => codeBuilder
-                        .Add($"trigger = args => target._{eventName}?.Invoke(target, args);")
-                    );
-
-                this.GenerateEventTriggerConfig(builder, symbol);
-            }
-        );
+                    this.GenerateEventTriggerConfig(regionScope, symbol);
+                }
+            );
     }
 
     private void GenerateEventTriggerConfig(CodeBuilder codeBuilder, IEventSymbol eventSymbol)
@@ -104,11 +109,9 @@ internal class EventBuilder(MockContext context)
                     .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."))
-                .AddConfigExtension(context, eventSymbol, [types + " eventArgs"], config =>
-                {
-                    config.Add($"this.{eventSymbol.Name}(out var trigger);");
-                    config.Add("trigger.Invoke(eventArgs);");
-                });
+                .AddConfigExtension(context, eventSymbol, [types + " eventArgs"], config => config
+                    .Add($"this.{eventSymbol.Name}(out var trigger);")
+                    .Add("trigger.Invoke(eventArgs);"));
         }
         else
         {
@@ -116,11 +119,9 @@ internal class EventBuilder(MockContext context)
                 .Documentation(doc => doc
                     .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
                     .Returns("The updated configuration object."))
-                .AddConfigExtension(context, eventSymbol, [], config =>
-                {
-                    config.Add($"this.{eventSymbol.Name}(out var trigger);");
-                    config.Add("trigger.Invoke();");
-                });
+                .AddConfigExtension(context, eventSymbol, [], config => config
+                    .Add($"this.{eventSymbol.Name}(out var trigger);")
+                    .Add("trigger.Invoke();"));
         }
     }
 }
