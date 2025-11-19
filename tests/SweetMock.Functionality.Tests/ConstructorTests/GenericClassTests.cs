@@ -38,7 +38,7 @@ public class GenericClassTests
 
         Assert.NotNull(sut);
 
-        Assert.Single(options.Logger.SomeMethod(args => args.input is Guid));
+        Assert.Single(options.Logger!.SomeMethod(args => args.input is Guid));
     }
 
     public class Repo<T> where T : new()

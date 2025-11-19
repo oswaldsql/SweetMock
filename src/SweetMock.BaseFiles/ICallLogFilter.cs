@@ -4,5 +4,5 @@ using System.Collections.Generic;
 
 public interface ICallLogFilter
 {
-    public IEnumerable<CallLogItem> Filter();
+    public CallLog Filter();
 }

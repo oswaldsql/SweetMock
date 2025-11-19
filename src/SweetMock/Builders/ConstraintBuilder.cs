@@ -15,46 +15,43 @@ public static class ConstraintBuilder
     /// <returns>A string representing the constraints for the type parameter.</returns>
     private static string ToConstraintString(ITypeParameterSymbol symbol)
     {
-        var results = string.Join(", ", symbol.ToConstraintElements());
+        var results = string.Join(", ", ToConstraintElements(symbol));
 
         return results.Length == 0 ? "" : " where " + symbol.Name + " : " + results;
     }
 
-    extension(ITypeParameterSymbol symbol)
+    private static IEnumerable<string> ToConstraintElements(ITypeParameterSymbol symbol)
     {
-        private IEnumerable<string> ToConstraintElements()
+        foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToString()))
         {
-            foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToString()))
+            yield return ct;
+        }
+
+        if (symbol.HasUnmanagedTypeConstraint)
+        {
+            yield return "unmanaged";
+        }
+        else
+        {
+            if (symbol.HasConstructorConstraint)
             {
-                yield return ct;
+                yield return "new()";
             }
 
-            if (symbol.HasUnmanagedTypeConstraint)
+            if (symbol.HasValueTypeConstraint)
             {
-                yield return "unmanaged";
+                yield return "struct";
             }
-            else
-            {
-                if (symbol.HasConstructorConstraint)
-                {
-                    yield return "new()";
-                }
+        }
 
-                if (symbol.HasValueTypeConstraint)
-                {
-                    yield return "struct";
-                }
-            }
+        if (symbol.HasReferenceTypeConstraint)
+        {
+            yield return "class";
+        }
 
-            if (symbol.HasReferenceTypeConstraint)
-            {
-                yield return "class";
-            }
-
-            if (symbol.HasNotNullConstraint)
-            {
-                yield return "notnull";
-            }
+        if (symbol.HasNotNullConstraint)
+        {
+            yield return "notnull";
         }
     }
 }

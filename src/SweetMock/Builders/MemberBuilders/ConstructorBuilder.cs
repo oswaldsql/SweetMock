@@ -20,7 +20,7 @@ internal class ConstructorBuilder(MockContext context) {
         classScope.Region("Constructors", builder =>
         {
             builder
-                .Add("SweetMock.MockOptions? _sweetMockOptions {get;set;}")
+                .Add("global::SweetMock.MockOptions? _sweetMockOptions {get;set;}")
                 .Add("string _sweetMockInstanceName {get; set;} = \"\";");
 
             if (distinctConstructors.Length != 0)
@@ -39,7 +39,7 @@ internal class ConstructorBuilder(MockContext context) {
         foreach (var constructor in constructors)
         {
             builder.Scope(this.ConstructorSignature(constructor), ctor => ctor
-                .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
+                .Add("_sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
                 .Add("_sweetMockCallLog = _sweetMockOptions.Logger;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
                 .BuildLogSegment(context, constructor)
@@ -53,13 +53,13 @@ internal class ConstructorBuilder(MockContext context) {
         var parameterList = constructor.Parameters.ToString(p => $"{p.Type} {p.Name}, ", "");
         var baseArguments = constructor.Parameters.ToString(p => p.Name);
 
-        return $"internal protected MockOf_{context.Source.Name}({parameterList}System.Action<{context.ConfigName}>? config = null, SweetMock.MockOptions? options = null) : base({baseArguments})";
+        return $"internal protected MockOf_{context.Source.Name}({parameterList}System.Action<{context.ConfigName}>? config = null, global::SweetMock.MockOptions? options = null) : base({baseArguments})";
     }
 
     private void BuildEmptyConstructor(CodeBuilder builder) =>
         builder
-            .Scope($"internal protected MockOf_{context.Source.Name}(System.Action<{context.ConfigName}>? config = null, SweetMock.MockOptions? options = null)", methodScope => methodScope
-                .Add("_sweetMockOptions = options ?? SweetMock.MockOptions.Default;")
+            .Scope($"internal protected MockOf_{context.Source.Name}(System.Action<{context.ConfigName}>? config = null, global::SweetMock.MockOptions? options = null)", methodScope => methodScope
+                .Add("_sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
                 .Add("_sweetMockCallLog = options?.Logger;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
                 .Scope("if(_sweetMockCallLog != null)", ifScope => ifScope

@@ -77,16 +77,16 @@ internal partial class MethodBuilder
             .Scope(signature, methodScope => methodScope
                 .BuildLogSegment(this.context, methodSymbol)
                 .Scope($"if (this.{functionPointer} is null)", ifScope =>
-                    ifScope.Add($"throw new SweetMock.NotExplicitlyMockedException(\"{methodSymbol.Name}\", _sweetMockInstanceName);"))
+                    ifScope.Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{methodSymbol.Name}\", _sweetMockInstanceName);"))
                 .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
             )
-            .AddLineBreak()
+            .BR()
             .Add($"private {this.context.ConfigName}.{delegateName}? {functionPointer} {{get;set;}} = null;")
-            .AddLineBreak()
+            .BR()
             .AddToConfig(this.context, config => config
                 .Documentation($"Delegate for mocking calls to {methodSymbol.ToSeeCRef()}.")
                 .Add($"public delegate {delegateType} {delegateName}({delegateParameters});")
-                .AddLineBreak()
+                .BR()
                 .Documentation(doc => doc
                     .Summary($"Configures the mock to execute the specified action when calling {methodSymbol.ToSeeCRef()}.")
                     .Parameter("call", "The action or function to execute when the method is called.")
@@ -98,8 +98,6 @@ internal partial class MethodBuilder
 
 internal partial class MethodBuilder
 {
-
-
     internal record DelegateInfo(string Name, string Type, string Parameters);
 
     internal record MethodInfo(string Name, string ReturnType, string ReturnString);

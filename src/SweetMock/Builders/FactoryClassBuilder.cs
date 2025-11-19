@@ -101,10 +101,10 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {source.ToSeeCRef()}."))
             .Add($"internal static {detailsSourceName} {source.Name}{generics}")
-            .Scope($"({parameters}System.Action<{detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName}>? config = null, MockOptions? options = null) {constraints}", methodScope => methodScope
+            .Scope($"({parameters}System.Action<{detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName}>? config = null, global::SweetMock.MockOptions? options = null) {constraints}", methodScope => methodScope
                 .Add($"return new {detailsNamespace}.{detailsMockType}({arguments}config, options);"));
 
-        builder.AddLineBreak();
+        builder.BR();
 
         builder
             .Documentation(doc => doc
@@ -114,7 +114,7 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {source.ToSeeCRef()}."))
             .Add($"internal static {detailsSourceName} {source.Name}{generics}")
-            .Scope($"({parameters}out {detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName} config{source.Name}, MockOptions? options = null) {constraints}", methodScope => methodScope
+            .Scope($"({parameters}out {detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName} config{source.Name}, global::SweetMock.MockOptions? options = null) {constraints}", methodScope => methodScope
                 .Add($"{detailsNamespace}.{detailsMockType}.{mockInfo.ContextConfigName} outConfig = null!;")
                 .Add($"var result = new {detailsNamespace}.{detailsMockType}({arguments}config => outConfig = config, options);")
                 .Add($"config{source.Name} = outConfig;;")
@@ -133,14 +133,14 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
-            .Scope($"(System.Action<{implementationType}.MockConfig>? config = null, MockOptions? options = null){constraints}", methodScope => methodScope
+            .Scope($"(global::System.Action<{implementationType}.MockConfig>? config = null, global::SweetMock.MockOptions? options = null){constraints}", methodScope => methodScope
                 .Add($"var result = new {implementationType}();")
                 .Add("config?.Invoke(result.Config);")
                 .Add("result.Options = options ?? result.Options;")
                 .Add("return result;")
             );
 
-        mockScope.AddLineBreak();
+        mockScope.BR();
 
         mockScope
             .Documentation(doc => doc
@@ -149,7 +149,7 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {type.ToSeeCRef()}."))
             .Add($"internal static {implementationType} {type.Name}{generics}")
-            .Scope($"(out {implementationType}.MockConfig config{type.Name}, MockOptions? options = null){constraints}", methodScope => methodScope
+            .Scope($"(out {implementationType}.MockConfig config{type.Name}, global::SweetMock.MockOptions? options = null){constraints}", methodScope => methodScope
                 .Add($"var result = new {implementationType}();")
                 .Add($"config{type.Name} = result.Config;")
                 .Add("result.Options = options ?? result.Options;")
@@ -168,13 +168,13 @@ public static class FactoryClassBuilder
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {mockInfo.Source.ToSeeCRef()}."))
             .Add($"internal static {mockInfo.MockClass}{generics} {mockInfo.Source.Name}{generics}")
-            .Scope($"(System.Action<{mockInfo.MockClass}{generics}.{mockInfo.ContextConfigName}>? config = null, MockOptions? options = null){constraints}", methodScope => methodScope
+            .Scope($"(global::System.Action<{mockInfo.MockClass}{generics}.{mockInfo.ContextConfigName}>? config = null, global::SweetMock.MockOptions? options = null){constraints}", methodScope => methodScope
                 .Add($"var result = new {mockInfo.MockClass}{generics}();")
                 .Add("config?.Invoke(result.Config);")
                 .Add("result.Options = options ?? result.Options;")
                 .Add("return result;")
             );
 
-        mockScope.AddLineBreak();
+        mockScope.BR();
     }
 }

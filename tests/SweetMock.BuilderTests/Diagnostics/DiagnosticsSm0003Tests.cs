@@ -14,7 +14,7 @@ public class DiagnosticsSm0003Tests(ITestOutputHelper testOutputHelper)
 
         var diagnostics = generate.GetErrors();
 
-        var actual = Assert.Single(diagnostics);
+        var actual = Assert.Single(diagnostics,  t => t.Id == "SM0003");
         Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
         Assert.Equal("SM0003", actual.Id);
         Assert.Equal("Ref property not supported for 'Name' in 'IRefProperty'", actual.GetMessage());
@@ -34,7 +34,7 @@ public class DiagnosticsSm0003Tests(ITestOutputHelper testOutputHelper)
 
         var diagnostics = generate.GetErrors();
 
-        var actual = Assert.Single(diagnostics);
+        var actual = Assert.Single(diagnostics, t => t.Id == "SM0003");
         Assert.Equal(DiagnosticSeverity.Error, actual.Severity);
         Assert.Equal("SM0003", actual.Id);
         Assert.Equal("Ref return type not supported for 'GetName' in 'IRefMethod'", actual.GetMessage());

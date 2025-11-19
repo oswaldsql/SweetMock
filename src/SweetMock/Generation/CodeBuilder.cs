@@ -6,8 +6,11 @@ internal partial class CodeBuilder
 {
     public CodeBuilder() { }
 
-    public CodeBuilder(CodeBuilder innerBuilder) =>
+    public CodeBuilder(CodeBuilder innerBuilder)
+    {
         this.result = innerBuilder.result;
+        this.indentation = innerBuilder.indentation;
+    }
 
     private readonly StringBuilder result = new();
 
@@ -60,7 +63,7 @@ internal partial class CodeBuilder
         return this;
     }
 
-    public CodeBuilder AddLineBreak()
+    public CodeBuilder BR()
     {
         this.result.AppendLine();
         return this;

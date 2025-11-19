@@ -2,25 +2,13 @@
 
 using Utils;
 
-public class MockContext
+public class MockContext(INamedTypeSymbol source)
 {
-    public MockContext(INamedTypeSymbol source)
-    {
-        this.Source = source;
-
-        var generics = source.GetTypeGenerics();
-
-        this.MockType = $"MockOf_{source.Name}{generics}";
-        this.MockName = "MockOf_" + source.Name;
-        this.Constraints = source.ToConstraints();
-        this.ConfigName = "MockConfig";
-    }
-
-    public INamedTypeSymbol Source { get; }
-    public string MockType { get; }
-    public string MockName { get; }
-    public string Constraints { get; }
-    public string ConfigName { get; }
+    public INamedTypeSymbol Source { get; } = source;
+    public string MockType { get; } = $"MockOf_{source.Name}{source.GetTypeGenerics()}";
+    public string MockName { get; } = "MockOf_" + source.Name;
+    public string Constraints { get; } = source.ToConstraints();
+    public string ConfigName { get; } = "MockConfig";
 
     internal ISymbol[] GetCandidates()
     {
@@ -30,7 +18,7 @@ public class MockContext
         return m;
     }
 
-    internal static void AddInheritedInterfaces(List<ISymbol> memberCandidates, INamedTypeSymbol namedTypeSymbol)
+    private static void AddInheritedInterfaces(List<ISymbol> memberCandidates, INamedTypeSymbol namedTypeSymbol)
     {
         if (namedTypeSymbol.TypeKind != TypeKind.Interface)
         {

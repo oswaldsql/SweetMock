@@ -70,21 +70,21 @@ internal class IndexBuilder(MockContext context)
                 .Scope("get", getScope => getScope
                     .BuildLogSegment(context, symbol.GetMethod)
                     .Scope($"if (this.{internalName}_get is null)", ifScope => ifScope
-                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"return this.{internalName}_get({argName});")
                 ))
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
                     .BuildLogSegment(context,symbol.SetMethod)
                     .Scope($"if (this.{internalName}_set is null)", ifScope => ifScope
-                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"this.{internalName}_set({argName}, value);")
                 )));
 
         classScope
             .Add($"private System.Func<{indexType}, {returnType}>? {internalName}_get {{ get; set; }} = null;")
             .Add($"private System.Action<{indexType}, {returnType}>? {internalName}_set {{ get; set; }} = null;")
-            .AddLineBreak();
+            .BR();
 
         classScope.AddToConfig(context, config =>
         {
@@ -111,7 +111,7 @@ internal class IndexBuilder(MockContext context)
         var hasSet = indexer.SetMethod != null;
 
         var typeSymbol = indexer.Parameters[0].Type;
-        codeBuilder.AddLineBreak();
+        codeBuilder.BR();
 
         codeBuilder
             .Documentation(doc => doc

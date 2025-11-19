@@ -13,7 +13,7 @@ internal partial class CodeBuilder
             .AddUnindented("#region " + region)
             .Apply(action)
             .AddUnindented("#endregion")
-            .AddLineBreak();
+            .BR();
 
     public CodeBuilder Scope(string prefix, Action<CodeBuilder> action) =>
         this
@@ -33,12 +33,12 @@ internal partial class CodeBuilder
     public CodeBuilder Usings(params string?[] namespaces) =>
         this
             .Add(namespaces.Where(t => !string.IsNullOrEmpty(t)), ns => "using " + ns + ";")
-            .AddLineBreak();
+            .BR();
 
     public CodeBuilder Nullable() =>
         this
             .Add("#nullable enable")
-            .AddLineBreak();
+            .BR();
 
     public void End() {}
 }

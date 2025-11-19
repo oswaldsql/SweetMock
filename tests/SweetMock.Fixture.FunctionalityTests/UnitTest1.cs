@@ -6,7 +6,7 @@ using Repo;
 [Fixture<GenericFixtureTarget<TestTarget2>>]
 [Mock<GenericMockTarget<TestTarget2>>]
 [Mock<IExplicitMock>]
-[Mock<ICustomMock, MockOf_ICustomMock>]
+[Mock<ICustomMock, MockOfICustomMock>]
 public class CreateSutArgumentsTest
 {
     [Fact]
@@ -162,27 +162,7 @@ public class CustomMockImplementation : ICustomMock
     public string CustomValue { get; set; } = "";
 }
 
-internal class MockOf_ICustomMock() : MockBase<ICustomMock>(new CustomMockImplementation());
-
-//internal class MockOf_ICustomMock(Action<WrapperMock<ICustomMock>.MockConfig>? config, MockOptions? options = null) : WrapperMock<ICustomMock>(config, options)
-//{
-//}
-
-public class Test
-{
-    [Fact]
-    public void METHOD()
-    {
-        var mockOfICustomMock2 = new MockOf_ICustomMock2();
-        // Arrange
-
-        // ACT
-
-        // Assert 
-    }
-}
-
-internal class MockOf_ICustomMock2() : WrapperMock2<ICustomMock>(new CustomMockImplementation());
+internal class MockOfICustomMock() : MockBase<ICustomMock>(new CustomMockImplementation());
 
 internal class WrapperMock2<TInterface>
 {

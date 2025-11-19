@@ -3,9 +3,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-public abstract class CallLogFilter(IEnumerable<CallLogItem> source) : ICallLogFilter
+public abstract class CallLogFilter(CallLog source) : ICallLogFilter
 {
     protected abstract string SignatureStart { get; }
 
-    IEnumerable<CallLogItem> ICallLogFilter.Filter() => source.Where(t => t.MethodSignature?.StartsWith(this.SignatureStart) == true);
+    public CallLog Filter() => new CallLog(source.ToList(), t => t.MethodSignature?.StartsWith(this.SignatureStart) == true);
 }

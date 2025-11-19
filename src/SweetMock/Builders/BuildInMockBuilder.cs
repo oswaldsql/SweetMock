@@ -24,6 +24,7 @@ public static class BuildInMockBuilder
                 if (buildInMocks.TryGetValue(displayString, out var func))
                 {
                     var source = func();
+                    source = source.Replace("{{SweetMockVersion}}", SourceGeneratorMetadata.Version.ToString());
                     spc.AddSource(symbol.ToCRef() + ".g.cs", source);
 
                     yield return new(symbol, symbol.ContainingNamespace + ".MockOf_" + symbol.Name, MockKind.BuildIn, "MockConfig");

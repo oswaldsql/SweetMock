@@ -162,8 +162,8 @@ namespace System.Net.Http{
 
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
     internal static class MockOf_HttpMessageHandler_LogExtensions{
-        public static HttpClient_Filter HttpClient(this global::System.Collections.Generic.IEnumerable<CallLogItem> source) => new(source);
-        public class HttpClient_Filter(global::System.Collections.Generic.IEnumerable<CallLogItem> source) : CallLogFilter(source){
+        public static HttpClient_Filter HttpClient(this global::SweetMock.CallLog source) => new(source);
+        public class HttpClient_Filter(global::SweetMock.CallLog source) : CallLogFilter(source){
             protected override string SignatureStart => "global::System.Net.Http.HttpClient.";
         }
 #region Constructors
@@ -173,12 +173,12 @@ namespace System.Net.Http{
         ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this HttpClient_Filter log, Func<HttpClient_Args, bool>? predicate = null) =>
-             ((ICallLogFilter)log).Filter().HttpClient(predicate);
+             log.HttpClient(predicate);
 
         /// <summary>
         ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
         /// </summary>
-        public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this global::System.Collections.Generic.IEnumerable<CallLogItem> log, Func<HttpClient_Args, bool>? HttpClient_HttpClient_Predicate = null) =>
+        public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this global::SweetMock.CallLog log, Func<HttpClient_Args, bool>? HttpClient_HttpClient_Predicate = null) =>
             log.Matching("global::System.Net.Http.HttpClient.HttpClient()", HttpClient_HttpClient_Predicate);
 
 #endregion
@@ -200,12 +200,12 @@ namespace System.Net.Http{
         ///     Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this HttpClient_Filter log, Func<SendAsync_Args, bool>? predicate = null) =>
-             ((ICallLogFilter)log).Filter().SendAsync(predicate);
+             log.SendAsync(predicate);
 
         /// <summary>
         ///    Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
         /// </summary>
-        public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this global::System.Collections.Generic.IEnumerable<CallLogItem> log, Func<SendAsync_Args, bool>? HttpMessageHandler_SendAsync_Predicate = null) =>
+        public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this global::SweetMock.CallLog log, Func<SendAsync_Args, bool>? HttpMessageHandler_SendAsync_Predicate = null) =>
             log.Matching("global::System.Net.Http.HttpClient.SendAsync(HttpRequestMessage, CancellationToken)", HttpMessageHandler_SendAsync_Predicate);
 
 #endregion

@@ -27,7 +27,7 @@ internal partial class CodeBuilder
             .Apply(build)
             .Add("return this;")
             .Unindent().Add("}")
-            .AddLineBreak();
+            .BR();
     }
 
     internal void AddConfigLambda(MockContext context, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
@@ -44,6 +44,6 @@ internal partial class CodeBuilder
             .Indent()
             .Apply(build)
             .Unindent()
-            .AddLineBreak();
+            .BR();
     }
 }

@@ -100,7 +100,7 @@ internal class EventBuilder(MockContext context)
     {
         var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type));
 
-        codeBuilder.AddLineBreak();
+        codeBuilder.BR();
 
         if (types != "System.EventArgs")
         {

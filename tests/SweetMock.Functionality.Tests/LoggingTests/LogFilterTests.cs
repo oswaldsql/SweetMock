@@ -1,12 +1,10 @@
 ﻿namespace Test.LoggingTests;
 
-using System.Collections;
-
 [Mock<IVersionLibrary>]
 public class LogFilterTests
 {
     [Fact]
-    public async Task METHOD()
+    public async Task LogFilter_WhenNewVersionAdded_ShouldLogCorrectly()
     {
         // Arrange
         var logger = new CallLog();
@@ -30,8 +28,8 @@ public class LogFilterTests
         trigger!(new Version(1,2,3,4));
         
         // Assert 
-        Assert.Single(logger.IVersionLibrary().DownloadLinkAsync(args => args.version == "1.2.3.4"));
-        Assert.Single(logger.IVersionLibrary().CurrentVersion_Set(args => args.value == new Version(1, 2, 3, 4)));
-        Assert.Single(logger.IVersionLibrary().DownloadExists(args => args.version?.ToString() == "2.3.4.5"));
+        Assert.Single(logger.DownloadLinkAsync(args => args.version == "1.2.3.4"));
+        Assert.Single(logger.CurrentVersion_Set(args => args.value == new Version(1, 2, 3, 4)));
+        Assert.Single(logger.DownloadExists(args => args.version?.ToString() == "2.3.4.5"));
     }
 }

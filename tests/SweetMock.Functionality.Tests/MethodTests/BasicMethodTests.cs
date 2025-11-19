@@ -13,7 +13,7 @@ public class BasicMethodTests
         var sut = Mock.IBasicMethods();
 
         // Act
-        var actual = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.VoidWithoutParameters());
+        var actual = Assert.Throws<NotExplicitlyMockedException>(() => sut.VoidWithoutParameters());
 
         // Assert
         Assert.NotNull(actual);

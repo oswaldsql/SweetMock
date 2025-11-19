@@ -4,8 +4,18 @@ using Generation;
 using MemberBuilders;
 using Utils;
 
+internal static class BaseClassBuilderExt
+{
+    internal static CodeBuilder BuildBaseClass(this CodeBuilder builder, MockContext context)
+    {
+        new BaseClassBuilder(context).BuildMockClass(builder);
+        return builder;
+    }
+}
+
 internal class BaseClassBuilder(MockContext context)
 {
+
     internal CodeBuilder BuildMockClass(CodeBuilder namespaceScope)
     {
         namespaceScope.Documentation($"Mock implementation of {context.Source.ToSeeCRef()}.", "Should only be used for testing purposes.");
@@ -15,11 +25,12 @@ internal class BaseClassBuilder(MockContext context)
 
         namespaceScope.AddGeneratedCodeAttrib();
         namespaceScope.Scope($"internal partial class {context.MockType} : {className}{context.Constraints}", classScope =>
-        {
-            this.InitializeConfig(classScope);
-            classScope.InitializeLogging();
-            this.BuildMembers(classScope);
-        });
+            {
+                this.InitializeConfig(classScope);
+                classScope.InitializeLogging();
+                this.BuildMembers(classScope);
+            })
+            .BR();
 
         return namespaceScope;
     }

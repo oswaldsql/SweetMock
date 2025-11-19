@@ -59,8 +59,8 @@ internal partial class MethodBuilder
         {
             var firstReturnType = (ITypeSymbol)candidate.Key!;
 
-            var isGenericTask = firstReturnType.IsGenericTask();
-            var isGenericValueTask = firstReturnType.IsGenericValueTask();
+            var isGenericTask = IsGenericTask(firstReturnType);
+            var isGenericValueTask = IsGenericValueTask(firstReturnType);
             if (!isGenericTask && !isGenericValueTask)
             {
                 continue;
@@ -107,7 +107,7 @@ internal partial class MethodBuilder
 
             var seeString = string.Join(", ", candidate.Select(t => t.ToSeeCRef()));
 
-            result.AddLineBreak();
+            result.BR();
             result.Documentation(doc => doc
                 .Summary("Configures the mock to return one of the specific values disregarding the arguments.", $"Configures {seeString}")
                 .Parameter("returnValues", "The values that should be returned in order. If the values are depleted <see cref=\"System.InvalidOperationException\"/>  is thrown.")
@@ -227,11 +227,11 @@ internal partial class MethodBuilder
                     .Summary("Configures the mock to throw the specified exception when the method is called.", $"Configures {SeeString(methodGroup)}")
                     .Parameter("throws", "The exception to be thrown when the method is called.")
                     .Returns("The updated configuration object."))
-                .AddConfigExtension(this.context, methodGroup.First(), ["Exception throws"], builder =>
+                .AddConfigExtension(this.context, methodGroup.First(), ["System.Exception throws"], builder =>
                     builder
                         .Add(methodGroup, method => $"this.{method.Name}(call: ({this.methodDelegateName[method]})(({GenerateParameterString(method)}) => throw throws));")
                     )
-                .AddLineBreak();
+                .BR();
         }
 
         return;
@@ -240,4 +240,12 @@ internal partial class MethodBuilder
 
         string SeeString(IGrouping<string, IMethodSymbol> methodGroup) => string.Join(", ", methodGroup.Select(t => t.ToSeeCRef()));
     }
+
+    internal static bool IsGenericTask(ITypeSymbol type) =>
+        type.ToString().StartsWith("System.Threading.Tasks.Task<") &&
+        ((INamedTypeSymbol)type).TypeArguments.Length > 0;
+
+    internal static bool IsGenericValueTask(ITypeSymbol type) =>
+        type.ToString().StartsWith("System.Threading.Tasks.ValueTask<") &&
+        ((INamedTypeSymbol)type).TypeArguments.Length > 0;
 }

@@ -74,19 +74,19 @@ internal class PropertyBuilder(MockContext context)
                 .Scope("get", getScope => getScope
                     .BuildLogSegment(context, symbol.GetMethod)
                     .Scope($"if (this._{internalName}_get is null)", ifScope => ifScope
-                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"return this._{internalName}_get();")))
             .AddIf(hasSet, set => set
                 .Scope(setType, setScope => setScope
                     .BuildLogSegment(context, symbol.SetMethod)
                     .Scope($"if (this._{internalName}_set is null)", ifScope => ifScope
-                        .Add($"throw new SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"this._{internalName}_set(value);"))));
 
         builder
             .Add($"private System.Func<{type}>? _{internalName}_get {{ get; set; }} = null;")
             .Add($"private System.Action<{type}>? _{internalName}_set {{ get; set; }} = null;")
-            .AddLineBreak();
+            .BR();
 
         builder.AddToConfig(context, config =>
         {
@@ -118,7 +118,7 @@ internal class PropertyBuilder(MockContext context)
             .Returns("The updated configuration object."));
 
         codeBuilder.AddConfigExtension(context, property, [$"{property.Type} value"], builder => builder
-            .Add($"SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);")
+            .Add($"global::SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);")
             .AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);")
             .AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);")
             .AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);"));

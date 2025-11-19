@@ -42,10 +42,10 @@ namespace Microsoft.Extensions.Logging{
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("SweetMock","0.9.28.0")]
+    [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
     internal static class MockOf_ILogger_LogExtensions{
-        public static ILogger_Filter ILogger(this global::System.Collections.Generic.IEnumerable<CallLogItem> source) => new(source);
-        public class ILogger_Filter(global::System.Collections.Generic.IEnumerable<CallLogItem> source) : CallLogFilter(source){
+        public static ILogger_Filter ILogger(this global::SweetMock.CallLog source) => new(source);
+        public class ILogger_Filter(global::SweetMock.CallLog source) : CallLogFilter(source){
             protected override string SignatureStart => "Microsoft.Extensions.Logging.ILogger.";
         }
 

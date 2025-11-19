@@ -40,7 +40,7 @@ public class HttpClientMockTests(ITestOutputHelper testOutputHelper)
             testOutputHelper.WriteLine(callLogItem.ToString());
         }
 
-        Assert.Single(fixture.Log.HttpClient().SendAsync(t => t.request.Method == HttpMethod.Get));
+        Assert.Single(fixture.Log.SendAsync(t => t.request.Method == HttpMethod.Get));
     }
     
     protected HttpResponseMessage Send2(HttpRequestMessage request) =>
