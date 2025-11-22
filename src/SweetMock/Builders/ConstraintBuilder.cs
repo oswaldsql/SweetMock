@@ -2,11 +2,8 @@
 
 public static class ConstraintBuilder
 {
-    extension(INamedTypeSymbol symbol)
-    {
-        public string ToConstraints() =>
-            string.Join(" ", symbol.TypeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
-    }
+    public static string ToConstraints(this INamedTypeSymbol symbol) =>
+        string.Join(" ", symbol.TypeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
 
     /// <summary>
     ///     Converts a type parameter symbol to a constraint string.

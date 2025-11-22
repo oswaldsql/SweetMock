@@ -63,12 +63,6 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         var requestedMocks = collectedMocks.ToLookup(t => t.Type, a => a, SymbolEqualityComparer.Default);
         foreach (var mock in requestedMocks)
         {
-//            var attributeNamedArguments = mock.First().Attribute.ConstructorArguments;
-//            foreach (var attributeNamedArgument in attributeNamedArguments)
-//            {
-//                Console.WriteLine(attributeNamedArgument.Value?.ToString());
-//            }
-
             var mockType = (INamedTypeSymbol)mock.Key!;
             var attributes = mock.Select(t => t.Attribute).ToArray();
 

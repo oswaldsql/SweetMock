@@ -6,11 +6,8 @@ using Utils;
 
 internal static class BaseClassBuilderExt
 {
-    internal static CodeBuilder BuildBaseClass(this CodeBuilder builder, MockContext context)
-    {
+    internal static CodeBuilder BuildBaseClass(this CodeBuilder builder, MockContext context) =>
         new BaseClassBuilder(context).BuildMockClass(builder);
-        return builder;
-    }
 }
 
 internal class BaseClassBuilder(MockContext context)

@@ -45,9 +45,8 @@ namespace Microsoft.Extensions.Logging{
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
     internal static class MockOf_ILogger_LogExtensions{
         public static ILogger_Filter ILogger(this global::SweetMock.CallLog source) => new(source);
-        public class ILogger_Filter(global::SweetMock.CallLog source) : CallLogFilter(source){
-            protected override string SignatureStart => "Microsoft.Extensions.Logging.ILogger.";
-        }
+
+        public class ILogger_Filter(global::SweetMock.CallLog source) : CallLogFilter(source, "Microsoft.Extensions.Logging.ILogger.");
 
 #region Log
         public class Log_Args : SweetMock.TypedArguments{

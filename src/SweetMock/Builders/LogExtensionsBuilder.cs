@@ -20,13 +20,14 @@ internal static class LogExtensionsBuilder
 
         var sourceName = context.Source.Name;
         builder
+            .Documentation($"Filters logs caused by calls to {context.Source.ToSeeCRef()}")
             .Add($"public static {sourceName}_Filter {sourceName}(this global::SweetMock.CallLog source) => new(source);")
-            .Scope($"public class {sourceName}_Filter(global::SweetMock.CallLog source) : CallLogFilter(source)", filterScope => filterScope
-                .Add($"protected override string SignatureStart => \"{context.Source.ToDisplayString(FullyQualifiedFormat)}.\";"));
+            .BR()
+            .Add($"public class {sourceName}_Filter(global::SweetMock.CallLog source) : CallLogFilter(source, \"{context.Source.ToDisplayString(FullyQualifiedFormat)}\");");
 
         foreach (var members in memberGroups)
         {
-            GenerateLoggingExtensions(builder, context, members);
+            GenerateLoggingExtensions(builder, context, members).End();
         }
     }
 

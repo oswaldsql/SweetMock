@@ -163,9 +163,9 @@ namespace System.Net.Http{
     [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
     internal static class MockOf_HttpMessageHandler_LogExtensions{
         public static HttpClient_Filter HttpClient(this global::SweetMock.CallLog source) => new(source);
-        public class HttpClient_Filter(global::SweetMock.CallLog source) : CallLogFilter(source){
-            protected override string SignatureStart => "global::System.Net.Http.HttpClient.";
-        }
+
+        public class HttpClient_Filter(global::SweetMock.CallLog source) : CallLogFilter(source, "global::System.Net.Http.HttpClient.");
+
 #region Constructors
         public class HttpClient_Args : SweetMock.TypedArguments { }
 
@@ -173,7 +173,7 @@ namespace System.Net.Http{
         ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this HttpClient_Filter log, Func<HttpClient_Args, bool>? predicate = null) =>
-             log.HttpClient(predicate);
+             log.Filter().HttpClient(predicate);
 
         /// <summary>
         ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
@@ -200,7 +200,7 @@ namespace System.Net.Http{
         ///     Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
         /// </summary>
         public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this HttpClient_Filter log, Func<SendAsync_Args, bool>? predicate = null) =>
-             log.SendAsync(predicate);
+             log.Filter().SendAsync(predicate);
 
         /// <summary>
         ///    Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
