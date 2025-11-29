@@ -16,11 +16,25 @@ internal class IndexBuilder(MockContext context)
 
     private void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
     {
-        var lookup = symbols.ToLookup(t => t.Name);
-        foreach (var m in lookup)
+        var lookup = symbols.ToArray();
+
+        if (lookup.Length == 0)
         {
-            this.BuildIndexes(classScope, m.ToArray());
+            return;
         }
+
+        classScope
+            .Add($"public record Indexer_Arguments(")
+            .Indent(scope => scope
+                .Add("global::System.String? InstanceName,")
+                .Add("global::System.String MethodSignature,")
+                .Add($"{GenerateArgumentType(lookup)} key = null,")
+                .Add($"{GenerateReturnType(lookup)} value = null")
+            )
+            .Add($") : ArgumentBase(_containerName, \"Indexer\", MethodSignature, InstanceName);")
+            .BR();
+
+        this.BuildIndexes(classScope, lookup);
     }
 
     /// <summary>
@@ -43,6 +57,56 @@ internal class IndexBuilder(MockContext context)
                 this.BuildIndex(builder, symbol, indexerCount);
             }
         });
+    }
+
+    private static string GenerateArgumentType(IPropertySymbol[] symbols)
+    {
+        if (symbols.Length > 1)
+        {
+            return "object?";
+        }
+
+        var symbol = symbols.First();
+        var type = symbol.Parameters.First().Type;
+
+        if (type is ITypeParameterSymbol)
+        {
+            return "object?";
+        }
+        if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
+        {
+            return "object?";
+        }
+        if (type.NullableAnnotation != NullableAnnotation.Annotated)
+        {
+            return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat) + "?";
+        }
+        return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat);
+    }
+
+    private static string GenerateReturnType(IPropertySymbol[] symbols)
+    {
+        if (symbols.Length > 1)
+        {
+            return "global::System.Object?";
+        }
+
+        var symbol = symbols.First();
+        var type = symbol.Type;
+
+        if (type is ITypeParameterSymbol)
+        {
+            return "global::System.Object?";
+        }
+        if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
+        {
+            return "global::System.Object?";
+        }
+        if (type.NullableAnnotation != NullableAnnotation.Annotated)
+        {
+            return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat) + "?";
+        }
+        return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat);
     }
 
     /// <summary>
@@ -68,6 +132,7 @@ internal class IndexBuilder(MockContext context)
         classScope.Scope(signature, indexerScope => indexerScope
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
+                    .Add($"this._log(new Indexer_Arguments(_sweetMockInstanceName, \"get\", key : {symbol.GetMethod.Parameters[0].Name}));")
                     .BuildLogSegment(context, symbol.GetMethod)
                     .Scope($"if (this.{internalName}_get is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
@@ -75,6 +140,7 @@ internal class IndexBuilder(MockContext context)
                 ))
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
+                    .Add($"this._log(new Indexer_Arguments(_sweetMockInstanceName, \"set\", key : {symbol.SetMethod.Parameters[0].Name}, value : {symbol.SetMethod.Parameters[1].Name}));")
                     .BuildLogSegment(context,symbol.SetMethod)
                     .Scope($"if (this.{internalName}_set is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))

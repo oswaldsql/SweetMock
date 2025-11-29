@@ -12,7 +12,6 @@ internal static class BaseClassBuilderExt
 
 internal class BaseClassBuilder(MockContext context)
 {
-
     internal CodeBuilder BuildMockClass(CodeBuilder namespaceScope)
     {
         namespaceScope.Documentation($"Mock implementation of {context.Source.ToSeeCRef()}.", "Should only be used for testing purposes.");
@@ -23,8 +22,9 @@ internal class BaseClassBuilder(MockContext context)
         namespaceScope.AddGeneratedCodeAttrib();
         namespaceScope.Scope($"internal partial class {context.MockType} : {className}{context.Constraints}", classScope =>
             {
+                classScope.Add($"private const string _containerName = \"{context.Source.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}\";");
                 this.InitializeConfig(classScope);
-                classScope.InitializeLogging();
+                classScope.InitializeLogging(context);
                 this.BuildMembers(classScope);
             })
             .BR();

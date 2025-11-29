@@ -31,6 +31,18 @@ internal partial class MethodBuilder
         {
             classScope.Region($"Method : {methodGroup.Key}", builder =>
             {
+                var arguments = methodGroup.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
+                var args = string.Join(", ", arguments.Select(GetArgString));
+
+                classScope
+                    .Add($"public record {methodGroup.Key}_Arguments(")
+                    .Indent(scope => scope
+                        .Add("global::System.String? InstanceName,")
+                        .Add("global::System.String MethodSignature" + (arguments.Count != 0 ? "," : ""))
+                        .Add(args))
+                    .Add($") : ArgumentBase(_containerName, \"{methodGroup.Key}\", MethodSignature, InstanceName);")
+                    .BR();
+
                 var methodCount = 1;
                 foreach (var symbol in methodGroup)
                 {
@@ -41,6 +53,48 @@ internal partial class MethodBuilder
                 classScope.AddToConfig(this.context, config => this.BuildConfigExtensions(config, methodGroup));
             });
         }
+    }
+
+    private static string GetArgString(IGrouping<string, IParameterSymbol> argument)
+    {
+        string argString;
+        if (argument.Select(t => t.Type).Distinct().Count() == 1)
+        {
+            var firstType = argument.First().Type;
+            if (firstType is INamedTypeSymbol namedType)
+            {
+                if (namedType.DelegateInvokeMethod != null)
+                {
+                    // Delegate types like System.Func<T> will be written as global::System.Object
+                    argString = $"global::System.Object? {argument.Key} = null";
+                }
+                else if (namedType.TypeArguments.Length > 0 || namedType.IsGenericType)
+                {
+                    // Generic types with nullable annotation and fully qualified format
+                    argString = $"{namedType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)} {argument.Key} = null";
+                }
+                else
+                {
+                    // Regular case
+                    argString = $"{firstType.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null";
+                }
+            }
+            else
+            if (firstType is ITypeParameterSymbol)
+            {
+                argString = $"global::System.Object? {argument.Key} = null";
+            }
+            else
+            {
+                argString = $"{firstType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null";
+            }
+        }
+        else
+        {
+            argString = $"object? {argument.Key} = null";
+        }
+
+        return argString;
     }
 
     /// <summary>
@@ -75,6 +129,7 @@ internal partial class MethodBuilder
 
         classScope
             .Scope(signature, methodScope => methodScope
+                .Add($"this._log(new {methodSymbol.Name}_Arguments(_sweetMockInstanceName, \"{methodSymbol.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat)}\"{string.Join("", methodSymbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
                 .BuildLogSegment(this.context, methodSymbol)
                 .Scope($"if (this.{functionPointer} is null)", ifScope =>
                     ifScope.Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{methodSymbol.Name}\", _sweetMockInstanceName);"))
@@ -82,17 +137,7 @@ internal partial class MethodBuilder
             )
             .BR()
             .Add($"private {this.context.ConfigName}.{delegateName}? {functionPointer} {{get;set;}} = null;")
-            .BR()
-            .AddToConfig(this.context, config => config
-                .Documentation($"Delegate for mocking calls to {methodSymbol.ToSeeCRef()}.")
-                .Add($"public delegate {delegateType} {delegateName}({delegateParameters});")
-                .BR()
-                .Documentation(doc => doc
-                    .Summary($"Configures the mock to execute the specified action when calling {methodSymbol.ToSeeCRef()}.")
-                    .Parameter("call", "The action or function to execute when the method is called.")
-                    .Returns("The updated configuration object."))
-                .AddConfigMethod(this.context, name, [$"{delegateName} call"], methodScope => methodScope
-                    .Add($"target.{functionPointer} = call;")));
+            .BR();
     }
 }
 

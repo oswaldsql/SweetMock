@@ -36,6 +36,16 @@ internal class PropertyBuilder(MockContext context)
 
         classScope.Region($"#region Property : {name}", builder =>
         {
+            classScope
+                .Add($"public record {name}_Arguments(")
+                .Indent(scope => scope
+                    .Add("global::System.String? InstanceName,")
+                    .Add("global::System.String MethodSignature,")
+                    .Add($"{GenerateArgumentType(symbols)} value = null")
+                )
+                .Add($") : ArgumentBase(_containerName, \"{name}\", MethodSignature, InstanceName);")
+                .BR();
+
             var index = 0;
             foreach (var symbol in symbols)
             {
@@ -43,6 +53,26 @@ internal class PropertyBuilder(MockContext context)
                 this.BuildProperty(builder, symbol, index);
             }
         });
+    }
+
+    private static string GenerateArgumentType(IPropertySymbol[] symbols)
+    {
+        var symbol = symbols.First();
+        var type = symbol.Type;
+
+        if (type is ITypeParameterSymbol)
+        {
+            return "object?";
+        }
+        if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
+        {
+            return "object?";
+        }
+        if (type.NullableAnnotation != NullableAnnotation.Annotated)
+        {
+            return type.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat) + "?";
+        }
+        return type.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat);
     }
 
     /// <summary>
@@ -72,12 +102,14 @@ internal class PropertyBuilder(MockContext context)
         builder.Scope(signature, propertyScope => propertyScope
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
+                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"get\"));")
                     .BuildLogSegment(context, symbol.GetMethod)
                     .Scope($"if (this._{internalName}_get is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"return this._{internalName}_get();")))
             .AddIf(hasSet, set => set
                 .Scope(setType, setScope => setScope
+                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"set\", value : value));")
                     .BuildLogSegment(context, symbol.SetMethod)
                     .Scope($"if (this._{internalName}_set is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))

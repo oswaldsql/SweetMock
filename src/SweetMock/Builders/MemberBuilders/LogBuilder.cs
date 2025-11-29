@@ -1,17 +1,27 @@
 ﻿namespace SweetMock.Builders.MemberBuilders;
 
 using Generation;
+using Utils;
 
 public static class LogBuilder
 {
     extension(CodeBuilder builder)
     {
-        internal void InitializeLogging() =>
+        internal void InitializeLogging(MockContext context) =>
             builder.Region("Logging", builder => builder
-                .Add("private global::SweetMock.CallLog? _sweetMockCallLog = new global::SweetMock.CallLog();"));
+                .Add("private global::SweetMock.CallLog _sweetMockCallLog = new global::SweetMock.CallLog();")
+                .Add("private void _log(global::SweetMock.ArgumentBase argument) {_sweetMockCallLog.Calls.Add(argument);}")
+                .AddToConfig(context, codeBuilder => codeBuilder
+                    .Scope($"internal MockConfig GetCallLogs(out {context.Source.Name}_Logs{context.Source.GetTypeGenerics()} callLog)", builder1 => builder1
+                        .Add($"callLog = new {context.Source.Name}_Logs{context.Source.GetTypeGenerics()}(target._sweetMockCallLog, target._sweetMockInstanceName);")
+                        .Add("return this;"))
+                )
+            );
 
         internal CodeBuilder BuildLogSegment(MockContext context, IMethodSymbol? symbol, bool skipParameters = false)
         {
+            return builder;
+
             if (symbol == null) { return builder; }
 
             if (!skipParameters && symbol.Parameters.Any(t => t.RefKind == RefKind.None))

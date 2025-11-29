@@ -21,7 +21,20 @@ internal class ConstructorBuilder(MockContext context) {
         {
             builder
                 .Add("global::SweetMock.MockOptions? _sweetMockOptions {get;set;}")
-                .Add("string _sweetMockInstanceName {get; set;} = \"\";");
+                .Add("string _sweetMockInstanceName {get; set;} = \"\";")
+                .BR();
+
+            var arguments = distinctConstructors.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
+            var args = string.Join(", ", arguments.Select(GetArgString));
+
+            builder
+                .Add($"public record {context.Source.Name}_Arguments(")
+                .Indent(scope => scope
+                    .Add("global::System.String? InstanceName,")
+                    .Add("global::System.String MethodSignature" + (arguments.Count != 0 ? "," : ""))
+                    .Add(args))
+                .Add($") : ArgumentBase(_containerName, \"{context.Source.Name}\", MethodSignature, InstanceName);")
+                .BR();
 
             if (distinctConstructors.Length != 0)
             {
@@ -34,14 +47,57 @@ internal class ConstructorBuilder(MockContext context) {
         });
     }
 
+    private static string GetArgString(IGrouping<string, IParameterSymbol> argument)
+    {
+        string argString;
+        if (argument.Select(t => t.Type).Distinct().Count() == 1)
+        {
+            var firstType = argument.First().Type;
+            if (firstType is INamedTypeSymbol namedType)
+            {
+                if (namedType.DelegateInvokeMethod != null)
+                {
+                    // Delegate types like System.Func<T> will be written as global::System.Object
+                    argString = $"global::System.Object? {argument.Key} = null";
+                }
+                else if (namedType.TypeArguments.Length > 0 || namedType.IsGenericType)
+                {
+                    // Generic types with nullable annotation and fully qualified format
+                    argString = $"{namedType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)} {argument.Key} = null";
+                }
+                else
+                {
+                    // Regular case
+                    argString = $"{firstType.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null";
+                }
+            }
+            else
+            if (firstType is ITypeParameterSymbol)
+            {
+                argString = $"global::System.Object? {argument.Key} = null";
+            }
+            else
+            {
+                argString = $"{firstType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null";
+            }
+        }
+        else
+        {
+            argString = $"object? {argument.Key} = null";
+        }
+
+        return argString;
+    }
+
     private void BuildConstructors(CodeBuilder builder, IEnumerable<IMethodSymbol> constructors)
     {
         foreach (var constructor in constructors)
         {
             builder.Scope(this.ConstructorSignature(constructor), ctor => ctor
                 .Add("_sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
-                .Add("_sweetMockCallLog = _sweetMockOptions.Logger;")
+                .Add("_sweetMockCallLog = _sweetMockOptions.Logger ?? _sweetMockCallLog;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
+                .Add($"this._log(new {context.Source.Name}_Arguments(_sweetMockInstanceName, \"{context.Source.Name}\"{string.Join("", constructor.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
                 .BuildLogSegment(context, constructor)
                 .Add($"new {context.ConfigName}(this, config);")
             );
@@ -60,9 +116,10 @@ internal class ConstructorBuilder(MockContext context) {
         builder
             .Scope($"internal protected MockOf_{context.Source.Name}(System.Action<{context.ConfigName}>? config = null, global::SweetMock.MockOptions? options = null)", methodScope => methodScope
                 .Add("_sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
-                .Add("_sweetMockCallLog = options?.Logger;")
+                .Add("_sweetMockCallLog = options?.Logger ?? _sweetMockCallLog;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
-                .Scope("if(_sweetMockCallLog != null)", ifScope => ifScope
-                    .Add($"_sweetMockCallLog.Add(\"{context.Source}.{context.Source.Name}()\");"))
+                .Add($"this._log(new {context.Source.Name}_Arguments(_sweetMockInstanceName, \"{context.Source.Name}\"));")
+//                .Scope("if(_sweetMockCallLog != null)", ifScope => ifScope
+//                    .Add($"_sweetMockCallLog.Add(\"{context.Source}.{context.Source.Name}()\");"))
                 .Add($"new {context.ConfigName}(this, config);"));
 }

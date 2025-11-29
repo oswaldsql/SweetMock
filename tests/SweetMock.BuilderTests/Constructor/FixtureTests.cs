@@ -29,7 +29,7 @@ public class FixtureTests(ITestOutputHelper testOutputHelper)
 
         var code = generate.syntaxTrees.ToArray();
 
-        testOutputHelper.DumpResult(code, generate.diagnostics);
+        testOutputHelper.DumpResult(generate.diagnostics);
 
         Assert.Empty(generate.GetErrors());
     }    

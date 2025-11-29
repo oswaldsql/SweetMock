@@ -14,7 +14,7 @@ public class ConstructorTests(ITestOutputHelper testOutputHelper)
 
         var code = generate.syntaxTrees.ToArray();
 
-        testOutputHelper.DumpResult(code, generate.diagnostics);
+        testOutputHelper.DumpResult(generate.diagnostics);
 
         Assert.Empty(generate.GetWarnings());
     }
@@ -100,7 +100,7 @@ public class PrivateConstructorClassTests(ITestOutputHelper testOutputHelper)
 
         var code = generate.syntaxTrees.ToArray();
 
-        testOutputHelper.DumpResult(code, generate.diagnostics);
+        testOutputHelper.DumpResult(generate.diagnostics);
 
         var error = Assert.Single(generate.GetErrors());
         

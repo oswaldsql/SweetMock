@@ -7,12 +7,38 @@ internal partial class MethodBuilder
 {
     private void BuildConfigExtensions(CodeBuilder builder, IGrouping<string, IMethodSymbol> methods)
     {
+        this.AddCallExtensions(builder, methods);
         this.AddReturnsExtensions(builder, methods);
         this.AddTaskReturnsExtensions(builder, methods);
         this.AddReturnValuesExtensions(builder, methods);
         this.AddNoReturnValueExtensions(builder, methods);
         this.AddOutArgumentExtensions(builder, methods);
         this.AddThrowExtensions(builder, methods);
+    }
+
+    private void AddCallExtensions(CodeBuilder builder, IGrouping<string, IMethodSymbol> methods)
+    {
+        var methodCount = 1;
+        foreach (var methodSymbol in methods)
+        {
+            var (delegateName, delegateType, delegateParameters) = methodSymbol.GetDelegateInfo(methodCount);
+            var (name, returnType, returnString) = methodSymbol.MethodMetadata();
+            var functionPointer = methodCount == 1 ? $"_{name}" : $"_{name}_{methodCount}";
+
+            builder
+                .Documentation($"Delegate for mocking calls to {methodSymbol.ToSeeCRef()}.")
+                .Add($"public delegate {delegateType} {delegateName}({delegateParameters});")
+                .BR()
+                .Documentation(doc => doc
+                    .Summary($"Configures the mock to execute the specified action when calling {methodSymbol.ToSeeCRef()}.")
+                    .Parameter("call", "The action or function to execute when the method is called.")
+                    .Returns("The updated configuration object."))
+                .AddConfigMethod(this.context, name, [$"{delegateName} call"], methodScope => methodScope
+                    .Add($"target.{functionPointer} = call;"))
+                .BR();
+
+            methodCount++;
+        }
     }
 
     private void AddReturnsExtensions(CodeBuilder result, IGrouping<string, IMethodSymbol> methods)
@@ -122,24 +148,25 @@ internal partial class MethodBuilder
             returnType = "System.Collections.Generic.IEnumerable<" + returnType + ">";
 
             result.AddConfigExtension(this.context, candidate.First(), [returnType + " returnValues"], builder =>
-            {
-                var index = 0;
-                foreach (var m in candidate)
                 {
-                    index++;
-                    var index1 = index;
-                    var parameters = m.GetParameterInfos();
-                    var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
+                    var index = 0;
+                    foreach (var m in candidate)
+                    {
+                        index++;
+                        var index1 = index;
+                        var parameters = m.GetParameterInfos();
+                        var parameterList = parameters.ToString(p => $"{p.OutString}{p.Type} _");
 
-                    builder.Add($"var {m.Name}{index1}_Values = returnValues.GetEnumerator();");
-                    builder.Scope($"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => ", lambdaScope => lambdaScope
-                            .Scope($"if({m.Name}{index1}_Values.MoveNext())", conditionScope => conditionScope
-                                .Add($"return {m.Name}{index1}_Values.Current;")
-                            )
-                            .Add(m.BuildNotMockedException()))
-                        .Add("));");
-                }
-            });
+                        builder.Add($"var {m.Name}{index1}_Values = returnValues.GetEnumerator();");
+                        builder.Scope($"this.{m.Name}(call: ({this.methodDelegateName[m]})(({parameterList}) => ", lambdaScope => lambdaScope
+                                .Scope($"if({m.Name}{index1}_Values.MoveNext())", conditionScope => conditionScope
+                                    .Add($"return {m.Name}{index1}_Values.Current;")
+                                )
+                                .Add(m.BuildNotMockedException()))
+                            .Add("));");
+                    }
+                })
+                .BR();
         }
     }
 

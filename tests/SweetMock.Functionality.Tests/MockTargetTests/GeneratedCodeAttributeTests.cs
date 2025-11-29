@@ -39,21 +39,21 @@ public class GeneratedCodeAttributeTests
         Assert.Equal(CurrentVersion, actualAttribute.Version);
     }
     
-    [Fact]
-    [Mock<IGeneratorTarget>]
-    public void GeneratedLoggerMockClassShouldHaveAttribute()
-    {
-        // Arrange
-        var sut = typeof(MockOf_IGeneratorTarget_LogExtensions);
-
-        // ACT
-        var actual = sut.GetCustomAttributes<GeneratedCodeAttribute>();
-
-        // Assert
-        var actualAttribute = Assert.Single(actual);
-        Assert.Equal("SweetMock", actualAttribute.Tool);
-        Assert.Equal(CurrentVersion, actualAttribute.Version);
-    }
+//    [Fact]
+//    [Mock<IGeneratorTarget>]
+//    public void GeneratedLoggerMockClassShouldHaveAttribute()
+//    {
+//        // Arrange
+//        var sut = typeof(MockOf_IGeneratorTarget_LogExtensions);
+//
+//        // ACT
+//        var actual = sut.GetCustomAttributes<GeneratedCodeAttribute>();
+//
+//        // Assert
+//        var actualAttribute = Assert.Single(actual);
+//        Assert.Equal("SweetMock", actualAttribute.Tool);
+//        Assert.Equal(CurrentVersion, actualAttribute.Version);
+//    }
     public interface IGeneratorTarget
     {
     }

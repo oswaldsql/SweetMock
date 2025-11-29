@@ -35,6 +35,15 @@ internal class EventBuilder(MockContext context)
 
         classScope.Region($"Event : {name}", builder =>
         {
+            classScope
+                .Add($"public record {name}_Arguments(")
+                .Indent(scope => scope
+                    .Add("global::System.String? InstanceName,")
+                    .Add("global::System.String MethodSignature")
+                )
+                .Add($") : ArgumentBase(_containerName, \"{name}\", MethodSignature, InstanceName);")
+                .BR();
+
             var eventCount = 1;
             foreach (var symbol in eventSymbols)
             {
@@ -67,12 +76,15 @@ internal class EventBuilder(MockContext context)
             .Add($"private event {typeSymbol}? _{eventFunction};")
             .Scope(signature, eventScope => eventScope
                 .Scope("add", addScope => addScope
+                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"add\"));")
                     .BuildLogSegment(context, symbol.AddMethod, true)
                     .Add($"this._{eventFunction} += value;"))
                 .Scope("remove", removeScope => removeScope
+                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"remove\"));")
                     .BuildLogSegment(context, symbol.RemoveMethod, true)
                     .Add($"this._{eventFunction} -= value;"))
             )
+            .BR()
             .AddToConfig(context, config =>
                 {
                     config.Documentation($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered.");

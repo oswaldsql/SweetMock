@@ -14,7 +14,7 @@ public class MockBuilder
         return result
             .AddFileHeader()
             .Nullable()
-            .Usings("global::SweetMock")
+            .Usings("global::SweetMock", "System.Linq")
             .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope => namespaceScope
                 .BuildBaseClass(mockContext)
                 .BuildLogExtensionsClass(mockContext))

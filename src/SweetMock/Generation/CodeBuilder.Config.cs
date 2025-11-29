@@ -23,11 +23,10 @@ internal partial class CodeBuilder
         var args = string.Join(" , ", arguments);
 
         return this.Add($"public {context.ConfigName} {name}({args})")
-            .Add("{").Indent()
-            .Apply(build)
-            .Add("return this;")
-            .Unindent().Add("}")
-            .BR();
+            .Add("{").Indent(scope => scope
+                .Apply(build)
+                .Add("return this;")
+            ).Add("}");
     }
 
     internal void AddConfigLambda(MockContext context, ISymbol symbol, string[] arguments, Action<CodeBuilder> build)
@@ -41,9 +40,7 @@ internal partial class CodeBuilder
         var args = string.Join(" , ", arguments);
 
         this.Add($"public {context.ConfigName} {name}({args}) =>")
-            .Indent()
-            .Apply(build)
-            .Unindent()
+            .Indent(build)
             .BR();
     }
 }

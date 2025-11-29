@@ -35,6 +35,12 @@ internal partial class CodeBuilder
         return this;
     }
 
+    public CodeBuilder Indent(Action<CodeBuilder> action) =>
+        this.Indent()
+            .Apply(action)
+            .Unindent();
+
+
     public CodeBuilder Unindent()
     {
         this.indentation -= 1;
@@ -44,6 +50,10 @@ internal partial class CodeBuilder
 
     public CodeBuilder Add(string line)
     {
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return this;
+        }
         this.result.Append(this.GetIndentation).AppendLine(line);
         return this;
     }

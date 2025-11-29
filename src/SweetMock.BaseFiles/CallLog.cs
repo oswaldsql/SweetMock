@@ -37,4 +37,6 @@ public class CallLog(List<CallLogItem>? source = null, Func<CallLogItem, bool>? 
         this.logs.Where(t => signatures.Contains(t.MethodSignature!) && this.filter(t))
             .Select(t => new TypedCallLogItem<T>(t).TypedArguments)
             .Where(t => predicate == null || predicate(t));
+
+    public List<ArgumentBase> Calls = [];
 }
