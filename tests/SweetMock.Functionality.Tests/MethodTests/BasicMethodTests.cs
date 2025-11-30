@@ -105,7 +105,7 @@ public class BasicMethodTests
     public void CallsShouldBeLoggedToTheLogger()
     {
         // Arrange
-        IBasicMethods_Logs logger = null!;
+        MockOf_IBasicMethods.IBasicMethods_Logs logger = null!;
         var sut = Mock.IBasicMethods(c => c
             .ReturnWithParameters(_ =>  "test")
             .GetCallLogs(out logger));

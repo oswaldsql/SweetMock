@@ -77,11 +77,9 @@ internal class EventBuilder(MockContext context)
             .Scope(signature, eventScope => eventScope
                 .Scope("add", addScope => addScope
                     .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"add\"));")
-                    .BuildLogSegment(context, symbol.AddMethod, true)
                     .Add($"this._{eventFunction} += value;"))
                 .Scope("remove", removeScope => removeScope
                     .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"remove\"));")
-                    .BuildLogSegment(context, symbol.RemoveMethod, true)
                     .Add($"this._{eventFunction} -= value;"))
             )
             .BR()

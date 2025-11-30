@@ -29,6 +29,8 @@ public class CreateSutArgumentsTest
         Assert.Equal("imp", actual.InstanceName);
 
         Assert.True(true);
+
+        fix.Logs.imp.ImplicitValue(arguments => arguments.value == "432");
     }
 
     [Fact]

@@ -9,7 +9,7 @@ public class LogFilterTests
         // Arrange
         var dic = new Dictionary<string, Version>();
         Action<Version>? trigger = null;
-        IVersionLibrary_Logs log = null!;
+        MockOf_IVersionLibrary.IVersionLibrary_Logs log = null!;
         var sut = Mock.IVersionLibrary(config => config
             .DownloadLinkAsync(new Uri("https://github.com"))
             .CurrentVersion(new Version(1, 2))

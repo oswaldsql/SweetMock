@@ -98,7 +98,6 @@ internal class ConstructorBuilder(MockContext context) {
                 .Add("_sweetMockCallLog = _sweetMockOptions.Logger ?? _sweetMockCallLog;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
                 .Add($"this._log(new {context.Source.Name}_Arguments(_sweetMockInstanceName, \"{context.Source.Name}\"{string.Join("", constructor.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
-                .BuildLogSegment(context, constructor)
                 .Add($"new {context.ConfigName}(this, config);")
             );
         }
@@ -119,7 +118,5 @@ internal class ConstructorBuilder(MockContext context) {
                 .Add("_sweetMockCallLog = options?.Logger ?? _sweetMockCallLog;")
                 .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
                 .Add($"this._log(new {context.Source.Name}_Arguments(_sweetMockInstanceName, \"{context.Source.Name}\"));")
-//                .Scope("if(_sweetMockCallLog != null)", ifScope => ifScope
-//                    .Add($"_sweetMockCallLog.Add(\"{context.Source}.{context.Source.Name}()\");"))
                 .Add($"new {context.ConfigName}(this, config);"));
 }

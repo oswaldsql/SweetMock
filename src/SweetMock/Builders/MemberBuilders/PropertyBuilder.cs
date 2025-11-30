@@ -103,14 +103,12 @@ internal class PropertyBuilder(MockContext context)
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
                     .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"get\"));")
-                    .BuildLogSegment(context, symbol.GetMethod)
                     .Scope($"if (this._{internalName}_get is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"return this._{internalName}_get();")))
             .AddIf(hasSet, set => set
                 .Scope(setType, setScope => setScope
                     .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"set\", value : value));")
-                    .BuildLogSegment(context, symbol.SetMethod)
                     .Scope($"if (this._{internalName}_set is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"this._{internalName}_set(value);"))));

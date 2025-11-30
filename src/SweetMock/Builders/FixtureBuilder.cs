@@ -1,5 +1,6 @@
 ﻿namespace SweetMock.Builders;
 
+using System.Collections;
 using Generation;
 using Utils;
 
@@ -33,7 +34,7 @@ public static class FixtureBuilder
                 .Scope($"internal class FixtureFor_{symbol.Name}{generics}{constraints}", classScope => classScope
                     .AddFixtureConfigObject(targetCtor, symbol, infos)
                     .AddPrivateMockObjects(targetCtor, infos)
-                    .AddCallLog()
+                    .AddCallLog(symbol, targetCtor, infos)
                     .AddConstructor(symbol, targetCtor, infos)
                     .AddCreateSutMethod(targetCtor, symbol, infos)
                     .End()));
@@ -102,10 +103,39 @@ public static class FixtureBuilder
         return builder;
     }
 
-    private static CodeBuilder AddCallLog(this CodeBuilder builder) =>
+    private static CodeBuilder AddCallLog(this CodeBuilder builder, INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
         builder
             .Documentation("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests.")
-            .Add("public global::SweetMock.CallLog Log{get; private set;}")
+            .Add("private global::SweetMock.CallLog _log;")
+            .Add("public FixtureLogger Logs {get; private set;}")
+
+            .Scope("internal class FixtureLogger(global::SweetMock.CallLog callLog) : global::SweetMock.FixtureLog_Base(callLog)", classScope =>
+            {
+                foreach (var parameter in targetCtor.Parameters)
+                {
+                    var type = parameter.Type as INamedTypeSymbol;
+                    if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
+                    {
+                        classScope.Add($"//{parameter.Type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").BR();
+                    }
+                    else
+                    {
+                        var generics = type.GetTypeGenerics();
+                        if (parameterInfo.Kind is MockKind.Wrapper or MockKind.BuildIn)
+                        {
+                            classScope
+                                .Add($"//public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
+                                .BR();
+                        }
+                        else
+                        {
+                            classScope
+                                .Add($"public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
+                                .BR();
+                        }
+                    }
+                }
+            })
             .BR();
 
     private static CodeBuilder AddConstructor(this CodeBuilder builder, INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
@@ -116,7 +146,10 @@ public static class FixtureBuilder
             )
             .Scope($"public FixtureFor_{s.Name}(System.Action<FixtureConfig>? config = null)", ctorScope =>
             {
-                ctorScope.Add("Log = new SweetMock.CallLog();").BR();
+                ctorScope
+                    .Add("_log = new SweetMock.CallLog();")
+                    .Add("Logs = new FixtureLogger(_log);")
+                    .BR();
 
                 foreach (var parameter in targetCtor.Parameters)
                 {
@@ -133,14 +166,14 @@ public static class FixtureBuilder
                             ctorScope
                                 .Add($"_{parameter.Name} = new global::{parameterInfo.MockClass}{generics}();")
                                 .Add($"var temp_{parameter.Name} = _{parameter.Name}.Config;")
-                                .Add($"_{parameter.Name}.Options = new global::SweetMock.MockOptions(Log, \"{parameter.Name}\");")
+                                .Add($"_{parameter.Name}.Options = new global::SweetMock.MockOptions(_log, \"{parameter.Name}\");")
                                 .BR();
                         }
                         else
                         {
                             ctorScope
                                 .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.ContextConfigName} temp_{parameter.Name} = null!;")
-                                .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new global::SweetMock.MockOptions(Log, \"{parameter.Name}\"));")
+                                .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new global::SweetMock.MockOptions(_log, \"{parameter.Name}\"));")
                                 .BR();
                         }
                     }

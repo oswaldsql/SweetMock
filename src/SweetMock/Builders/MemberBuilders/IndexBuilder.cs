@@ -133,7 +133,6 @@ internal class IndexBuilder(MockContext context)
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
                     .Add($"this._log(new Indexer_Arguments(_sweetMockInstanceName, \"get\", key : {symbol.GetMethod.Parameters[0].Name}));")
-                    .BuildLogSegment(context, symbol.GetMethod)
                     .Scope($"if (this.{internalName}_get is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"return this.{internalName}_get({argName});")
@@ -141,7 +140,6 @@ internal class IndexBuilder(MockContext context)
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
                     .Add($"this._log(new Indexer_Arguments(_sweetMockInstanceName, \"set\", key : {symbol.SetMethod.Parameters[0].Name}, value : {symbol.SetMethod.Parameters[1].Name}));")
-                    .BuildLogSegment(context,symbol.SetMethod)
                     .Scope($"if (this.{internalName}_set is null)", ifScope => ifScope
                         .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
                     .Add($"this.{internalName}_set({argName}, value);")

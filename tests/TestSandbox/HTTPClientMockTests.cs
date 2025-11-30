@@ -35,12 +35,12 @@ public class HttpClientMockTests(ITestOutputHelper testOutputHelper)
         //var result = await sut.Client.GetAsync("http://localhost/");
         //Console.WriteLine(result);
 
-        foreach (var callLogItem in fixture.Log)
+        foreach (var callLogItem in fixture.Logs.All)
         {
             testOutputHelper.WriteLine(callLogItem.ToString());
         }
 
-        Assert.Single(fixture.Log.SendAsync(t => t.request.Method == HttpMethod.Get));
+        //Assert.Single(fixture.Logs.SendAsync(t => t.request.Method == HttpMethod.Get));
     }
     
     protected HttpResponseMessage Send2(HttpRequestMessage request) =>

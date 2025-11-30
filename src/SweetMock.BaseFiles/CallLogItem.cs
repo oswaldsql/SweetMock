@@ -1,5 +1,7 @@
 ﻿namespace SweetMock;
 
+using System.Collections.Generic;
+
 public class CallLogItem
 {
     public int Index { get; set; }
@@ -12,3 +14,8 @@ public class CallLogItem
 }
 
 public record ArgumentBase(string Container, string MethodName, string MethodSignature, string? InstanceName);
+
+public abstract class FixtureLog_Base(CallLog callLog)
+{
+    public IEnumerable<ArgumentBase> All => callLog.Calls;
+}
