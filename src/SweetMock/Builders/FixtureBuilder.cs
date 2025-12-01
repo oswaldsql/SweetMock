@@ -124,7 +124,7 @@ public static class FixtureBuilder
                         if (parameterInfo.Kind is MockKind.Wrapper or MockKind.BuildIn)
                         {
                             classScope
-                                .Add($"//public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
+                                .Add($"public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
                                 .BR();
                         }
                         else

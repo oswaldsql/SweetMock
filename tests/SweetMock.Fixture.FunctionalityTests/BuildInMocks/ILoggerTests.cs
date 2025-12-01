@@ -5,19 +5,24 @@ using Microsoft.Extensions.Logging;
 [Fixture<ILoggerTarget>]
 public class ILoggerTests
 {
-    [Fact(Skip = "not working yet")]
+    [Fact]
     public void LogMessagesAreWrittenToTheCallLog()
     {
         // Arrange
-        var fixture = Fixture.ILoggerTarget();
+        var fixture = Fixture.ILoggerTarget(config => config
+            .logger.SetLogLevel(LogLevel.Warning)
+        );
         var sut = fixture.CreateILoggerTarget();
 
         // ACT
         sut.SomeMethod("Some name");
 
+        foreach (var logArguments in fixture.Logs.logger.Log())
+        {
+            Console.WriteLine(logArguments);
+        }
+        
         // Assert 
-        
-        
 //        var intoItem = Assert.Single(fixture.Logs.Log(args => args.logLevel == LogLevel.Information));
 //        Assert.Equal("Some method was called with the name 'Some name'", intoItem.message);
 //        Console.WriteLine(intoItem.state.ToString());

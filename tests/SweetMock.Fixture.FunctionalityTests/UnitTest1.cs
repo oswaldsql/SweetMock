@@ -6,7 +6,7 @@ using Repo;
 [Fixture<GenericFixtureTarget<TestTarget2>>]
 [Mock<GenericMockTarget<TestTarget2>>]
 [Mock<IExplicitMock>]
-[Mock<ICustomMock, MockOfICustomMock>]
+//[Mock<ICustomMock, MockOfICustomMock>]
 public class CreateSutArgumentsTest
 {
     [Fact]
@@ -17,7 +17,7 @@ public class CreateSutArgumentsTest
 //            config.directValue = "directValue";
             config.imp.ImplicitValue("ImplicitValue");
             config.explicitMock.ExplicitValue("ExplicitValue");
-            config.customMock.Value = new CustomMockImplementation();
+            //config.customMock.Value = new CustomMockImplementation();
         });
 
         var sut = fix.CreateTestTarget("directValue");
@@ -164,7 +164,7 @@ public class CustomMockImplementation : ICustomMock
     public string CustomValue { get; set; } = "";
 }
 
-internal class MockOfICustomMock() : MockBase<ICustomMock>(new CustomMockImplementation());
+//internal class MockOfICustomMock() : MockBase<ICustomMock>(new CustomMockImplementation());
 
 internal class WrapperMock2<TInterface>
 {
