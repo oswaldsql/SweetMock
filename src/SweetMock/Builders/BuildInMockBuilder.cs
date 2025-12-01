@@ -6,9 +6,9 @@ public static class BuildInMockBuilder
 {
     private static Dictionary<string, Func<string>> buildInMocks = new()
     {
-        {"Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger},
-        {"System.TimeProvider", TimeProvider},
-        {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions},
+       // {"Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger},
+       // {"System.TimeProvider", TimeProvider},
+       // {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions},
         {"System.Net.Http.HttpClient", HttpClient}
     };
 
@@ -44,6 +44,6 @@ public static class BuildInMockBuilder
         ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_IOptions.cs");
 
     private static string HttpClient() =>
-        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_HttpClient.cs");
+        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_HttpClient_new.cs");
 
 }

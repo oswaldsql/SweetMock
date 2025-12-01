@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class CallLog(List<CallLogItem>? source = null, Func<CallLogItem, bool>? filter = null) : IEnumerable<CallLogItem>
+public class CallLog_Old(List<CallLogItem>? source = null, Func<CallLogItem, bool>? filter = null) : IEnumerable<CallLogItem>
 {
     private readonly Func<CallLogItem, bool> filter = filter ?? (_ => true);
     private readonly object @lock = new();
@@ -38,5 +38,11 @@ public class CallLog(List<CallLogItem>? source = null, Func<CallLogItem, bool>? 
             .Select(t => new TypedCallLogItem<T>(t).TypedArguments)
             .Where(t => predicate == null || predicate(t));
 
+    public List<ArgumentBase> Calls = [];
+}
+
+public class CallLog
+{
+    public void Add(ArgumentBase argument) => this.Calls.Add(argument);
     public List<ArgumentBase> Calls = [];
 }

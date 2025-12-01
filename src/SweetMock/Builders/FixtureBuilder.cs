@@ -161,7 +161,7 @@ public static class FixtureBuilder
                     else
                     {
                         var generics = type.GetTypeGenerics();
-                        if (parameterInfo.Kind is MockKind.Wrapper or MockKind.BuildIn)
+                        if (parameterInfo.Kind is MockKind.Wrapper)// or MockKind.BuildIn)
                         {
                             ctorScope
                                 .Add($"_{parameter.Name} = new global::{parameterInfo.MockClass}{generics}();")
@@ -214,7 +214,8 @@ public static class FixtureBuilder
         return mockType switch
         {
             MockKind.Wrapper => $"_{t.Name}.Value",
-            MockKind.BuildIn => $"_{t.Name}.Value",
+//            MockKind.BuildIn => $"_{t.Name}.Value",
+            MockKind.BuildIn => $"_{t.Name}",
             MockKind.Generated => $"_{t.Name}",
             MockKind.Direct when canBeNull => $"Config.{t.Name}",
             MockKind.Direct when !canBeNull => $"Config.{t.Name} ?? throw new NullReferenceException()",

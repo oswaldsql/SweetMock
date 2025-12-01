@@ -49,7 +49,8 @@ public static class FactoryClassBuilder
                                 BuildCustomMockFactory(mockInfo.Source, mockInfo.Implementation!, mockScope);
                                 break;
                             case MockKind.BuildIn:
-                                BuildBuildInMockFactory(mockInfo, mockScope);
+                                //BuildBuildInMockFactory(mockInfo, mockScope);
+                                BuildGeneratedFactory(regionScope, mockInfo);
                                 break;
                             case MockKind.Direct:
                                 break;

@@ -11,14 +11,19 @@ using global::System.Text.Json;
 using global::System.Threading;
 using global::System.Threading.Tasks;
 
+/*
+
 namespace System.Net.Http{
     /// <summary>
     ///    Mock implementation of <see cref="global::System.Net.Http.HttpClient">HttpClient</see>.
     ///    Should only be used for testing purposes.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("SweetMock", "{{SweetMockVersion}}")]
-    internal class MockOf_HttpClient
+    internal class MockOf_HttpClient : HttpClient
     {
+        private const string _containerName = "global::System.Net.Http.HttpClient";
+        private void _log(global::SweetMock.ArgumentBase argument) {this.Options.Logger.Add(argument);}
+
         public MockOf_HttpClient()
         {
             var handler = new MockHandler(this);
@@ -53,6 +58,12 @@ namespace System.Net.Http{
             }
         }
 
+        public record SendAsync_Arguments(
+            global::System.String? InstanceName,
+            global::System.String MethodSignature,
+            global::System.Net.Http.HttpRequestMessage? request = null, global::System.Threading.CancellationToken? cancellationToken = null
+        ) : ArgumentBase(_containerName, "SendAsync", MethodSignature, InstanceName);
+
         internal class MockHandler(MockOf_HttpClient mockOfHttpClient) : HttpMessageHandler
         {
             private MockOptions Options => mockOfHttpClient.Options;
@@ -61,10 +72,11 @@ namespace System.Net.Http{
 
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
+                mockOfHttpClient._log(new SendAsync_Arguments(mockOfHttpClient._sweetMockInstanceName, "SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)", request : request, cancellationToken : cancellationToken));
                 Console.WriteLine(this.Options.Logger == null ? "null" : "not null");
                 if (this.Options.Logger != null)
                 {
-                    this.Options.Logger.Add("global::System.Net.Http.HttpClient.SendAsync(HttpRequestMessage, CancellationToken)", Arguments.With("request", request).And("cancellationToken", cancellationToken));
+                    this.Options.Logger.Add(new SendAsync_Arguments() "global::System.Net.Http.HttpClient.SendAsync(HttpRequestMessage, CancellationToken)", Arguments.With("request", request).And("cancellationToken", cancellationToken));
                 }
 
                 return this.CallBack.Invoke(request, cancellationToken);
@@ -160,56 +172,6 @@ namespace System.Net.Http{
         }
     }
 
-    [System.CodeDom.Compiler.GeneratedCode("SweetMock","{{SweetMockVersion}}")]
-    internal static class MockOf_HttpMessageHandler_LogExtensions{
-        public static HttpClient_Filter HttpClient(this global::SweetMock.CallLog source) => new(source);
-
-        public class HttpClient_Filter(global::SweetMock.CallLog source) : CallLogFilter(source, "global::System.Net.Http.HttpClient.");
-
-#region Constructors
-        public class HttpClient_Args : SweetMock.TypedArguments { }
-
-        /// <summary>
-        ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
-        /// </summary>
-        public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this HttpClient_Filter log, Func<HttpClient_Args, bool>? predicate = null) =>
-             log.Filter().HttpClient(predicate);
-
-        /// <summary>
-        ///    Identifies when the mock object for <see cref="global::System.Net.Http.HttpClient">HttpClient()</see> <see cref="global::System.Net.Http.HttpClient">HttpMessageHandler.HttpMessageHandler()</see> is created.
-        /// </summary>
-        public static global::System.Collections.Generic.IEnumerable<HttpClient_Args> HttpClient(this global::SweetMock.CallLog log, Func<HttpClient_Args, bool>? HttpClient_HttpClient_Predicate = null) =>
-            log.Matching("global::System.Net.Http.HttpClient.HttpClient()", HttpClient_HttpClient_Predicate);
-
-#endregion
-
-#region Method : SendAsync
-        public class SendAsync_Args : SweetMock.TypedArguments{
-            /// <summary>
-            ///    Enables filtering on the request argument.
-            /// </summary>
-            public System.Net.Http.HttpRequestMessage request => (System.Net.Http.HttpRequestMessage)base.Arguments["request"]!;
-
-            /// <summary>
-            ///    Enables filtering on the cancellationToken argument.
-            /// </summary>
-            public System.Threading.CancellationToken cancellationToken => (System.Threading.CancellationToken)base.Arguments["cancellationToken"]!;
-
-        }
-        /// <summary>
-        ///     Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
-        /// </summary>
-        public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this HttpClient_Filter log, Func<SendAsync_Args, bool>? predicate = null) =>
-             log.Filter().SendAsync(predicate);
-
-        /// <summary>
-        ///    Identifying calls to the method <see cref="global::System.Net.Http.HttpClient.SendAsync(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)</see>.
-        /// </summary>
-        public static global::System.Collections.Generic.IEnumerable<SendAsync_Args> SendAsync(this global::SweetMock.CallLog log, Func<SendAsync_Args, bool>? HttpMessageHandler_SendAsync_Predicate = null) =>
-            log.Matching("global::System.Net.Http.HttpClient.SendAsync(HttpRequestMessage, CancellationToken)", HttpMessageHandler_SendAsync_Predicate);
-
-#endregion
-
-    }
 
 }
+*/
