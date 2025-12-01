@@ -8,7 +8,7 @@ public static class BuildInMockBuilder
     {
         {"Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger},
        // {"System.TimeProvider", TimeProvider},
-       // {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions},
+       {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions},
         {"System.Net.Http.HttpClient", HttpClient}
     };
 
@@ -41,7 +41,7 @@ public static class BuildInMockBuilder
         ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_TimeProvider.cs");
 
     private static string IOptions() =>
-        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_IOptions.cs");
+        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_IOptions_new.cs");
 
     private static string HttpClient() =>
         ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_HttpClient_new.cs");

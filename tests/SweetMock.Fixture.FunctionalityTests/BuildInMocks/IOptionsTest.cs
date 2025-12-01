@@ -7,11 +7,13 @@ using Microsoft.Extensions.Options;
 [Fixture<OptionsTarget2>]
 public class IOptionsTest
 {
-    [Fact(Skip = "not working yet")]
+    [Fact]
     public void OptionsWithAEmptyConstructorIsAutomaticallyCreated()
     {
         // Arrange
-        var fixture = Fixture.OptionsTarget();
+        var fixture = Fixture.OptionsTarget(
+//            config => config.options.Value(new TargetOptions())
+        );
         var sut = fixture.CreateOptionsTarget();
 
         // ACT
@@ -21,13 +23,13 @@ public class IOptionsTest
         Assert.Equal("Initial value", actual);
     }
 
-    [Fact(Skip = "not working yet")]
+    [Fact]
     public void OptionsWithASetValueIsReturned()
     {
         // Arrange
         var fixture = Fixture.OptionsTarget(config =>
         {
-            //config.options.Set(new() { SomeProperty = "Set value" });
+            config.options.Value(new() { SomeProperty = "Set value" });
         });
         var sut = fixture.CreateOptionsTarget();
 
@@ -38,28 +40,30 @@ public class IOptionsTest
         Assert.Equal("Set value", actual);
     }
     
-    [Fact(Skip = "not working yet")]
+    [Fact]
     public void OptionsWithACtorShouldThrowExceptionIsNotSet()
     {
         // Arrange
         var fixture = Fixture.OptionsTarget2();
+
+        var sut = fixture.CreateOptionsTarget2();
         
         // ACT
-        var actual = Record.Exception(() => fixture.CreateOptionsTarget2());
+        var actual = Record.Exception(() => sut.ReturnOptionValue());
 
         // Assert
-        var actualException = Assert.IsType<ArgumentNullException>(actual);
-        Assert.StartsWith("'options' must have a value before being used.", actualException.Message);
-        Assert.Equal("options", actualException.ParamName);
+        var actualException = Assert.IsType<NotExplicitlyMockedException>(actual);
+        Assert.StartsWith("'Value' in 'options' is not explicitly mocked.", actualException.Message);
+        Assert.Equal("Value", actualException.MemberName);
     }
         
-    [Fact(Skip = "not working yet")]
+    [Fact]
     public void OptionsWithACtorShouldWorkIfSet()
     {
         // Arrange
         var fixture = Fixture.OptionsTarget2(config =>
         {
-            //config.options.Set(new("Ctor value"));
+            config.options.Value(new("Ctor value"));
         });
         var sut = fixture.CreateOptionsTarget2();
 
