@@ -3,7 +3,7 @@
 using Microsoft.Extensions.Logging;
 
 [Fixture<ILoggerTarget>]
-public class ILoggerTests
+public class ILoggerTests(ITestOutputHelper  outputHelper)
 {
     [Fact]
     public void LogMessagesAreWrittenToTheCallLog()
@@ -17,20 +17,19 @@ public class ILoggerTests
         // ACT
         sut.SomeMethod("Some name");
 
-        foreach (var logArguments in fixture.Logs.logger.Log())
+        var logs = fixture.Logs.logger;
+        foreach (var logArguments in logs.Log())
         {
-            Console.WriteLine(logArguments);
+            outputHelper.WriteLine(logArguments.ToString());
         }
         
         // Assert 
-//        var intoItem = Assert.Single(fixture.Logs.Log(args => args.logLevel == LogLevel.Information));
-//        Assert.Equal("Some method was called with the name 'Some name'", intoItem.message);
-//        Console.WriteLine(intoItem.state.ToString());
-//        
-//        var errorItem = Assert.Single(fixture.Logs.Log(args => args.logLevel == LogLevel.Error));
-//        Assert.Equal("A Exception of type ArgumentException was thrown in SomeMethod", errorItem.message);
-//        Assert.IsType<ArgumentException>(errorItem.exception);
-//        Console.WriteLine(errorItem.state.ToString());
+        var intoItem = Assert.Single(logs.Log(args => args.logLevel == LogLevel.Information));
+        Assert.Equal("Some method was called with the name 'Some name'", intoItem.message);
+        
+        var errorItem = Assert.Single(logs.Log(args => args.logLevel == LogLevel.Error));
+        Assert.Equal("A Exception of type ArgumentException was thrown in SomeMethod", errorItem.message);
+        Assert.IsType<ArgumentException>(errorItem.exception);
     }
     
     public class ILoggerTarget(ILogger<ILoggerTarget> logger)
