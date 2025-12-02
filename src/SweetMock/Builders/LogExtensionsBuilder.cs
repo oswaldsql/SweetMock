@@ -1,7 +1,6 @@
 namespace SweetMock.Builders;
 
 using Generation;
-using MemberBuilders;
 using Utils;
 
 internal static class LogExtensionsBuilder

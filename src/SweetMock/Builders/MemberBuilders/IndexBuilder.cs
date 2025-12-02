@@ -132,16 +132,16 @@ internal class IndexBuilder(MockContext context)
         classScope.Scope(signature, indexerScope => indexerScope
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
-                    .Add($"this._log(new Indexer_Arguments(_sweetMockInstanceName, \"get\", key : {symbol.GetMethod.Parameters[0].Name}));")
+                    .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"get\", key : {symbol.GetMethod!.Parameters[0].Name}));")
                     .Scope($"if (this.{internalName}_get is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
                     .Add($"return this.{internalName}_get({argName});")
                 ))
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
-                    .Add($"this._log(new Indexer_Arguments(_sweetMockInstanceName, \"set\", key : {symbol.SetMethod.Parameters[0].Name}, value : {symbol.SetMethod.Parameters[1].Name}));")
+                    .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"set\", key : {symbol.SetMethod!.Parameters[0].Name}, value : {symbol.SetMethod.Parameters[1].Name}));")
                     .Scope($"if (this.{internalName}_set is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
                     .Add($"this.{internalName}_set({argName}, value);")
                 )));
 

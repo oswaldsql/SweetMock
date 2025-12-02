@@ -21,7 +21,7 @@ public static class DumpExtensions
         foreach (var item in diagnostics.OrderBy(t=> t.Severity).ThenBy(t => t.ToString()))
         {
             output.WriteLine("-- " + item.Severity + " | " + item.Id + " --");
-            output.WriteLine($"{item.GetMessage()}[{item.Location.SourceTree.FilePath} [{item.Location.GetLineSpan().StartLinePosition} - {item.Location.GetLineSpan().EndLinePosition}]");
+            output.WriteLine($"{item.GetMessage()}[{item.Location.SourceTree!.FilePath} [{item.Location.GetLineSpan().StartLinePosition} - {item.Location.GetLineSpan().EndLinePosition}]");
             output.WriteLine(item.GetCode());
 
             if (item.AdditionalLocations.Count>0)

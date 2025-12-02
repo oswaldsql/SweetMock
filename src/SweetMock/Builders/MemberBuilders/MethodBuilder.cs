@@ -58,7 +58,7 @@ internal partial class MethodBuilder
     private static string GetArgString(IGrouping<string, IParameterSymbol> argument)
     {
         string argString;
-        if (argument.Select(t => t.Type).Distinct().Count() == 1)
+        if (argument.Select(t => t.Type).Distinct(SymbolEqualityComparer.Default).Count() == 1)
         {
             var firstType = argument.First().Type;
             if (firstType is INamedTypeSymbol namedType)
@@ -117,7 +117,7 @@ internal partial class MethodBuilder
 
         var (containingSymbol, accessibilityString, overrideString) = methodSymbol.Overwrites();
 
-        var (delegateName, delegateType, delegateParameters) = methodSymbol.GetDelegateInfo(methodCount);
+        var (delegateName, _, _) = methodSymbol.GetDelegateInfo(methodCount);
         this.methodDelegateName.Add(methodSymbol, delegateName);
 
         var functionPointer = methodCount == 1 ? $"_{name}" : $"_{name}_{methodCount}";
@@ -129,9 +129,9 @@ internal partial class MethodBuilder
 
         classScope
             .Scope(signature, methodScope => methodScope
-                .Add($"this._log(new {methodSymbol.Name}_Arguments(_sweetMockInstanceName, \"{methodSymbol.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat)}\"{string.Join("", methodSymbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
+                .Add($"this._log(new {methodSymbol.Name}_Arguments(this._sweetMockInstanceName, \"{methodSymbol.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat)}\"{string.Join("", methodSymbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
                 .Scope($"if (this.{functionPointer} is null)", ifScope =>
-                    ifScope.Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{methodSymbol.Name}\", _sweetMockInstanceName);"))
+                    ifScope.Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{methodSymbol.Name}\", this._sweetMockInstanceName);"))
                 .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
             )
             .BR()

@@ -22,7 +22,7 @@ internal partial class MethodBuilder
         foreach (var methodSymbol in methods)
         {
             var (delegateName, delegateType, delegateParameters) = methodSymbol.GetDelegateInfo(methodCount);
-            var (name, returnType, returnString) = methodSymbol.MethodMetadata();
+            var (name, _, _) = methodSymbol.MethodMetadata();
             var functionPointer = methodCount == 1 ? $"_{name}" : $"_{name}_{methodCount}";
 
             builder
@@ -162,7 +162,7 @@ internal partial class MethodBuilder
                                 .Scope($"if({m.Name}{index1}_Values.MoveNext())", conditionScope => conditionScope
                                     .Add($"return {m.Name}{index1}_Values.Current;")
                                 )
-                                .Add(m.BuildNotMockedException()))
+                                .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{m.Name}\", this.target._sweetMockInstanceName);"))
                             .Add("));");
                     }
                 })

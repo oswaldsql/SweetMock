@@ -1,6 +1,5 @@
 ﻿namespace SweetMock.Builders;
 
-using System.Collections;
 using Generation;
 using Utils;
 
@@ -34,7 +33,7 @@ public static class FixtureBuilder
                 .Scope($"internal class FixtureFor_{symbol.Name}{generics}{constraints}", classScope => classScope
                     .AddFixtureConfigObject(targetCtor, symbol, infos)
                     .AddPrivateMockObjects(targetCtor, infos)
-                    .AddCallLog(symbol, targetCtor, infos)
+                    .AddCallLog(targetCtor, infos)
                     .AddConstructor(symbol, targetCtor, infos)
                     .AddCreateSutMethod(targetCtor, symbol, infos)
                     .End()));
@@ -103,7 +102,7 @@ public static class FixtureBuilder
         return builder;
     }
 
-    private static CodeBuilder AddCallLog(this CodeBuilder builder, INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
+    private static CodeBuilder AddCallLog(this CodeBuilder builder, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
         builder
             .Documentation("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests.")
             .Add("private global::SweetMock.CallLog _log;")

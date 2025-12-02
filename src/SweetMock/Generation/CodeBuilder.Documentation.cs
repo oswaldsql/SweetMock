@@ -26,6 +26,14 @@ internal partial class CodeBuilder
             .Add("// Changes to this file may be lost when the code is regenerated.")
             .BR();
 
+    public CodeBuilder AddResharperDisable() => this
+        .BR()
+        .Add("// ReSharper disable RedundantNameQualifier")
+        .Add("// ReSharper disable RedundantNullableDirective")
+        .Add("// ReSharper disable RedundantNameQualifier")
+        .Add("// ReSharper disable BuiltInTypeReferenceStyle")
+        .Add("// ReSharper disable InconsistentNaming").BR();
+
     public CodeBuilder AddGeneratedCodeAttrib() =>
         this.Add($"[System.CodeDom.Compiler.GeneratedCode(\"SweetMock\",\"{SourceGeneratorMetadata.Version}\")]");
 }

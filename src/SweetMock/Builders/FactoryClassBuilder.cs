@@ -49,7 +49,6 @@ public static class FactoryClassBuilder
                                 BuildCustomMockFactory(mockInfo.Source, mockInfo.Implementation!, mockScope);
                                 break;
                             case MockKind.BuildIn:
-                                //BuildBuildInMockFactory(mockInfo, mockScope);
                                 BuildGeneratedFactory(regionScope, mockInfo);
                                 break;
                             case MockKind.Direct:
@@ -155,27 +154,5 @@ public static class FactoryClassBuilder
                 .Add($"config{type.Name} = result.Config;")
                 .Add("result.Options = options ?? result.Options;")
                 .Add("return result;"));
-    }
-
-    private static void BuildBuildInMockFactory(MockInfo mockInfo, CodeBuilder mockScope)
-    {
-        var generics = mockInfo.Source.GetTypeGenerics();
-        var constraints = mockInfo.Source.ToConstraints();
-
-        mockScope
-            .Documentation(doc => doc
-                .Summary($"Creates a mock object for {mockInfo.Source.ToSeeCRef()}.")
-                .Parameter("config", "Optional configuration for the mock object.")
-                .Parameter("options", "Options for the mock object.")
-                .Returns($"The mock object for {mockInfo.Source.ToSeeCRef()}."))
-            .Add($"internal static {mockInfo.MockClass}{generics} {mockInfo.Source.Name}{generics}")
-            .Scope($"(global::System.Action<{mockInfo.MockClass}{generics}.{mockInfo.ContextConfigName}>? config = null, global::SweetMock.MockOptions? options = null){constraints}", methodScope => methodScope
-                .Add($"var result = new {mockInfo.MockClass}{generics}();")
-                .Add("config?.Invoke(result.Config);")
-                .Add("result.Options = options ?? result.Options;")
-                .Add("return result;")
-            );
-
-        mockScope.BR();
     }
 }

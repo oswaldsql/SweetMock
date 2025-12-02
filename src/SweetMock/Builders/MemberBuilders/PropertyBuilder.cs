@@ -102,15 +102,15 @@ internal class PropertyBuilder(MockContext context)
         builder.Scope(signature, propertyScope => propertyScope
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
-                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"get\"));")
+                    .Add($"this._log(new {symbol.Name}_Arguments(this._sweetMockInstanceName, \"get\"));")
                     .Scope($"if (this._{internalName}_get is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
                     .Add($"return this._{internalName}_get();")))
             .AddIf(hasSet, set => set
                 .Scope(setType, setScope => setScope
-                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"set\", value : value));")
+                    .Add($"this._log(new {symbol.Name}_Arguments(this._sweetMockInstanceName, \"set\", value : value));")
                     .Scope($"if (this._{internalName}_set is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", _sweetMockInstanceName);"))
+                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
                     .Add($"this._{internalName}_set(value);"))));
 
         builder

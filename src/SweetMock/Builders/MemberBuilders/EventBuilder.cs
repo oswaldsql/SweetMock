@@ -76,10 +76,10 @@ internal class EventBuilder(MockContext context)
             .Add($"private event {typeSymbol}? _{eventFunction};")
             .Scope(signature, eventScope => eventScope
                 .Scope("add", addScope => addScope
-                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"add\"));")
+                    .Add($"this._log(new {symbol.Name}_Arguments(this._sweetMockInstanceName, \"add\"));")
                     .Add($"this._{eventFunction} += value;"))
                 .Scope("remove", removeScope => removeScope
-                    .Add($"this._log(new {symbol.Name}_Arguments(_sweetMockInstanceName, \"remove\"));")
+                    .Add($"this._log(new {symbol.Name}_Arguments(this._sweetMockInstanceName, \"remove\"));")
                     .Add($"this._{eventFunction} -= value;"))
             )
             .BR()

@@ -13,6 +13,7 @@ public class MockBuilder
 
         return result
             .AddFileHeader()
+            .AddResharperDisable()
             .Nullable()
             .Usings("global::SweetMock", "System.Linq")
             .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope => namespaceScope

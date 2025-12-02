@@ -22,7 +22,7 @@ internal class BaseClassBuilder(MockContext context)
         namespaceScope.AddGeneratedCodeAttrib();
         namespaceScope.Scope($"internal partial class {context.MockType} : {className}{context.Constraints}", classScope =>
             {
-                classScope.Add($"private const string _containerName = \"{context.Source.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}\";");
+                classScope.Add($"private const string _containerName = \"{context.Source.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}\";").BR();
                 this.InitializeConfig(classScope);
                 classScope.InitializeLogging(context);
                 this.BuildMembers(classScope);

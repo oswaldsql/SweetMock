@@ -20,8 +20,8 @@ internal class ConstructorBuilder(MockContext context) {
         classScope.Region("Constructors", builder =>
         {
             builder
-                .Add("global::SweetMock.MockOptions? _sweetMockOptions {get;set;}")
-                .Add("string _sweetMockInstanceName {get; set;} = \"\";")
+                .Add("private global::SweetMock.MockOptions? _sweetMockOptions {get;set;}")
+                .Add("private string _sweetMockInstanceName {get; set;} = \"\";")
                 .BR();
 
             var arguments = distinctConstructors.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
@@ -50,7 +50,7 @@ internal class ConstructorBuilder(MockContext context) {
     private static string GetArgString(IGrouping<string, IParameterSymbol> argument)
     {
         string argString;
-        if (argument.Select(t => t.Type).Distinct().Count() == 1)
+        if (argument.Select(t => t.Type).Distinct(SymbolEqualityComparer.Default).Count() == 1)
         {
             var firstType = argument.First().Type;
             if (firstType is INamedTypeSymbol namedType)
@@ -94,10 +94,10 @@ internal class ConstructorBuilder(MockContext context) {
         foreach (var constructor in constructors)
         {
             builder.Scope(this.ConstructorSignature(constructor), ctor => ctor
-                .Add("_sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
-                .Add("_sweetMockCallLog = _sweetMockOptions.Logger ?? _sweetMockCallLog;")
-                .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
-                .Add($"this._log(new {context.Source.Name}_Arguments(_sweetMockInstanceName, \"{context.Source.Name}\"{string.Join("", constructor.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
+                .Add("this._sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
+                .Add("this._sweetMockCallLog = this._sweetMockOptions.Logger ?? this._sweetMockCallLog;")
+                .Add($"this._sweetMockInstanceName = this._sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
+                .Add($"this._log(new {context.Source.Name}_Arguments(this._sweetMockInstanceName, \"{context.Source.Name}\"{string.Join("", constructor.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
                 .Add($"new {context.ConfigName}(this, config);")
             );
         }
@@ -108,15 +108,15 @@ internal class ConstructorBuilder(MockContext context) {
         var parameterList = constructor.Parameters.ToString(p => $"{p.Type} {p.Name}, ", "");
         var baseArguments = constructor.Parameters.ToString(p => p.Name);
 
-        return $"internal protected MockOf_{context.Source.Name}({parameterList}System.Action<{context.ConfigName}>? config = null, global::SweetMock.MockOptions? options = null) : base({baseArguments})";
+        return $"protected internal MockOf_{context.Source.Name}({parameterList}System.Action<{context.ConfigName}>? config = null, global::SweetMock.MockOptions? options = null) : base({baseArguments})";
     }
 
     private void BuildEmptyConstructor(CodeBuilder builder) =>
         builder
             .Scope($"internal protected MockOf_{context.Source.Name}(System.Action<{context.ConfigName}>? config = null, global::SweetMock.MockOptions? options = null)", methodScope => methodScope
-                .Add("_sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
-                .Add("_sweetMockCallLog = options?.Logger ?? _sweetMockCallLog;")
-                .Add($"_sweetMockInstanceName = _sweetMockOptions.InstanceName ?? \"{context.Source.Name}\";")
+                .Add("this._sweetMockOptions = options ?? global::SweetMock.MockOptions.Default;")
+                .Add("this._sweetMockCallLog = options?.Logger ?? _sweetMockCallLog;")
+                .Add($"this._sweetMockInstanceName = options?.InstanceName ?? \"{context.Source.Name}\";")
                 .Add($"this._log(new {context.Source.Name}_Arguments(_sweetMockInstanceName, \"{context.Source.Name}\"));")
                 .Add($"new {context.ConfigName}(this, config);"));
 }
