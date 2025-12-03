@@ -34,7 +34,7 @@ public static class FixtureBuilder
                 .AddFixtureConfigObject(targetCtor, symbol, infos)
                 .AddPrivateMockObjects(targetCtor, infos)
                 .AddCallLog(targetCtor, infos)
-                .AddConstructor(symbol, targetCtor, infos)
+                .AddConstructor(targetCtor, symbol, infos)
                 .AddCreateSutMethod(targetCtor, symbol, infos)
                 .End());
 
@@ -93,7 +93,7 @@ public static class FixtureBuilder
             if (infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
             {
                 var generics = type.GetTypeGenerics();
-                builder.Add($"private readonly global::{parameterInfo.MockClass}{generics} _{parameter.Name};");
+                builder.Add($"private readonly {parameterInfo.Source.ToDisplayString(ToFullNameFormatWithoutGeneric)}{generics} _{parameter.Name};");
             }
         }
 
@@ -113,31 +113,18 @@ public static class FixtureBuilder
                 foreach (var parameter in targetCtor.Parameters)
                 {
                     var type = parameter.Type as INamedTypeSymbol;
-                    if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
-                    {
-                        classScope.Add($"//{parameter.Type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").BR();
-                    }
-                    else
+                    if (infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
                     {
                         var generics = type.GetTypeGenerics();
-                        if (parameterInfo.Kind is MockKind.Wrapper or MockKind.BuildIn)
-                        {
-                            classScope
-                                .Add($"public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
-                                .BR();
-                        }
-                        else
-                        {
-                            classScope
-                                .Add($"public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
-                                .BR();
-                        }
+                        classScope
+                            .Add($"public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
+                            .BR();
                     }
                 }
             })
             .BR();
 
-    private static CodeBuilder AddConstructor(this CodeBuilder builder, INamedTypeSymbol s, IMethodSymbol targetCtor, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
+    private static CodeBuilder AddConstructor(this CodeBuilder builder, IMethodSymbol targetCtor, INamedTypeSymbol s, Dictionary<INamedTypeSymbol, MockInfo> infos) =>
         builder
             .Documentation(doc => doc
                 .Summary($"Provides a fixture for the {s.ToSeeCRef()} object, setting up mocks and a call log for testing purposes.")
@@ -155,26 +142,12 @@ public static class FixtureBuilder
                     var type = parameter.Type as INamedTypeSymbol;
                     if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
                     {
-                        ctorScope.Add($"{parameter.Type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").BR();
+                        ctorScope.Add($"{type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").BR();
                     }
                     else
                     {
                         var generics = type.GetTypeGenerics();
-                        if (parameterInfo.Kind is MockKind.Wrapper)// or MockKind.BuildIn)
-                        {
-                            ctorScope
-                                .Add($"_{parameter.Name} = new global::{parameterInfo.MockClass}{generics}();")
-                                .Add($"var temp_{parameter.Name} = _{parameter.Name}.Config;")
-                                .Add($"_{parameter.Name}.Options = new global::SweetMock.MockOptions(_log, \"{parameter.Name}\");")
-                                .BR();
-                        }
-                        else
-                        {
-                            ctorScope
-                                .Add($"global::{parameterInfo.MockClass}{generics}.{parameterInfo.ContextConfigName} temp_{parameter.Name} = null!;")
-                                .Add($"_{parameter.Name} = new {parameterInfo.MockClass}{generics}(config => temp_{parameter.Name} = config, new global::SweetMock.MockOptions(_log, \"{parameter.Name}\"));")
-                                .BR();
-                        }
+                        ctorScope.Add($"_{parameter.Name} = global::SweetMock.Mock.{type.Name}{generics}(out var temp_{parameter.Name}, new(_log, \"{parameter.Name}\"));");
                     }
                 }
 
@@ -213,7 +186,6 @@ public static class FixtureBuilder
         return mockType switch
         {
             MockKind.Wrapper => $"_{t.Name}.Value",
-//            MockKind.BuildIn => $"_{t.Name}.Value",
             MockKind.BuildIn => $"_{t.Name}",
             MockKind.Generated => $"_{t.Name}",
             MockKind.Direct when canBeNull => $"Config.{t.Name}",
@@ -255,6 +227,14 @@ public static class FixtureBuilder
         SymbolDisplayGlobalNamespaceStyle.Included,
         SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
+    );
+
+    private static readonly SymbolDisplayFormat ToFullNameFormatWithoutGeneric = new(
+        SymbolDisplayGlobalNamespaceStyle.Included,
+        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        SymbolDisplayGenericsOptions.None,
         memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
         parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
     );
