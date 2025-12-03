@@ -15,10 +15,10 @@ public class MockBuilder
             .AddFileHeader()
             .AddResharperDisable()
             .Nullable()
+            .Add($"namespace {mockContext.Source.ContainingNamespace};")
             .Usings("global::SweetMock", "System.Linq")
-            .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope => namespaceScope
-                .BuildBaseClass(mockContext)
-                .BuildLogExtensionsClass(mockContext))
+            .BuildBaseClass(mockContext)
+            .BuildLogExtensionsClass(mockContext)
             .ToString();
     }
 

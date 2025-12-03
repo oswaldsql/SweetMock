@@ -18,21 +18,19 @@ internal partial class CodeBuilder
     public CodeBuilder Scope(string prefix, Action<CodeBuilder> action) =>
         this
             .Add(prefix + "{")
-            .Indent()
-            .Apply(action)
-            .Unindent()
+            .Indent(indentScope => indentScope
+                .Apply(action))
             .Add("}");
 
     public CodeBuilder Lambda(string prefix, Action<CodeBuilder> action) =>
         this
             .Add(prefix + " =>")
-            .Indent()
-            .Apply(action)
-            .Unindent();
+            .Indent(indentScope => indentScope
+                .Apply(action));
 
     public CodeBuilder Usings(params string?[] namespaces) =>
         this
-            .Add(namespaces.Where(t => !string.IsNullOrEmpty(t)), ns => "using " + ns + ";")
+            .AddMultiple(namespaces.Where(t => !string.IsNullOrEmpty(t)), ns => "using " + ns + ";")
             .BR();
 
     public CodeBuilder Nullable() =>

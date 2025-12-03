@@ -24,17 +24,7 @@ internal class ConstructorBuilder(MockContext context) {
                 .Add("private string _sweetMockInstanceName {get; set;} = \"\";")
                 .BR();
 
-            var arguments = distinctConstructors.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
-            var args = string.Join(", ", arguments.Select(GetArgString));
-
-            builder
-                .Add($"public record {context.Source.Name}_Arguments(")
-                .Indent(scope => scope
-                    .Add("global::System.String? InstanceName,")
-                    .Add("global::System.String MethodSignature" + (arguments.Count != 0 ? "," : ""))
-                    .Add(args))
-                .Add($") : ArgumentBase(_containerName, \"{context.Source.Name}\", MethodSignature, InstanceName);")
-                .BR();
+            this.CreateLogArgumentsRecord(distinctConstructors, builder);
 
             if (distinctConstructors.Length != 0)
             {
@@ -45,6 +35,21 @@ internal class ConstructorBuilder(MockContext context) {
                 this.BuildEmptyConstructor(builder);
             }
         });
+    }
+
+    private void CreateLogArgumentsRecord(IMethodSymbol[] distinctConstructors, CodeBuilder builder)
+    {
+        var arguments = distinctConstructors.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
+        var args = string.Join(", ", arguments.Select(GetArgString));
+
+        builder
+            .Add($"public record {context.Source.Name}_Arguments(")
+            .Indent(scope => scope
+                .Add("global::System.String? InstanceName,")
+                .Add("global::System.String MethodSignature" + (arguments.Count != 0 ? "," : ""))
+                .Add(args))
+            .Add($") : ArgumentBase(_containerName, \"{context.Source.Name}\", MethodSignature, InstanceName);")
+            .BR();
     }
 
     private static string GetArgString(IGrouping<string, IParameterSymbol> argument)

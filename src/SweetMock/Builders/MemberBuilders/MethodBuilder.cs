@@ -31,17 +31,7 @@ internal partial class MethodBuilder
         {
             classScope.Region($"Method : {methodGroup.Key}", builder =>
             {
-                var arguments = methodGroup.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
-                var args = string.Join(", ", arguments.Select(GetArgString));
-
-                classScope
-                    .Add($"public record {methodGroup.Key}_Arguments(")
-                    .Indent(scope => scope
-                        .Add("global::System.String? InstanceName,")
-                        .Add("global::System.String MethodSignature" + (arguments.Count != 0 ? "," : ""))
-                        .Add(args))
-                    .Add($") : ArgumentBase(_containerName, \"{methodGroup.Key}\", MethodSignature, InstanceName);")
-                    .BR();
+                CreateLogArgumentsRecord(classScope, methodGroup);
 
                 var methodCount = 1;
                 foreach (var symbol in methodGroup)
@@ -50,9 +40,24 @@ internal partial class MethodBuilder
                     methodCount++;
                 }
 
-                classScope.AddToConfig(this.context, config => this.BuildConfigExtensions(config, methodGroup));
+                classScope.AddToConfig(this.context, config => this.BuildConfigExtensions(config, methodGroup.ToArray()));
             });
         }
+    }
+
+    private static void CreateLogArgumentsRecord(CodeBuilder classScope, IGrouping<string, IMethodSymbol> methodGroup)
+    {
+        var arguments = methodGroup.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
+        var args = string.Join(", ", arguments.Select(GetArgString));
+
+        classScope
+            .Add($"public record {methodGroup.Key}_Arguments(")
+            .Indent(scope => scope
+                .Add("global::System.String? InstanceName,")
+                .Add("global::System.String MethodSignature" + (arguments.Count != 0 ? "," : ""))
+                .Add(args))
+            .Add($") : ArgumentBase(_containerName, \"{methodGroup.Key}\", MethodSignature, InstanceName);")
+            .BR();
     }
 
     private static string GetArgString(IGrouping<string, IParameterSymbol> argument)

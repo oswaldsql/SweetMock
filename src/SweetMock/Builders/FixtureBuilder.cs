@@ -28,15 +28,15 @@ public static class FixtureBuilder
 
         fileScope.AddFileHeader()
             .Nullable()
-            .Scope($"namespace {symbol.ContainingNamespace}", namespaceScope => namespaceScope
-                .AddGeneratedCodeAttrib()
-                .Scope($"internal class FixtureFor_{symbol.Name}{generics}{constraints}", classScope => classScope
-                    .AddFixtureConfigObject(targetCtor, symbol, infos)
-                    .AddPrivateMockObjects(targetCtor, infos)
-                    .AddCallLog(targetCtor, infos)
-                    .AddConstructor(symbol, targetCtor, infos)
-                    .AddCreateSutMethod(targetCtor, symbol, infos)
-                    .End()));
+            .Add($"namespace {symbol.ContainingNamespace};")
+            .AddGeneratedCodeAttrib()
+            .Scope($"internal class FixtureFor_{symbol.Name}{generics}{constraints}", classScope => classScope
+                .AddFixtureConfigObject(targetCtor, symbol, infos)
+                .AddPrivateMockObjects(targetCtor, infos)
+                .AddCallLog(targetCtor, infos)
+                .AddConstructor(symbol, targetCtor, infos)
+                .AddCreateSutMethod(targetCtor, symbol, infos)
+                .End());
 
         return fileScope.ToString();
     }
@@ -50,10 +50,10 @@ public static class FixtureBuilder
                 configScope.Documentation(doc =>
                     {
                         doc.Summary("Configuration object for the fixture");
-                        doc.Parameter(targetCtor.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
+                        doc.Parameters(targetCtor.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
                     })
                     .Scope($"internal FixtureConfig({configParameters})", ctorScope =>
-                        ctorScope.Add(targetCtor.Parameters, parameter => $"this.{parameter.Name} = {parameter.Name};"));
+                        ctorScope.AddMultiple(targetCtor.Parameters, parameter => $"this.{parameter.Name} = {parameter.Name};"));
 
                 foreach (var parameter in targetCtor.Parameters)
                 {
@@ -193,13 +193,13 @@ public static class FixtureBuilder
         builder
             .Documentation(doc => doc
                 .Summary($"Creates an instance of the {s.ToSeeCRef()} object using the initialized mock dependencies.")
-                .Parameter(parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
+                .Parameters(parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
                 .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
             )
             .Scope($"public {s.ToDisplayString(ToFullNameFormat)} Create{s.Name}({arguments})", methodScope =>
             {
                 methodScope
-                    .Add(parameters, parameter => $"var argument_{parameter.Name} = {parameter.Name} ?? {MockTypeToArgument(infos, parameter)};")
+                    .AddMultiple(parameters, parameter => $"var argument_{parameter.Name} = {parameter.Name} ?? {MockTypeToArgument(infos, parameter)};")
                     .Add($"return new {s.ToDisplayString(ToFullNameFormat)}({parameters.ToString(symbol => "argument_" + symbol.Name)});");
             });
 
@@ -264,16 +264,15 @@ public static class FixtureBuilder
         var fileScope = new CodeBuilder();
         fileScope.AddFileHeader()
             .Nullable()
-            .Scope("namespace SweetMock", namespaceScope =>
-                namespaceScope
-                    .AddGeneratedCodeAttrib()
-                    .Scope("internal static class Fixture", classScope =>
-                    {
-                        foreach (var symbol in source)
-                        {
-                            BuildForFixture(classScope, symbol);
-                        }
-                    }));
+            .Add("namespace SweetMock;")
+            .AddGeneratedCodeAttrib()
+            .Scope("internal static class Fixture", classScope =>
+            {
+                foreach (var symbol in source)
+                {
+                    BuildForFixture(classScope, symbol);
+                }
+            });
 
         return fileScope.ToString();
     }

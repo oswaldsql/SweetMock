@@ -23,18 +23,66 @@ internal class IndexBuilder(MockContext context)
             return;
         }
 
+        this.CreateLogArgumentsRecord(classScope, lookup);
+        this.BuildIndexes(classScope, lookup);
+    }
+
+    private void CreateLogArgumentsRecord(CodeBuilder classScope, IPropertySymbol[] lookup)
+    {
         classScope
-            .Add($"public record Indexer_Arguments(")
+            .Add("public record Indexer_Arguments(")
             .Indent(scope => scope
                 .Add("global::System.String? InstanceName,")
                 .Add("global::System.String MethodSignature,")
                 .Add($"{GenerateArgumentType(lookup)} key = null,")
                 .Add($"{GenerateReturnType(lookup)} value = null")
             )
-            .Add($") : ArgumentBase(_containerName, \"Indexer\", MethodSignature, InstanceName);")
+            .Add(") : ArgumentBase(_containerName, \"Indexer\", MethodSignature, InstanceName);")
             .BR();
 
-        this.BuildIndexes(classScope, lookup);
+        return;
+
+        string GenerateArgumentType(IPropertySymbol[] symbols)
+        {
+            if (symbols.Length > 1)
+            {
+                return "global::System.Object?";
+            }
+
+            var type = symbols.First().Parameters.First().Type;
+            return DetermineArgumentType(type);
+        }
+
+        string GenerateReturnType(IPropertySymbol[] symbols)
+        {
+            if (symbols.Length > 1)
+            {
+                return "global::System.Object?";
+            }
+
+            var type = symbols.First().Type;
+            return DetermineArgumentType(type);
+        }
+
+        string DetermineArgumentType(ITypeSymbol type)
+        {
+            if (type is ITypeParameterSymbol)
+            {
+                return "global::System.Object?";
+            }
+
+            if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
+            {
+                return "global::System.Object?";
+            }
+
+            if (type.NullableAnnotation != NullableAnnotation.Annotated)
+            {
+                return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat) + "?";
+            }
+
+            return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat);
+        }
     }
 
     /// <summary>
@@ -46,67 +94,19 @@ internal class IndexBuilder(MockContext context)
     private void BuildIndexes(CodeBuilder classScope, IEnumerable<IPropertySymbol> indexerSymbols)
     {
         var symbols = indexerSymbols as IPropertySymbol[] ?? indexerSymbols.ToArray();
-        var indexType = symbols.First().Parameters[0].Type.ToString();
 
-        classScope.Region($"Index : this[{indexType}]", builder =>
+        var indexerCount = 1;
+        foreach (var symbol in symbols)
         {
-            var indexerCount = 0;
-            foreach (var symbol in symbols)
+            var indexType = symbol.Parameters[0].Type.ToString();
+            classScope.Region($"Index : this[{indexType}]", builder =>
             {
-                indexerCount++;
                 this.BuildIndex(builder, symbol, indexerCount);
-            }
-        });
-    }
+                this.BuildConfigExtensions(classScope, symbol, indexerCount);
 
-    private static string GenerateArgumentType(IPropertySymbol[] symbols)
-    {
-        if (symbols.Length > 1)
-        {
-            return "object?";
+                indexerCount++;
+            });
         }
-
-        var symbol = symbols.First();
-        var type = symbol.Parameters.First().Type;
-
-        if (type is ITypeParameterSymbol)
-        {
-            return "object?";
-        }
-        if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
-        {
-            return "object?";
-        }
-        if (type.NullableAnnotation != NullableAnnotation.Annotated)
-        {
-            return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat) + "?";
-        }
-        return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat);
-    }
-
-    private static string GenerateReturnType(IPropertySymbol[] symbols)
-    {
-        if (symbols.Length > 1)
-        {
-            return "global::System.Object?";
-        }
-
-        var symbol = symbols.First();
-        var type = symbol.Type;
-
-        if (type is ITypeParameterSymbol)
-        {
-            return "global::System.Object?";
-        }
-        if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
-        {
-            return "global::System.Object?";
-        }
-        if (type.NullableAnnotation != NullableAnnotation.Annotated)
-        {
-            return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat) + "?";
-        }
-        return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat);
     }
 
     /// <summary>
@@ -146,27 +146,41 @@ internal class IndexBuilder(MockContext context)
                 )));
 
         classScope
-            .Add($"private System.Func<{indexType}, {returnType}>? {internalName}_get {{ get; set; }} = null;")
-            .Add($"private System.Action<{indexType}, {returnType}>? {internalName}_set {{ get; set; }} = null;")
+            .BR()
+            .AddIf(hasGet, () => $"private System.Func<{indexType}, {returnType}>? {internalName}_get {{ get; set; }} = null;")
+            .AddIf(hasSet, () => $"private System.Action<{indexType}, {returnType}>? {internalName}_set {{ get; set; }} = null;")
             .BR();
+    }
 
+    private void BuildConfigExtensions(CodeBuilder classScope, IPropertySymbol symbol, int index)
+    {
+        var internalName = index == 1 ? "_onIndex" : $"_onIndex_{index}";
         classScope.AddToConfig(context, config =>
         {
-            var indexerParameters = (hasGet ? $"System.Func<{indexType}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{indexType}, {returnType}> set" : "");
+            this.AddGetSetConfiguration(symbol, config, internalName);
+            this.GenerateIndexerConfigExtensions(config, symbol);
+        });
+    }
 
-            config.Documentation(doc => doc
-                .Summary($"Configures the indexer for {symbol.Parameters[0].Type.ToSeeCRef()} by specifying methods to call when the property is accessed.")
-                .Parameter("get", "Function to call when the property is read.", hasGet)
-                .Parameter("set", "Function to call when the property is set.", hasSet)
-                .Returns("The configuration object."));
+    private void AddGetSetConfiguration(IPropertySymbol symbol, CodeBuilder config, string internalName)
+    {
+        var hasGet = symbol.GetMethod != null;
+        var hasSet = symbol.SetMethod != null;
 
-            config.AddConfigMethod(context, "Indexer", [indexerParameters], builder => builder
+        var typeSymbol = symbol.Parameters[0].Type;
+        var returnType = symbol.Type.ToString();
+
+        var indexerParameters = (hasGet ? $"System.Func<{typeSymbol}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{typeSymbol}, {returnType}> set" : "");
+
+        config.Documentation(doc => doc
+                .Summary($"Configures the indexer for {typeSymbol.ToSeeCRef()} by specifying methods to call when the property is accessed.")
+                .ParameterIf(hasGet, "get", "Function to call when the property is read.")
+                .ParameterIf(hasSet, "set", "Function to call when the property is set.")
+                .Returns("The configuration object."))
+            .AddConfigMethod(context, "Indexer", [indexerParameters], builder => builder
                 .AddIf(hasGet, () => $"target.{internalName}_get = get;")
                 .AddIf(hasSet, () => $"target.{internalName}_set = set;")
             );
-
-            this.GenerateIndexerConfigExtensions(config, symbol);
-        });
     }
 
     private void GenerateIndexerConfigExtensions(CodeBuilder codeBuilder, IPropertySymbol indexer)
@@ -175,9 +189,9 @@ internal class IndexBuilder(MockContext context)
         var hasSet = indexer.SetMethod != null;
 
         var typeSymbol = indexer.Parameters[0].Type;
-        codeBuilder.BR();
 
         codeBuilder
+            .BR()
             .Documentation(doc => doc
                 .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")

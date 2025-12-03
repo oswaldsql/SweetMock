@@ -24,7 +24,7 @@ internal static class MethodBuilderHelpers
 
     extension(ITypeSymbol type)
     {
-        private bool IsMethodTypeParameter() =>
+        internal bool IsMethodTypeParameter() =>
             type is ITypeParameterSymbol { TypeParameterKind: TypeParameterKind.Method, DeclaringMethod: not null };
     }
 
@@ -32,14 +32,24 @@ internal static class MethodBuilderHelpers
     {
         internal bool IsReturnTypeDerivedFromGeneric()
         {
-            var typeSymbol = candidate.First().ReturnType as INamedTypeSymbol;
-            var nop = typeSymbol?.TypeArguments.Any(IsMethodTypeParameter);
+            var returnType = candidate.First().ReturnType as INamedTypeSymbol;
+            var nop = returnType?.TypeArguments.Any(IsMethodTypeParameter);
             return nop == true;
         }
     }
 
+    extension(IEnumerable<IParameterSymbol> parameters) {
+        internal IEnumerable<IParameterSymbol> OutParams() => parameters.Where(t => t.RefKind == RefKind.Out);
+    }
+
     extension(IMethodSymbol symbol)
     {
+        internal IEnumerable<IParameterSymbol> OutParameters() =>
+            symbol.Parameters.OutParams();
+
+        internal bool HasOutParameters() =>
+            symbol.OutParameters().Any();
+
         internal MethodBuilder.DelegateInfo GetDelegateInfo(int methodCount)
         {
             var delegateName = methodCount == 1 ? $"DelegateFor_{symbol.Name}" : $"DelegateFor_{symbol.Name}_{methodCount}";

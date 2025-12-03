@@ -16,9 +16,8 @@ public static class FactoryClassBuilder
 
         builder
             .AddFileHeader()
-            .Nullable();
-
-        builder.Scope("namespace SweetMock", namespaceScope => namespaceScope
+            .Nullable()
+            .Add("namespace SweetMock;")
             .Documentation("Factory for creating mock objects.")
             .AddGeneratedCodeAttrib()
             .Scope("internal static class Mock", mockScope =>
@@ -58,7 +57,7 @@ public static class FactoryClassBuilder
                         }
                     });
                 }
-            }));
+            });
 
         return builder.ToString();
     }
@@ -96,7 +95,7 @@ public static class FactoryClassBuilder
         builder
             .Documentation(doc => doc
                 .Summary($"Creates a mock object for {source.ToSeeCRef()}.")
-                .Parameter(constructorParameters, t => $"Base constructor parameter {t.Name}.")
+                .Parameters(constructorParameters, t => $"Base constructor parameter {t.Name}.")
                 .Parameter("config", "Optional configuration for the mock object.")
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {source.ToSeeCRef()}."))
@@ -109,7 +108,7 @@ public static class FactoryClassBuilder
         builder
             .Documentation(doc => doc
                 .Summary($"Creates a mock object for {source.ToSeeCRef()}.")
-                .Parameter(constructorParameters, t => $"Base constructor parameter {t.Name}.")
+                .Parameters(constructorParameters, t => $"Base constructor parameter {t.Name}.")
                 .Parameter($"config{source.Name}", "Outputs configuration for the mock object.")
                 .Parameter("options", "Options for the mock object.")
                 .Returns($"The mock object for {source.ToSeeCRef()}."))

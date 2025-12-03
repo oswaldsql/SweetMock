@@ -57,6 +57,11 @@ public static class Mappers
             $"{symbol}?";
     }
 
+    extension(IEnumerable<ISymbol> symbols)
+    {
+        public string ToSeeCRef() => string.Join(", ", symbols.Distinct(SymbolEqualityComparer.Default).Select(t => t.ToSeeCRef()));
+    }
+
     private static string AccessibilityString(this Accessibility accessibility) =>
         accessibility switch
         {

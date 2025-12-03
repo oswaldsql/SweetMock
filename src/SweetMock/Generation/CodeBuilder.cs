@@ -58,7 +58,7 @@ internal partial class CodeBuilder
         return this;
     }
 
-    public CodeBuilder Add<T>(IEnumerable<T> source, Func<T, string> format)
+    public CodeBuilder AddMultiple<T>(IEnumerable<T> source, Func<T, string> format)
     {
         foreach (var s in source)
         {

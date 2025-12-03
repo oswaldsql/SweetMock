@@ -36,37 +36,43 @@ internal class PropertyBuilder(MockContext context)
 
         classScope.Region($"#region Property : {name}", builder =>
         {
-            classScope
-                .Add($"public record {name}_Arguments(")
-                .Indent(scope => scope
-                    .Add("global::System.String? InstanceName,")
-                    .Add("global::System.String MethodSignature,")
-                    .Add($"{GenerateArgumentType(symbols)} value = null")
-                )
-                .Add($") : ArgumentBase(_containerName, \"{name}\", MethodSignature, InstanceName);")
-                .BR();
+            CreateLogArgumentsRecord(classScope, symbols, name);
 
-            var index = 0;
             foreach (var symbol in symbols)
             {
-                index++;
-                this.BuildProperty(builder, symbol, index);
+                this.BuildProperty(builder, symbol);
+                this.BuildConfigExtensions(builder, symbol);
             }
         });
     }
 
+    private static void CreateLogArgumentsRecord(CodeBuilder classScope, IPropertySymbol[] symbols, string name) =>
+        classScope
+            .Add($"public record {name}_Arguments(")
+            .Indent(scope => scope
+                .Add("global::System.String? InstanceName,")
+                .Add("global::System.String MethodSignature,")
+                .Add($"{GenerateArgumentType(symbols)} value = null")
+            )
+            .Add($") : ArgumentBase(_containerName, \"{name}\", MethodSignature, InstanceName);")
+            .BR();
+
     private static string GenerateArgumentType(IPropertySymbol[] symbols)
     {
-        var symbol = symbols.First();
-        var type = symbol.Type;
+        if (symbols.Length > 1)
+        {
+            return "global::System.Object?";
+        }
+
+        var type = symbols.First().Type;
 
         if (type is ITypeParameterSymbol)
         {
-            return "object?";
+            return "global::System.Object?";
         }
         if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
         {
-            return "object?";
+            return "global::System.Object?";
         }
         if (type.NullableAnnotation != NullableAnnotation.Annotated)
         {
@@ -80,8 +86,7 @@ internal class PropertyBuilder(MockContext context)
     /// </summary>
     /// <param name="builder">The code builder to add the property to.</param>
     /// <param name="symbol">The property symbol representing the property.</param>
-    /// <param name="index">The index of the property.</param>
-    private void BuildProperty(CodeBuilder builder, IPropertySymbol symbol, int index)
+    private void BuildProperty(CodeBuilder builder, IPropertySymbol symbol)
     {
         if (symbol.ReturnsByRef)
         {
@@ -89,7 +94,6 @@ internal class PropertyBuilder(MockContext context)
         }
 
         var propertyName = symbol.Name;
-        var internalName = index == 1 ? propertyName : $"{propertyName}_{index}";
         var type = symbol.Type.ToString();
         var setType = symbol.SetMethod?.IsInitOnly == true ? "init" : "set";
 
@@ -99,58 +103,69 @@ internal class PropertyBuilder(MockContext context)
         var hasSet = symbol.SetMethod != null;
 
         var signature = $"{overwriteString.AccessibilityString}{overwriteString.OverrideString}{type} {overwriteString.ContainingSymbol}{propertyName}";
-        builder.Scope(signature, propertyScope => propertyScope
-            .AddIf(hasGet, get => get
-                .Scope("get", getScope => getScope
-                    .Add($"this._log(new {symbol.Name}_Arguments(this._sweetMockInstanceName, \"get\"));")
-                    .Scope($"if (this._{internalName}_get is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
-                    .Add($"return this._{internalName}_get();")))
-            .AddIf(hasSet, set => set
-                .Scope(setType, setScope => setScope
-                    .Add($"this._log(new {symbol.Name}_Arguments(this._sweetMockInstanceName, \"set\", value : value));")
-                    .Scope($"if (this._{internalName}_set is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
-                    .Add($"this._{internalName}_set(value);"))));
-
         builder
-            .Add($"private System.Func<{type}>? _{internalName}_get {{ get; set; }} = null;")
-            .Add($"private System.Action<{type}>? _{internalName}_set {{ get; set; }} = null;")
+            .Scope(signature, propertyScope => propertyScope
+                .AddIf(hasGet, get => get
+                    .Scope("get", getScope => getScope
+                        .Add($"this._log(new {propertyName}_Arguments(this._sweetMockInstanceName, \"get\"));")
+                        .Scope($"if (this._{propertyName}_get is null)", ifScope => ifScope
+                            .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{propertyName}\", this._sweetMockInstanceName);"))
+                        .Add($"return this._{propertyName}_get();")))
+                .AddIf(hasSet, set => set
+                    .Scope(setType, setScope => setScope
+                        .Add($"this._log(new {propertyName}_Arguments(this._sweetMockInstanceName, \"set\", value : value));")
+                        .Scope($"if (this._{propertyName}_set is null)", ifScope => ifScope
+                            .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{propertyName}\", this._sweetMockInstanceName);"))
+                        .Add($"this._{propertyName}_set(value);"))))
+            .BR()
+            .AddIf(hasGet, () => $"private System.Func<{type}>? _{propertyName}_get {{ get; set; }} = null;")
+            .AddIf(hasSet, () => $"private System.Action<{type}>? _{propertyName}_set {{ get; set; }} = null;")
             .BR();
-
-        builder.AddToConfig(context, config =>
-        {
-            var p = (hasGet ? $"System.Func<{type}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{type}> set" : "");
-
-            config.Documentation(doc => doc
-                .Summary($"Configures {symbol.ToSeeCRef()} by specifying methods to call when the property is accessed.")
-                .Parameter("get", "Function to call when the property is read.", hasGet)
-                .Parameter("set", "Function to call when the property is set.", hasGet)
-                .Returns("The updated configuration object."));
-
-            config.AddConfigMethod(context, internalName, [p], codeBuilder => codeBuilder
-                .AddIf(hasGet, () => $"target._{internalName}_get = get;")
-                .AddIf(hasSet, () => $"target._{internalName}_set = set;")
-            );
-
-            this.GeneratePropertyMockConfiguration(config, symbol);
-        });
     }
 
-    private void GeneratePropertyMockConfiguration(CodeBuilder codeBuilder, IPropertySymbol property)
+    private void BuildConfigExtensions(CodeBuilder builder, IPropertySymbol symbol) =>
+        builder.AddToConfig(context, config =>
+        {
+            this.AddGetSetConfiguration(config, symbol);
+
+            this.AddValueConfiguration(config, symbol);
+        });
+
+    private void AddGetSetConfiguration(CodeBuilder config, IPropertySymbol symbol)
+    {
+        var hasGet = symbol.GetMethod != null;
+        var hasSet = symbol.SetMethod != null;
+        var propertyType = symbol.Type.ToString();
+        var name = symbol.Name;
+
+        var p = (hasGet ? $"System.Func<{propertyType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{propertyType}> set" : "");
+
+        config.Documentation(doc => doc
+                .Summary($"Configures {symbol.ToSeeCRef()} by specifying methods to call when the property is accessed.")
+                .ParameterIf(hasGet, "get", "Function to call when the property is read.")
+                .ParameterIf(hasSet, "set", "Function to call when the property is set.")
+                .Returns("The updated configuration object."))
+            .AddConfigMethod(context, name, [p], codeBuilder => codeBuilder
+                .AddIf(hasGet, () => $"target._{name}_get = get;")
+                .AddIf(hasSet, () => $"target._{name}_set = set;")
+            );
+    }
+
+    private void AddValueConfiguration(CodeBuilder codeBuilder, IPropertySymbol property)
     {
         var hasGet = property.GetMethod != null;
         var hasSet = property.SetMethod != null;
 
-        codeBuilder.Documentation(doc => doc
-            .Summary($"Specifies a value to use for mocking the property {property.ToSeeCRef()}.")
-            .Parameter("value", "The value to use for the initial value of the property.")
-            .Returns("The updated configuration object."));
+        var propertyType = property.Type;
 
-        codeBuilder.AddConfigExtension(context, property, [$"{property.Type} value"], builder => builder
-            .Add($"global::SweetMock.ValueBox<{property.Type}> {property.Name}_value = new (value);")
-            .AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({property.Type} value) => {property.Name}_value.Value = value);")
-            .AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);")
-            .AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({property.Type} value) => {property.Name}_value.Value = value);"));
+        codeBuilder.Documentation(doc => doc
+                .Summary($"Specifies a value to use for mocking the property {property.ToSeeCRef()}.")
+                .Parameter("value", "The value to use for the initial value of the property.")
+                .Returns("The updated configuration object."))
+            .AddConfigExtension(context, property, [$"{propertyType} value"], builder => builder
+                .Add($"global::SweetMock.ValueBox<{propertyType}> {property.Name}_value = new (value);")
+                .AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({propertyType} value) => {property.Name}_value.Value = value);")
+                .AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);")
+                .AddIf(!hasGet && hasSet, () => $"this.{property.Name}(set : ({propertyType} value) => {property.Name}_value.Value = value);"));
     }
 }
