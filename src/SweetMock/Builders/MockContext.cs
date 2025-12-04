@@ -5,6 +5,7 @@ using Utils;
 public class MockContext(INamedTypeSymbol source)
 {
     public INamedTypeSymbol Source { get; } = source;
+    public string Name => Source.Name;
     public string MockType { get; } = $"MockOf_{source.Name}{source.GetTypeGenerics()}";
     public string MockName { get; } = "MockOf_" + source.Name;
     public string Constraints { get; } = source.ToConstraints();

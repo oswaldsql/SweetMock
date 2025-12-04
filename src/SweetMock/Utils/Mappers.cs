@@ -4,41 +4,16 @@ using Exceptions;
 
 public static class Mappers
 {
-    private static readonly SymbolDisplayFormat ToCRefFormat = new(
-        SymbolDisplayGlobalNamespaceStyle.Omitted,
-        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-        SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
-        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
-    );
-
-    private static readonly SymbolDisplayFormat ToFullNameFormat = new(
-        SymbolDisplayGlobalNamespaceStyle.Omitted,
-        SymbolDisplayTypeQualificationStyle.NameOnly,
-        SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
-        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType,
-        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-    );
-
-    private static readonly SymbolDisplayFormat ToFullNameFormatWithGlobal = new(
-        SymbolDisplayGlobalNamespaceStyle.Included,
-        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-        SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
-        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
-    );
-
     internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
         values == null ? "" : string.Join(separator, values.Select(mapper));
 
     extension(ISymbol symbol)
     {
         internal string ToCRef() =>
-            symbol.ToDisplayString(ToCRefFormat).Replace(".this[", ".Item[").Replace('<', '{').Replace('>', '}');
+            symbol.ToDisplayString(Format.ToCRefFormat).Replace(".this[", ".Item[").Replace('<', '{').Replace('>', '}');
 
         public string ToSeeCRef() =>
-            $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(ToFullNameFormat).Replace("<", "&lt;").Replace(">", "&gt;")}</see>""";
+            $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(Format.ToFullNameFormat).Replace("<", "&lt;").Replace(">", "&gt;")}</see>""";
 
         private string AccessibilityString() =>
             symbol.DeclaredAccessibility.AccessibilityString();
@@ -101,7 +76,7 @@ public static class Mappers
         return new(methodParameters, nameList);
     }
 
-    internal static string GetTypeGenerics(this INamedTypeSymbol type) => type.IsGenericType ? "<" + string.Join(", ", type.TypeArguments.Select(t => t.ToDisplayString(ToFullNameFormatWithGlobal))) + ">" : "";
+    internal static string GetTypeGenerics(this INamedTypeSymbol type) => type.IsGenericType ? "<" + string.Join(", ", type.TypeArguments.Select(t => t.ToDisplayString(Format.ToFullNameFormatWithGlobal))) + ">" : "";
 }
 
 public sealed class NamedSymbolEqualityComparer : IEqualityComparer<INamedTypeSymbol>

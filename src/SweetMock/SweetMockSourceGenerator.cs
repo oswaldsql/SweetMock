@@ -8,8 +8,6 @@ using Utils;
 [Generator]
 public class SweetMockSourceGenerator : IIncrementalGenerator
 {
-    private static readonly SymbolDisplayFormat Format = new();
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var fixtureAttributes = context.SyntaxProvider
@@ -106,7 +104,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
             var mockType = (INamedTypeSymbol)mock.Key!;
 
             var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
-            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format), MockKind.Wrapper, "MockConfig", implementation);
+            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format.Format2), MockKind.Wrapper, "MockConfig", implementation);
         }
     }
 

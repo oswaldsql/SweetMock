@@ -10,8 +10,8 @@ public static class LogBuilder
             .Add("private global::SweetMock.CallLog _sweetMockCallLog = new global::SweetMock.CallLog();").BR()
             .Add("private void _log(global::SweetMock.ArgumentBase argument) => this._sweetMockCallLog.Add(argument);").BR()
             .AddToConfig(context, codeBuilder => codeBuilder
-                .Scope($"internal MockConfig GetCallLogs(out {context.Source.Name}_Logs callLog)", builder1 => builder1
-                    .Add($"callLog = new {context.Source.Name}_Logs(this.target._sweetMockCallLog, this.target._sweetMockInstanceName);")
+                .Scope($"internal MockConfig GetCallLogs(out {context.Name}_Logs callLog)", builder1 => builder1
+                    .Add($"callLog = new {context.Name}_Logs(this.target._sweetMockCallLog, this.target._sweetMockInstanceName);")
                     .Add("return this;"))
             )
         );
@@ -24,8 +24,8 @@ public static class LogBuilder
             .ToLookup(t => t.Name);
 
         builder
-            .Scope($"internal partial class MockOf_{context.Source.Name}{context.Source.GetTypeGenerics()}", c => c
-                .Scope($"internal class {context.Source.Name}_Logs(CallLog log, string? instanceName = null)", classScope =>
+            .Scope($"internal partial class MockOf_{context.Name}{context.Source.GetTypeGenerics()}", c => c
+                .Scope($"internal class {context.Name}_Logs(CallLog log, string? instanceName = null)", classScope =>
                 {
                     classScope
                         .Add($"public System.Collections.Generic.IEnumerable<ArgumentBase> All() =>")
@@ -53,7 +53,7 @@ public static class LogBuilder
         g.Key switch
         {
             "this[]" => "Indexer",
-            ".ctor" => context.Source.Name,
+            ".ctor" => context.Name,
             _ => g.Key
         };
 
@@ -95,10 +95,10 @@ public static class LogBuilder
 
         if (type.NullableAnnotation != NullableAnnotation.Annotated)
         {
-            return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat) + "?";
+            return type.ToDisplayString(Format.ExtendedTypeFormat) + "?";
         }
 
-        return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat);
+        return type.ToDisplayString(Format.ExtendedTypeFormat);
     }
 
     public static string GenerateArgumentDeclaration(this IGrouping<string, IParameterSymbol> argument)
@@ -113,10 +113,10 @@ public static class LogBuilder
         return firstType switch
         {
             INamedTypeSymbol { DelegateInvokeMethod: not null } => $"global::System.Object? {argument.Key} = null",
-            INamedTypeSymbol namedType when namedType.TypeArguments.Length > 0 || namedType.IsGenericType => $"{namedType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)} {argument.Key} = null",
-            INamedTypeSymbol => $"{firstType.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null",
+            INamedTypeSymbol namedType when namedType.TypeArguments.Length > 0 || namedType.IsGenericType => $"{namedType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(Format.ExtendedTypeFormat)} {argument.Key} = null",
+            INamedTypeSymbol => $"{firstType.ToDisplayString(Format.ExtendedTypeFormat)}? {argument.Key} = null",
             ITypeParameterSymbol => $"global::System.Object? {argument.Key} = null",
-            _ => $"{firstType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null"
+            _ => $"{firstType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(Format.ExtendedTypeFormat)}? {argument.Key} = null"
         };
     }
 }

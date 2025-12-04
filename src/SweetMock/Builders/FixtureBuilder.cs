@@ -71,7 +71,7 @@ public static class FixtureBuilder
                         configScope
                             .BR()
                             .Documentation($"Gets or sets the {parameter.Name} used for configuration within the fixture.")
-                            .Add($"internal {parameter.Type.ToDisplayString(ToFullNameFormat)}{generics}? {parameter.Name} {{get; set;}}");
+                            .Add($"internal {parameter.Type.ToDisplayString(Format.ToFullNameFormat2)}{generics}? {parameter.Name} {{get; set;}}");
                     }
                 }
             })
@@ -93,7 +93,7 @@ public static class FixtureBuilder
             if (infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
             {
                 var generics = type.GetTypeGenerics();
-                builder.Add($"private readonly {parameterInfo.Source.ToDisplayString(ToFullNameFormatWithoutGeneric)}{generics} _{parameter.Name};");
+                builder.Add($"private readonly {parameterInfo.Source.ToDisplayString(Format.ToFullNameFormatWithoutGeneric)}{generics} _{parameter.Name};");
             }
         }
 
@@ -142,7 +142,7 @@ public static class FixtureBuilder
                     var type = parameter.Type as INamedTypeSymbol;
                     if (!infos.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
                     {
-                        ctorScope.Add($"{type.ToDisplayString(ToFullNameFormat)}? temp_{parameter.Name} = default;").BR();
+                        ctorScope.Add($"{type.ToDisplayString(Format.ToFullNameFormat2)}? temp_{parameter.Name} = default;").BR();
                     }
                     else
                     {
@@ -169,11 +169,11 @@ public static class FixtureBuilder
                 .Parameters(parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
                 .Returns($"A {s.ToSeeCRef()} instance configured with mocked dependencies.")
             )
-            .Scope($"public {s.ToDisplayString(ToFullNameFormat)} Create{s.Name}({arguments})", methodScope =>
+            .Scope($"public {s.ToDisplayString(Format.ToFullNameFormat2)} Create{s.Name}({arguments})", methodScope =>
             {
                 methodScope
                     .AddMultiple(parameters, parameter => $"var argument_{parameter.Name} = {parameter.Name} ?? {MockTypeToArgument(infos, parameter)};")
-                    .Add($"return new {s.ToDisplayString(ToFullNameFormat)}({parameters.ToString(symbol => "argument_" + symbol.Name)});");
+                    .Add($"return new {s.ToDisplayString(Format.ToFullNameFormat2)}({parameters.ToString(symbol => "argument_" + symbol.Name)});");
             });
 
         return builder;
@@ -218,26 +218,12 @@ public static class FixtureBuilder
             }
             else
             {
-                yield return $"{parameter.Type.ToDisplayString(ToFullNameFormat)}? {parameter.Name}";
+                yield return $"{parameter.Type.ToDisplayString(Format.ToFullNameFormat2)}? {parameter.Name}";
             }
         }
     }
 
-    private static readonly SymbolDisplayFormat ToFullNameFormat = new(
-        SymbolDisplayGlobalNamespaceStyle.Included,
-        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-        SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
-        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
-    );
 
-    private static readonly SymbolDisplayFormat ToFullNameFormatWithoutGeneric = new(
-        SymbolDisplayGlobalNamespaceStyle.Included,
-        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-        SymbolDisplayGenericsOptions.None,
-        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
-        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType
-    );
 
     public static string BuildFixturesFactory(IEnumerable<INamedTypeSymbol> source)
     {

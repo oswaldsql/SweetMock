@@ -12,16 +12,18 @@ internal static class BaseClassBuilderExt
 
 internal class BaseClassBuilder(MockContext context)
 {
+    private readonly INamedTypeSymbol source = context.Source;
+
     internal CodeBuilder BuildMockClass(CodeBuilder namespaceScope)
     {
-        var className = context.Source.ToString().Substring(context.Source.ContainingNamespace.ToString().Length + 1);
+        var className = this.source.ToDisplayString(Format.NameAndGenerics);
 
         return namespaceScope
-            .Documentation($"Mock implementation of {context.Source.ToSeeCRef()}.", "Should only be used for testing purposes.")
+            .Documentation($"Mock implementation of {this.source.ToSeeCRef()}.", "Should only be used for testing purposes.")
             .AddGeneratedCodeAttrib()
             .Scope($"internal partial class {context.MockType} : {className}{context.Constraints}", classScope =>
             {
-                classScope.Add($"private const string _containerName = \"{context.Source.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}\";").BR();
+                classScope.Add($"private const string _containerName = \"{this.source.ToDisplayString(Format.ExtendedTypeFormat)}\";").BR();
                 this.InitializeConfig(classScope);
                 classScope.InitializeLogging(context);
                 this.BuildMembers(classScope);
@@ -40,7 +42,7 @@ internal class BaseClassBuilder(MockContext context)
 
                     config
                         .Documentation(doc => doc
-                            .Summary($"Initializes the configuration for {context.Source.ToSeeCRef()} instance of the {context.ConfigName} class")
+                            .Summary($"Initializes the configuration for {this.source.ToSeeCRef()} instance of the {context.ConfigName} class")
                             .Parameter("target", "The target mock class.")
                             .Parameter("config", "Optional configuration method."))
                         .Scope($"public {context.ConfigName}({context.MockType} target, System.Action<{context.ConfigName}>? config = null)", methodScope => methodScope

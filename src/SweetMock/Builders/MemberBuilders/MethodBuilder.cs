@@ -92,7 +92,7 @@ internal partial class MethodBuilder
 
         classScope
             .Scope(signature, methodScope => methodScope
-                .Add($"this._log(new {methodSymbol.Name}_Arguments(this._sweetMockInstanceName, \"{methodSymbol.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat)}\"{string.Join("", methodSymbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
+                .Add($"this._log(new {methodSymbol.Name}_Arguments(this._sweetMockInstanceName, \"{methodSymbol.ToDisplayString(Format.SignatureOnlyFormat)}\"{string.Join("", methodSymbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
                 .Scope($"if (this.{functionPointer} is null)", ifScope =>
                     ifScope.Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{methodSymbol.Name}\", this._sweetMockInstanceName);"))
                 .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
