@@ -52,34 +52,10 @@ internal class PropertyBuilder(MockContext context)
             .Indent(scope => scope
                 .Add("global::System.String? InstanceName,")
                 .Add("global::System.String MethodSignature,")
-                .Add($"{GenerateArgumentType(symbols)} value = null")
+                .Add($"{symbols.GenerateReturnType()} value = null")
             )
             .Add($") : ArgumentBase(_containerName, \"{name}\", MethodSignature, InstanceName);")
             .BR();
-
-    private static string GenerateArgumentType(IPropertySymbol[] symbols)
-    {
-        if (symbols.Length > 1)
-        {
-            return "global::System.Object?";
-        }
-
-        var type = symbols.First().Type;
-
-        if (type is ITypeParameterSymbol)
-        {
-            return "global::System.Object?";
-        }
-        if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
-        {
-            return "global::System.Object?";
-        }
-        if (type.NullableAnnotation != NullableAnnotation.Annotated)
-        {
-            return type.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat) + "?";
-        }
-        return type.ToDisplayString(MethodBuilderHelpers.SignatureOnlyFormat);
-    }
 
     /// <summary>
     ///     Builds a property and adds it to the code builder.

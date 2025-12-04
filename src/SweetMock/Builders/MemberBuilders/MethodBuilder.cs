@@ -48,7 +48,7 @@ internal partial class MethodBuilder
     private static void CreateLogArgumentsRecord(CodeBuilder classScope, IGrouping<string, IMethodSymbol> methodGroup)
     {
         var arguments = methodGroup.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
-        var args = string.Join(", ", arguments.Select(GetArgString));
+        var args = string.Join(", ", arguments.Select(t => t.GenerateArgumentDeclaration()));
 
         classScope
             .Add($"public record {methodGroup.Key}_Arguments(")
@@ -58,48 +58,6 @@ internal partial class MethodBuilder
                 .Add(args))
             .Add($") : ArgumentBase(_containerName, \"{methodGroup.Key}\", MethodSignature, InstanceName);")
             .BR();
-    }
-
-    private static string GetArgString(IGrouping<string, IParameterSymbol> argument)
-    {
-        string argString;
-        if (argument.Select(t => t.Type).Distinct(SymbolEqualityComparer.Default).Count() == 1)
-        {
-            var firstType = argument.First().Type;
-            if (firstType is INamedTypeSymbol namedType)
-            {
-                if (namedType.DelegateInvokeMethod != null)
-                {
-                    // Delegate types like System.Func<T> will be written as global::System.Object
-                    argString = $"global::System.Object? {argument.Key} = null";
-                }
-                else if (namedType.TypeArguments.Length > 0 || namedType.IsGenericType)
-                {
-                    // Generic types with nullable annotation and fully qualified format
-                    argString = $"{namedType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)} {argument.Key} = null";
-                }
-                else
-                {
-                    // Regular case
-                    argString = $"{firstType.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null";
-                }
-            }
-            else
-            if (firstType is ITypeParameterSymbol)
-            {
-                argString = $"global::System.Object? {argument.Key} = null";
-            }
-            else
-            {
-                argString = $"{firstType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}? {argument.Key} = null";
-            }
-        }
-        else
-        {
-            argString = $"object? {argument.Key} = null";
-        }
-
-        return argString;
     }
 
     /// <summary>

@@ -27,63 +27,17 @@ internal class IndexBuilder(MockContext context)
         this.BuildIndexes(classScope, lookup);
     }
 
-    private void CreateLogArgumentsRecord(CodeBuilder classScope, IPropertySymbol[] lookup)
-    {
+    private void CreateLogArgumentsRecord(CodeBuilder classScope, IPropertySymbol[] lookup) =>
         classScope
             .Add("public record Indexer_Arguments(")
             .Indent(scope => scope
                 .Add("global::System.String? InstanceName,")
                 .Add("global::System.String MethodSignature,")
-                .Add($"{GenerateArgumentType(lookup)} key = null,")
-                .Add($"{GenerateReturnType(lookup)} value = null")
+                .Add($"{lookup.GenerateKeyType()} key = null,")
+                .Add($"{lookup.GenerateReturnType()} value = null")
             )
             .Add(") : ArgumentBase(_containerName, \"Indexer\", MethodSignature, InstanceName);")
             .BR();
-
-        return;
-
-        string GenerateArgumentType(IPropertySymbol[] symbols)
-        {
-            if (symbols.Length > 1)
-            {
-                return "global::System.Object?";
-            }
-
-            var type = symbols.First().Parameters.First().Type;
-            return DetermineArgumentType(type);
-        }
-
-        string GenerateReturnType(IPropertySymbol[] symbols)
-        {
-            if (symbols.Length > 1)
-            {
-                return "global::System.Object?";
-            }
-
-            var type = symbols.First().Type;
-            return DetermineArgumentType(type);
-        }
-
-        string DetermineArgumentType(ITypeSymbol type)
-        {
-            if (type is ITypeParameterSymbol)
-            {
-                return "global::System.Object?";
-            }
-
-            if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
-            {
-                return "global::System.Object?";
-            }
-
-            if (type.NullableAnnotation != NullableAnnotation.Annotated)
-            {
-                return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat) + "?";
-            }
-
-            return type.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat);
-        }
-    }
 
     /// <summary>
     ///     Builds the indexers and adds them to the code builder.

@@ -14,13 +14,12 @@ internal class BaseClassBuilder(MockContext context)
 {
     internal CodeBuilder BuildMockClass(CodeBuilder namespaceScope)
     {
-        namespaceScope.Documentation($"Mock implementation of {context.Source.ToSeeCRef()}.", "Should only be used for testing purposes.");
-
-        // TODO : Fix this uglyness
         var className = context.Source.ToString().Substring(context.Source.ContainingNamespace.ToString().Length + 1);
 
-        namespaceScope.AddGeneratedCodeAttrib();
-        namespaceScope.Scope($"internal partial class {context.MockType} : {className}{context.Constraints}", classScope =>
+        return namespaceScope
+            .Documentation($"Mock implementation of {context.Source.ToSeeCRef()}.", "Should only be used for testing purposes.")
+            .AddGeneratedCodeAttrib()
+            .Scope($"internal partial class {context.MockType} : {className}{context.Constraints}", classScope =>
             {
                 classScope.Add($"private const string _containerName = \"{context.Source.ToDisplayString(MethodBuilderHelpers.CustomSymbolDisplayFormat)}\";").BR();
                 this.InitializeConfig(classScope);
@@ -28,8 +27,6 @@ internal class BaseClassBuilder(MockContext context)
                 this.BuildMembers(classScope);
             })
             .BR();
-
-        return namespaceScope;
     }
 
     private void InitializeConfig(CodeBuilder result) =>
