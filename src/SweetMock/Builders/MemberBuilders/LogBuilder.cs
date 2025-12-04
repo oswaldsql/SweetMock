@@ -23,28 +23,42 @@ public static class LogBuilder
             .Distinct(SymbolEqualityComparer.IncludeNullability)
             .ToLookup(t => t.Name);
 
+        var generics = context.Source.GetTypeGenerics();
         builder
-            .Scope($"internal partial class MockOf_{context.Name}{context.Source.GetTypeGenerics()}", c => c
+            .Scope($"internal partial class MockOf_{context.Name}{generics}", c => c
                 .Scope($"internal class {context.Name}_Logs(CallLog log, string? instanceName = null)", classScope =>
                 {
                     classScope
-                        .Add($"public System.Collections.Generic.IEnumerable<ArgumentBase> All() =>")
-                        .Add($"    log.Calls.Where(t => instanceName == null || t.InstanceName == instanceName);");
+                        .Add("public System.Collections.Generic.IEnumerable<ArgumentBase> All() =>")
+                        .Add("    log.Calls.Where(t => instanceName == null || t.InstanceName == instanceName);");
 
-                    foreach (var g in memberGroups)
+                    foreach (var group in memberGroups)
                     {
-                        var gKey = GenerateLogKey(context, g);
+                        var logKey = GenerateLogKey(context, group);
 
-                        var argsClass = $"{context.MockName}{context.Source.GetTypeGenerics()}.{gKey}_Arguments";
+                        var argsClass = $"{context.MockName}{generics}.{logKey}_Arguments";
 
                         classScope
                             .BR()
-                            .Add($"public System.Collections.Generic.IEnumerable<{argsClass}> {gKey}(System.Func<{argsClass}, bool>? filter = null) =>")
+                            .Add($"public global::System.Collections.Generic.IEnumerable<{argsClass}> {logKey}(System.Func<{argsClass}, bool>? filter = null) =>")
                             .Add($"    this.All().OfType<{argsClass}>().Where(filter ?? (_ => true));");
                     }
                 })
             )
             .BR();
+
+        builder
+            .Scope($"internal static class {context.MockName}_LogExtensions", classScope =>
+            {
+                classScope
+                    .Add($"public static {context.MockName}{generics}.{context.Name}_Logs {context.Name}{generics}(this CallLog all){context.Source.ToConstraints()} => new(all);");
+
+                foreach (var group in memberGroups)
+                {
+                    var logKey = GenerateLogKey(context, group);
+                    classScope.Add($"public static global::System.Collections.Generic.IEnumerable<{context.MockName}{generics}.{logKey}_Arguments> {logKey}{generics}(this global::SweetMock.CallLog all, global::System.Func<{context.MockName}{generics}.{logKey}_Arguments, bool>? filter = null){context.Source.ToConstraints()} => all.{context.Name}{generics}().{logKey}(filter);");
+                }
+            });
 
         return builder;
     }

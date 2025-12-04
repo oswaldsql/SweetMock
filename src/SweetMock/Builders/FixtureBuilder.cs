@@ -53,7 +53,10 @@ public static class FixtureBuilder
                         doc.Parameters(targetCtor.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {s.ToSeeCRef()}.");
                     })
                     .Scope($"internal FixtureConfig({configParameters})", ctorScope =>
-                        ctorScope.AddMultiple(targetCtor.Parameters, parameter => $"this.{parameter.Name} = {parameter.Name};"));
+                        ctorScope
+                            .AddMultiple(targetCtor.Parameters, parameter => $"this.{parameter.Name} = {parameter.Name};")
+                            .Add("this.CallLog = callLog;")
+                        );
 
                 foreach (var parameter in targetCtor.Parameters)
                 {
@@ -74,6 +77,8 @@ public static class FixtureBuilder
                             .Add($"internal {parameter.Type.ToDisplayString(Format.ToFullNameFormat2)}{generics}? {parameter.Name} {{get; set;}}");
                     }
                 }
+
+                configScope.BR().Add("internal global::SweetMock.CallLog CallLog {get; private set;}");
             })
             .BR();
 
@@ -106,7 +111,8 @@ public static class FixtureBuilder
         builder
             .Documentation("Gets the call log used to record method invocations and interactions within the mocked dependencies during the test execution process.", "This property facilitates the tracking and validation of method calls made on the mocks in the scope of the unit tests.")
             .Add("private global::SweetMock.CallLog _log;")
-            .Add("public FixtureLogger Logs {get; private set;}")
+            .Add("public global::SweetMock.CallLog Log {get; private set;}")
+            .Add("public FixtureLogger Calls {get; private set;}")
 
             .Scope("internal class FixtureLogger(global::SweetMock.CallLog callLog) : global::SweetMock.FixtureLog_Base(callLog)", classScope =>
             {
@@ -134,7 +140,8 @@ public static class FixtureBuilder
             {
                 ctorScope
                     .Add("_log = new SweetMock.CallLog();")
-                    .Add("Logs = new FixtureLogger(_log);")
+                    .Add("Log = _log;")
+                    .Add("Calls = new FixtureLogger(_log);")
                     .BR();
 
                 foreach (var parameter in targetCtor.Parameters)
@@ -152,7 +159,10 @@ public static class FixtureBuilder
                 }
 
                 var parametersString = targetCtor.Parameters.ToString(t => "temp_" + t.Name);
+                parametersString += parametersString == "" ? "_log" : ", _log";
+
                 builder
+                    .BR()
                     .Add($"Config = new FixtureConfig({parametersString});")
                     .Add("config?.Invoke(Config);");
             }).BR();
@@ -221,6 +231,8 @@ public static class FixtureBuilder
                 yield return $"{parameter.Type.ToDisplayString(Format.ToFullNameFormat2)}? {parameter.Name}";
             }
         }
+
+        yield return "global::SweetMock.CallLog callLog";
     }
 
 

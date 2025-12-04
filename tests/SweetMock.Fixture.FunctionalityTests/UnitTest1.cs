@@ -12,7 +12,7 @@ public class CreateSutArgumentsTest
     [Fact]
     public void Test1()
     {
-        var fix = Fixture.TestTarget(config =>
+        var fixture = Fixture.TestTarget(config =>
         {
 //            config.directValue = "directValue";
             config.imp.ImplicitValue("ImplicitValue");
@@ -20,7 +20,7 @@ public class CreateSutArgumentsTest
             //config.customMock.Value = new CustomMockImplementation();
         });
 
-        var sut = fix.CreateTestTarget("directValue");
+        var sut = fixture.CreateTestTarget("directValue");
 
         Assert.Equal("directValue", sut.GetDirectValue());
         var actual = Assert.Throws<NotExplicitlyMockedException>(() => sut.GetImplicitValue());
@@ -30,7 +30,7 @@ public class CreateSutArgumentsTest
 
         Assert.True(true);
 
-        fix.Logs.imp.ImplicitValue(arguments => arguments.value == "432");
+        fixture.Calls.imp.ImplicitValue(arguments => arguments.value == "432");
     }
 
     [Fact]

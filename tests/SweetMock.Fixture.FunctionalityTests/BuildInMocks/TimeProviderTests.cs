@@ -26,7 +26,7 @@ public class TimeProviderTests
         Console.WriteLine(actual);
         Console.WriteLine(actual2);
 
-        foreach (var argumentBase in fixture.Logs.provider.All())
+        foreach (var argumentBase in fixture.Calls.provider.All())
         {
             Console.WriteLine(argumentBase);
         }

@@ -18,13 +18,13 @@ public class Tests(ITestOutputHelper testOutputHelper)
         {
             config.name = "Tester32";
             config.user.GetUserName("fds");
-            //config.time.Value = TimeProvider.System;
+            config.time.Value = TimeProvider.System;
         });
         var sut = fixture.CreateShoppingBasket();
         
         testOutputHelper.WriteLine(sut.Name);
         
-        foreach (var callLogItem in fixture.Logs.repo.All())
+        foreach (var callLogItem in fixture.Calls.repo.All())
         {
             testOutputHelper.WriteLine(callLogItem.ToString());
         }

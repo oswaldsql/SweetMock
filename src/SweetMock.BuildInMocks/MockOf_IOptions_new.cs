@@ -14,6 +14,8 @@ using System.Linq;
 
 namespace Microsoft.Extensions.Options;
 
+using System;
+
 /// <summary>
 ///    Mock implementation of <see cref="global::Microsoft.Extensions.Options.IOptions{TOptions}">IOptions&lt;TOptions&gt;</see>.
 ///    Should only be used for testing purposes.

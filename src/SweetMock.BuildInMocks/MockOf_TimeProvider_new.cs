@@ -51,6 +51,9 @@ internal partial class MockOf_TimeProvider : TimeProvider{
                 .GetTimestamp(call: timeProvider.GetTimestamp)
                 .LocalTimeZone(get: () => timeProvider.LocalTimeZone)
                 .TimestampFrequency(get: () => timeProvider.TimestampFrequency);
+
+        [Obsolete("Use Initialize(TimeProvider timeProvider) instead")]
+        public TimeProvider Value { get => this.target; set => this.Initialize(value); }
     }
     #endregion
 

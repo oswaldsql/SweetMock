@@ -37,7 +37,7 @@ public class HttpClientMockTests(ITestOutputHelper testOutputHelper)
         //var result = await sut.Client.GetAsync("http://localhost/");
         //Console.WriteLine(result);
 
-        foreach (var callLogItem in fixture.Logs.client.All())
+        foreach (var callLogItem in fixture.Calls.client.All())
         {
             testOutputHelper.WriteLine(callLogItem.ToString());
         }

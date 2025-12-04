@@ -17,7 +17,7 @@ public class ILoggerTests(ITestOutputHelper  outputHelper)
         // ACT
         sut.SomeMethod("Some name");
 
-        var logs = fixture.Logs.logger;
+        var logs = fixture.Calls.logger;
         foreach (var logArguments in logs.Log())
         {
             outputHelper.WriteLine(logArguments.ToString());
