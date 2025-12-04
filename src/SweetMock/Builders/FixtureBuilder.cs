@@ -1,5 +1,6 @@
 ﻿namespace SweetMock.Builders;
 
+using Exceptions;
 using Generation;
 using Utils;
 
@@ -19,10 +20,16 @@ public static class FixtureBuilder
 
     public static string BuildFixture(ISymbol source, List<MockInfo> mockInfos)
     {
-        var infos = mockInfos.ToDictionary(t => t.Source, NamedSymbolEqualityComparer.Default);
         var symbol = (INamedTypeSymbol)source;
+        var targetCtor = symbol.Constructors.FirstOrDefault(t => t.DeclaredAccessibility is not Accessibility.Private and not Accessibility.Protected && t.Parameters.Length > 0);
+
+        if (targetCtor is null)
+        {
+            throw new SweetMockException("Intended fixture contained no accessible constructor.");
+        }
+
         var fileScope = new CodeBuilder();
-        var targetCtor = symbol.Constructors.First();
+        var infos = mockInfos.ToDictionary(t => t.Source, NamedSymbolEqualityComparer.Default);
         var generics = symbol.GetTypeGenerics();
         var constraints = symbol.ToConstraints();
 

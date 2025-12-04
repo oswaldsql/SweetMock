@@ -6,7 +6,6 @@ using Repo;
 [Fixture<GenericFixtureTarget<TestTarget2>>]
 [Mock<GenericMockTarget<TestTarget2>>]
 [Mock<IExplicitMock>]
-//[Mock<ICustomMock, MockOfICustomMock>]
 public class CreateSutArgumentsTest
 {
     [Fact]
@@ -112,11 +111,11 @@ public class GenericMockTarget
     }
 }
 
-public class GenericFixtureTarget<T> where T : new()
+public class GenericFixtureTarget<T>(int number) where T : new()
 {
 };
 
-public class TestTarget2
+public class TestTarget2()
 {
 }
 
