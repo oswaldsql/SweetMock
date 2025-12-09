@@ -189,6 +189,12 @@ internal partial class MockOf_HttpClient : HttpClient
             return this;
         }
 
+        public MockConfig Send(System.Func<System.Net.Http.HttpRequestMessage, System.Net.Http.HttpResponseMessage> call)
+        {
+            this.SendAsync(call: (request, _) => Task.FromResult(call(request)));
+            return this;
+        }
+
         /// <summary>
         ///    Configures the mock to return a specific value, regardless of the provided arguments.
         ///    Use this to quickly define a fixed return result for <see cref="global::System.Net.Http.HttpClient.Send(System.Net.Http.HttpRequestMessage, System.Threading.CancellationToken)">HttpClient.Send(HttpRequestMessage, CancellationToken)</see>.
@@ -456,6 +462,9 @@ public static class HttpClient_TestExtensions
         var json = JsonSerializer.Serialize(jsonSource, JsonSerializerOptions.Web);
         return response.WithContent(new StringContent(json), "application/json");
     }
+
+    public static HttpResponseMessage WithByteArrayContent(this HttpResponseMessage response, byte[] byteSource) =>
+        response.WithContent(new ByteArrayContent(byteSource), "application/octet-stream");
 
     public static HttpResponseMessage WithHeader(this HttpResponseMessage response, string headerName, string headerValue)
     {
