@@ -18,7 +18,7 @@ public class GenericClassTests
             .SomeMethod(guid => guid)
             .SomeProperty(Guid.NewGuid())
             .SomeProperty(Guid.NewGuid, _ => { })
-            .Indexer(new())
+            .Indexer(new Dictionary<string, Guid>())
             .Indexer(_ => Guid.NewGuid(), (s, _) => Guid.Parse(s))
             .SomeEvent(Guid.NewGuid())
             .SomeEvent(out trigger)

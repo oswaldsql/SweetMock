@@ -28,16 +28,21 @@ internal class IndexBuilder(MockContext context)
     }
 
     private void CreateLogArgumentsRecord(CodeBuilder classScope, IPropertySymbol[] lookup) =>
-        classScope
-            .Add("public record Indexer_Arguments(")
-            .Indent(scope => scope
-                .Add("global::System.String? InstanceName,")
-                .Add("global::System.String MethodSignature,")
-                .Add($"{lookup.GenerateKeyType()} key = null,")
-                .Add($"{lookup.GenerateReturnType()} value = null")
-            )
-            .Add(") : ArgumentBase(_containerName, \"Indexer\", MethodSignature, InstanceName);")
-            .BR();
+        classScope.Region("Indexers", builder =>
+        {
+            builder
+                .Add("public record Indexer_Arguments(")
+                .Indent(scope => scope
+                    .Add("global::System.String? InstanceName,")
+                    .Add("global::System.String MethodSignature,")
+                    .Add($"{lookup.GenerateKeyType()} key = null,")
+                    .Add($"{lookup.GenerateReturnType()} value = null")
+                )
+                .Add(") : ArgumentBase(_containerName, \"Indexer\", MethodSignature, InstanceName);")
+                .BR();
+
+            this.AddThrowConfiguration(lookup, builder);
+        });
 
     /// <summary>
     ///     Builds the indexers and adds them to the code builder.
@@ -87,22 +92,18 @@ internal class IndexBuilder(MockContext context)
             .AddIf(hasGet, get => get
                 .Scope("get", getScope => getScope
                     .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"get\", key : {symbol.GetMethod!.Parameters[0].Name}));")
-                    .Scope($"if (this.{internalName}_get is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
                     .Add($"return this.{internalName}_get({argName});")
                 ))
             .AddIf(hasSet, set => set
                 .Scope("set", setScope => setScope
                     .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"set\", key : {symbol.SetMethod!.Parameters[0].Name}, value : {symbol.SetMethod.Parameters[1].Name}));")
-                    .Scope($"if (this.{internalName}_set is null)", ifScope => ifScope
-                        .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{symbol.Name}\", this._sweetMockInstanceName);"))
                     .Add($"this.{internalName}_set({argName}, value);")
                 )));
 
         classScope
             .BR()
-            .AddIf(hasGet, () => $"private System.Func<{indexType}, {returnType}>? {internalName}_get {{ get; set; }} = null;")
-            .AddIf(hasSet, () => $"private System.Action<{indexType}, {returnType}>? {internalName}_set {{ get; set; }} = null;")
+            .AddIf(hasGet, () => $"private System.Func<{indexType}, {returnType}> {internalName}_get {{ get; set; }} = null!;")
+            .AddIf(hasSet, () => $"private System.Action<{indexType}, {returnType}> {internalName}_set {{ get; set; }} = null!;")
             .BR();
     }
 
@@ -137,6 +138,32 @@ internal class IndexBuilder(MockContext context)
             );
     }
 
+    private void AddThrowConfiguration(IPropertySymbol[] symbols, CodeBuilder config)
+    {
+        config.AddToConfig(context, builder => builder.Documentation(doc => doc
+                .Summary($"Configures all indexers to throw an exception when accessed.")
+                .Parameter("throw", "Exception to throw when the indexer is accessed.")
+                .Returns("The configuration object."))
+            .AddConfigMethod(context, "Indexer", ["System.Exception throws"], builder =>
+            {
+                foreach (var symbol in symbols)
+                {
+                    var hasGet = symbol.GetMethod != null;
+                    var hasSet = symbol.SetMethod != null;
+
+                    var typeSymbol = symbol.Parameters[0].Type;
+                    var returnType = symbol.Type.ToString();
+
+                    var name = "Indexer";
+
+                    builder
+                        .AddIf(hasGet && hasSet, () => $"this.{name}(get : ({typeSymbol} _) => throw throws, set : (_,_) => throw throws);")
+                        .AddIf(hasGet && !hasSet, () => $"this.{name}(get : ({typeSymbol} _) => throw throws);")
+                        .AddIf(!hasGet && hasSet, () => $"this.{name}(set : ({typeSymbol} _, {returnType} _) => throw throws);");
+                }
+            }));
+    }
+
     private void GenerateIndexerConfigExtensions(CodeBuilder codeBuilder, IPropertySymbol indexer)
     {
         var hasGet = indexer.GetMethod != null;
@@ -150,7 +177,7 @@ internal class IndexBuilder(MockContext context)
                 .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."))
-            .AddConfigExtension(context, indexer, [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder => builder
+            .AddConfigMethod(context, "Indexer", [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder => builder
                 .AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);")
                 .AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);")
                 .AddIf(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);"));

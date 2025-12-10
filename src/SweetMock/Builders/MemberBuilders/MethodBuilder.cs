@@ -9,14 +9,22 @@ using Utils;
 /// </summary>
 internal partial class MethodBuilder
 {
-    private readonly MockContext context;
-    private readonly Dictionary<IMethodSymbol, string> methodDelegateName = new(SymbolEqualityComparer.Default);
-    private readonly ILookup<string, IMethodSymbol> methodGroups;
+    public ILookup<string, MethodMetadata> AllMethods { get; set; }
 
     private MethodBuilder(IEnumerable<IMethodSymbol> methods, MockContext context)
     {
-        this.context = context;
-        this.methodGroups = methods.ToLookup(t => t.Name);
+        var methodGroups = methods.ToLookup(t => t.Name, symbol => new MethodMetadata(symbol, context));
+        foreach (var grouping in methodGroups)
+        {
+            var index = 1;
+            foreach (var method in grouping)
+            {
+                method.Initialize(index);
+                index++;
+            }
+        }
+
+        this.AllMethods = methodGroups;
     }
 
     public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IMethodSymbol> methods)
@@ -27,27 +35,25 @@ internal partial class MethodBuilder
 
     private void Render(CodeBuilder classScope)
     {
-        foreach (var methodGroup in this.methodGroups)
+        foreach (var methodGroup in this.AllMethods)
         {
             classScope.Region($"Method : {methodGroup.Key}", builder =>
             {
                 CreateLogArgumentsRecord(classScope, methodGroup);
 
-                var methodCount = 1;
-                foreach (var symbol in methodGroup)
+                foreach (var method in methodGroup)
                 {
-                    this.Build(builder, symbol, methodCount);
-                    methodCount++;
+                    this.Build(builder, method);
                 }
 
-                classScope.AddToConfig(this.context, config => this.BuildConfigExtensions(config, methodGroup.ToArray()));
+                classScope.AddToConfig(methodGroup.First().Context, config => this.BuildConfigExtensions(config, methodGroup));
             });
         }
     }
 
-    private static void CreateLogArgumentsRecord(CodeBuilder classScope, IGrouping<string, IMethodSymbol> methodGroup)
+    private static void CreateLogArgumentsRecord(CodeBuilder classScope, IGrouping<string, MethodMetadata> methodGroup)
     {
-        var arguments = methodGroup.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
+        var arguments = methodGroup.SelectMany(t => t.Symbol.Parameters).ToLookup(t => t.Name);
         var args = string.Join(", ", arguments.Select(t => t.GenerateArgumentDeclaration()));
 
         classScope
@@ -64,48 +70,26 @@ internal partial class MethodBuilder
     ///     Builds a method and adds it to the code builder.
     /// </summary>
     /// <param name="classScope">The code builder for the class scope.</param>
-    /// <param name="methodSymbol">The method symbol to build the method from.</param>
-    /// <param name="methodCount">The count of methods built so far.</param>
+    /// <param name="method">Metadata for the method to build.</param>
     /// <returns>True if the method was built; otherwise, false.</returns>
-    private void Build(CodeBuilder classScope, IMethodSymbol methodSymbol, int methodCount)
+    private void Build(CodeBuilder classScope, MethodMetadata method)
     {
-        if (methodSymbol.ReturnsByRef)
+        if (method.ReturnsByRef)
         {
-            throw new RefReturnTypeNotSupportedException(methodSymbol, methodSymbol.ContainingType);
+            throw new RefReturnTypeNotSupportedException(method);
         }
 
-        var (methodParameters, nameList) = methodSymbol.ParameterStrings();
-
-        var (name, returnType, returnString) = methodSymbol.MethodMetadata();
-
-        var (containingSymbol, accessibilityString, overrideString) = methodSymbol.Overwrites();
-
-        var (delegateName, _, _) = methodSymbol.GetDelegateInfo(methodCount);
-        this.methodDelegateName.Add(methodSymbol, delegateName);
-
-        var functionPointer = methodCount == 1 ? $"_{name}" : $"_{name}_{methodCount}";
-
-        var genericString = methodSymbol.GenericString();
-        var castString = methodSymbol is { IsGenericMethod: true, ReturnsVoid: false } ? " (" + returnType + ") " : "";
-
-        var signature = $"{accessibilityString}{overrideString}{returnType} {containingSymbol}{name}{genericString}({methodParameters})";
+        var valueSetters = string.Join("", method.Symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"));
 
         classScope
-            .Scope(signature, methodScope => methodScope
-                .Add($"this._log(new {methodSymbol.Name}_Arguments(this._sweetMockInstanceName, \"{methodSymbol.ToDisplayString(Format.SignatureOnlyFormat)}\"{string.Join("", methodSymbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"))}));")
-                .Scope($"if (this.{functionPointer} is null)", ifScope =>
-                    ifScope.Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{methodSymbol.Name}\", this._sweetMockInstanceName);"))
-                .Add($"{returnString}{castString}this.{functionPointer}.Invoke({nameList});")
-            )
+            .Documentation($"Delegate for mocking calls to {method.ToSeeCRef}.")
+            .Add($"public delegate {method.DelegateType} {method.DelegateName}({method.DelegateParameters});")
             .BR()
-            .Add($"private {this.context.ConfigName}.{delegateName}? {functionPointer} {{get;set;}} = null;")
+            .Add($"private {method.DelegateName} {method.FunctionPointer} {{get;set;}} = null!;")
+            .BR()
+            .Scope(method.Signature, methodScope => methodScope
+                .Add($"this._log(new {method.Name}_Arguments(this._sweetMockInstanceName, \"{method.FullName}\"{valueSetters}));")
+                .Add($"{method.ReturnString}{method.CastString}this.{method.FunctionPointer}.Invoke({method.NameList});"))
             .BR();
     }
-}
-
-internal partial class MethodBuilder
-{
-    internal record DelegateInfo(string Name, string Type, string Parameters);
-
-    internal record MethodInfo(string Name, string ReturnType, string ReturnString);
 }

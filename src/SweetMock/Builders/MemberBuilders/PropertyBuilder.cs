@@ -84,18 +84,14 @@ internal class PropertyBuilder(MockContext context)
                 .AddIf(hasGet, get => get
                     .Scope("get", getScope => getScope
                         .Add($"this._log(new {propertyName}_Arguments(this._sweetMockInstanceName, \"get\"));")
-                        .Scope($"if (this._{propertyName}_get is null)", ifScope => ifScope
-                            .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{propertyName}\", this._sweetMockInstanceName);"))
                         .Add($"return this._{propertyName}_get();")))
                 .AddIf(hasSet, set => set
                     .Scope(setType, setScope => setScope
                         .Add($"this._log(new {propertyName}_Arguments(this._sweetMockInstanceName, \"set\", value : value));")
-                        .Scope($"if (this._{propertyName}_set is null)", ifScope => ifScope
-                            .Add($"throw new global::SweetMock.NotExplicitlyMockedException(\"{propertyName}\", this._sweetMockInstanceName);"))
                         .Add($"this._{propertyName}_set(value);"))))
             .BR()
-            .AddIf(hasGet, () => $"private System.Func<{type}>? _{propertyName}_get {{ get; set; }} = null;")
-            .AddIf(hasSet, () => $"private System.Action<{type}>? _{propertyName}_set {{ get; set; }} = null;")
+            .AddIf(hasGet, () => $"private System.Func<{type}> _{propertyName}_get {{ get; set; }} = null!;")
+            .AddIf(hasSet, () => $"private System.Action<{type}> _{propertyName}_set {{ get; set; }} = null!;")
             .BR();
     }
 
@@ -103,7 +99,7 @@ internal class PropertyBuilder(MockContext context)
         builder.AddToConfig(context, config =>
         {
             this.AddGetSetConfiguration(config, symbol);
-
+            this.AddThrowConfiguration(config, symbol);
             this.AddValueConfiguration(config, symbol);
         });
 
@@ -127,6 +123,23 @@ internal class PropertyBuilder(MockContext context)
             );
     }
 
+    private void AddThrowConfiguration(CodeBuilder config, IPropertySymbol symbol)
+    {
+        var hasGet = symbol.GetMethod != null;
+        var hasSet = symbol.SetMethod != null;
+        var name = symbol.Name;
+
+        config.Documentation(doc => doc
+                .Summary("Configures the mock to throw the specified exception when the property is accessed.", $"Configures {symbol.ToSeeCRef()}")
+                .Parameter("throws", "The exception to be thrown when the property is accessed.")
+                .Returns("The updated configuration object."))
+            .AddConfigMethod(context, name, ["System.Exception throws"], codeBuilder => codeBuilder
+                .AddIf(hasGet && hasSet, () => $"this.{name}(get : () => throw throws, set : _ => throw throws);")
+                .AddIf(hasGet && !hasSet, () => $"this.{name}(get : () => throw throws);")
+                .AddIf(!hasGet && hasSet, () => $"this.{name}(set : _ => throw throws);")
+            );
+    }
+
     private void AddValueConfiguration(CodeBuilder codeBuilder, IPropertySymbol property)
     {
         var hasGet = property.GetMethod != null;
@@ -138,7 +151,7 @@ internal class PropertyBuilder(MockContext context)
                 .Summary($"Specifies a value to use for mocking the property {property.ToSeeCRef()}.")
                 .Parameter("value", "The value to use for the initial value of the property.")
                 .Returns("The updated configuration object."))
-            .AddConfigExtension(context, property, [$"{propertyType} value"], builder => builder
+            .AddConfigMethod(context, property.Name, [$"{propertyType} value"], builder => builder
                 .Add($"global::SweetMock.ValueBox<{propertyType}> {property.Name}_value = new (value);")
                 .AddIf(hasGet && hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value, set : ({propertyType} value) => {property.Name}_value.Value = value);")
                 .AddIf(hasGet && !hasSet, () => $"this.{property.Name}(get : () => {property.Name}_value.Value);")

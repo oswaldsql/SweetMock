@@ -47,7 +47,44 @@ internal class BaseClassBuilder(MockContext context)
                             .Parameter("config", "Optional configuration method."))
                         .Scope($"public {context.ConfigName}({context.MockType} target, System.Action<{context.ConfigName}>? config = null)", methodScope => methodScope
                             .Add("this.target = target;")
-                            .Add("config?.Invoke(this);"));
+                            .Add("_initialize();")
+                            .Add("config?.Invoke(this);")
+                        )
+                        .BR();
+
+                    config.Add("private global::SweetMock.NotExplicitlyMockedException _createException(string name) => new (name, this.target._sweetMockInstanceName);").BR();
+
+                    var candidates = context.GetCandidates().Where(t => (t is IMethodSymbol { MethodKind: MethodKind.Ordinary }) || t is IPropertySymbol).ToLookup(t => t.Name);
+                    config
+                        .Scope("private void _initialize()", codeBuilder =>
+                        {
+                            if (candidates.Count > 0)
+                            {
+                                codeBuilder.Add("this").Indent(lambdaScope =>
+                                {
+                                    foreach (var candidate in candidates)
+                                    {
+                                        var key = candidate.Key;
+                                        switch (candidate.First())
+                                        {
+                                            case IMethodSymbol { MethodKind: MethodKind.Ordinary }:
+                                                lambdaScope.Add($".{key}(throws:this._createException(\"{key}\"))");
+                                                break;
+                                            case IPropertySymbol { IsIndexer: true }:
+                                                lambdaScope.Add($".Indexer(throws:this._createException(\"Indexer\"))");
+                                                break;
+                                            case IPropertySymbol { IsIndexer: false }:
+                                                lambdaScope.Add($".{key}(throws:this._createException(\"{key}\"))");
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                });
+
+                                codeBuilder.Add(";");
+                            }
+                        });
                 });
         });
 

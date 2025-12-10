@@ -1,3 +1,6 @@
 ﻿namespace SweetMock.Exceptions;
 
-internal class RefReturnTypeNotSupportedException(IMethodSymbol methodSymbol, ITypeSymbol typeSymbol) : SweetMockException($"Ref return type not supported for '{methodSymbol.Name}' in '{typeSymbol.Name}'");
+using Builders.MemberBuilders;
+
+internal class RefReturnTypeNotSupportedException(MethodMetadata metadata) :
+    SweetMockException($"Ref return type not supported for '{metadata.Name}' in '{metadata.Context.Name}'");

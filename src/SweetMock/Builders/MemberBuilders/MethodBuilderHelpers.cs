@@ -4,99 +4,67 @@ using Utils;
 
 internal static class MethodBuilderHelpers
 {
+    internal static ILookup<ISymbol?, MethodMetadata> GroupByReturnType(this IEnumerable<MethodMetadata> infos)
+        => infos.ToLookup(t => t.ReturnType, SymbolEqualityComparer.Default);
 
+    private static bool IsMethodTypeParameter(this ITypeSymbol type) =>
+        type is ITypeParameterSymbol { TypeParameterKind: TypeParameterKind.Method, DeclaringMethod: not null };
 
-    extension(ITypeSymbol type)
+    internal static bool IsReturnTypeDerivedFromGeneric(this IMethodSymbol symbol)
     {
-        internal bool IsMethodTypeParameter() =>
-            type is ITypeParameterSymbol { TypeParameterKind: TypeParameterKind.Method, DeclaringMethod: not null };
+        var returnType = symbol.ReturnType as INamedTypeSymbol;
+        return returnType?.TypeArguments.Any(IsMethodTypeParameter) == true;
     }
 
-    extension(IEnumerable<IMethodSymbol> candidate)
+    internal static IEnumerable<IParameterSymbol> OutParameters(this IMethodSymbol symbol) =>
+        symbol.Parameters.Where(t => t.RefKind == RefKind.Out);
+
+    internal static bool HasOutParameters(this IMethodSymbol symbol) =>
+        symbol.Parameters.Any(t => t.RefKind == RefKind.Out);
+
+    internal static IEnumerable<ParameterInfo> GetParameterInfos(this IMethodSymbol symbol)
     {
-        internal bool IsReturnTypeDerivedFromGeneric()
+        if (!symbol.IsGenericMethod)
         {
-            var returnType = candidate.First().ReturnType as INamedTypeSymbol;
-            var nop = returnType?.TypeArguments.Any(IsMethodTypeParameter);
-            return nop == true;
+            foreach (var t in symbol.Parameters)
+            {
+                yield return new(t.Type.ToString(), t.Name, t.OutAsString(), t.Name);
+            }
+
+            yield break;
+        }
+
+        foreach (var parameter in symbol.Parameters)
+        {
+            if (parameter.Type is { TypeKind: TypeKind.TypeParameter, ContainingSymbol: IMethodSymbol })
+            {
+                yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
+            }
+            else if (((INamedTypeSymbol)parameter.Type).IsGenericType)
+            {
+                yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
+            }
+            else
+            {
+                yield return new(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name);
+            }
+        }
+
+        foreach (var typeArgument in symbol.TypeArguments)
+        {
+            yield return new("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")");
         }
     }
 
-    extension(IEnumerable<IParameterSymbol> parameters) {
-        internal IEnumerable<IParameterSymbol> OutParams() => parameters.Where(t => t.RefKind == RefKind.Out);
-    }
-
-    extension(IMethodSymbol symbol)
+    internal static string GenericString(this IMethodSymbol symbol)
     {
-        internal IEnumerable<IParameterSymbol> OutParameters() =>
-            symbol.Parameters.OutParams();
-
-        internal bool HasOutParameters() =>
-            symbol.OutParameters().Any();
-
-        internal MethodBuilder.DelegateInfo GetDelegateInfo(int methodCount)
+        if (!symbol.IsGenericMethod)
         {
-            var delegateName = methodCount == 1 ? $"DelegateFor_{symbol.Name}" : $"DelegateFor_{symbol.Name}_{methodCount}";
-            var delegateType = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? "object" : symbol.ReturnType.ToString();
-
-            var parameterList = GetParameterInfos(symbol).ToString(p => $"{p.OutString}{p.Type} {p.Name}");
-
-            return new(delegateName, delegateType, parameterList);
+            return "";
         }
 
-        internal IEnumerable<ParameterInfo> GetParameterInfos()
-        {
-            if (!symbol.IsGenericMethod)
-            {
-                foreach (var t in symbol.Parameters)
-                {
-                    yield return new(t.Type.ToString(), t.Name, t.OutAsString(), t.Name);
-                }
-
-                yield break;
-            }
-
-            foreach (var parameter in symbol.Parameters)
-            {
-                if (parameter.Type is { TypeKind: TypeKind.TypeParameter, ContainingSymbol: IMethodSymbol })
-                {
-                    yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
-                }
-                else if (((INamedTypeSymbol)parameter.Type).IsGenericType)
-                {
-                    yield return new("System.Object", parameter.Name, parameter.OutAsString(), parameter.Name);
-                }
-                else
-                {
-                    yield return new(parameter.Type.ToString(), parameter.Name, parameter.OutAsString(), parameter.Name);
-                }
-            }
-
-            foreach (var typeArgument in symbol.TypeArguments)
-            {
-                yield return new("System.Type", "typeOf_" + typeArgument.Name, "", "typeof(" + typeArgument.Name + ")");
-            }
-        }
-
-        internal MethodBuilder.MethodInfo MethodMetadata()
-        {
-            var methodName = symbol.Name;
-            var methodReturnType = symbol.ReturnType.ToString();
-            var returnString = symbol.ReturnsVoid ? "" : "return ";
-
-            return new(methodName, methodReturnType, returnString);
-        }
-
-        internal string GenericString()
-        {
-            if (!symbol.IsGenericMethod)
-            {
-                return "";
-            }
-
-            var typeArguments = symbol.TypeArguments;
-            var types = string.Join(", ", typeArguments.Select(t => t.Name));
-            return $"<{types}>";
-        }
+        var typeArguments = symbol.TypeArguments;
+        var types = string.Join(", ", typeArguments.Select(t => t.Name));
+        return $"<{types}>";
     }
 }
