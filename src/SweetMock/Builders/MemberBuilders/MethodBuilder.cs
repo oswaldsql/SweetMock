@@ -2,14 +2,13 @@ namespace SweetMock.Builders.MemberBuilders;
 
 using Exceptions;
 using Generation;
-using Utils;
 
 /// <summary>
 ///     Represents a builder for methods, implementing the ISymbolBuilder interface.
 /// </summary>
 internal partial class MethodBuilder
 {
-    public ILookup<string, MethodMetadata> AllMethods { get; set; }
+    private ILookup<string, MethodMetadata> AllMethods { get; set; }
 
     private MethodBuilder(IEnumerable<IMethodSymbol> methods, MockContext context)
     {

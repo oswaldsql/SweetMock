@@ -184,8 +184,8 @@ internal partial class MethodBuilder
                         var str = method.ReturnTypeString switch
                         {
                             "void" => $"this.{method.Name}(call: ({method.DelegateName})(({parameterList}) => {{}}));",
-                            "System.Threading.Tasks.Task" => $"this.{method.Name}(call: ({method.DelegateName})(({parameterList}) => System.Threading.Tasks.Task.CompletedTask));",
-                            "System.Threading.Tasks.ValueTask" => $"this.{method.Name}(call: ({method.DelegateName})(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask));",
+                            "global::System.Threading.Tasks.Task" => $"this.{method.Name}(call: ({method.DelegateName})(({parameterList}) => System.Threading.Tasks.Task.CompletedTask));",
+                            "global::System.Threading.Tasks.ValueTask" => $"this.{method.Name}(call: ({method.DelegateName})(({parameterList}) => System.Threading.Tasks.ValueTask.CompletedTask));",
                             _ => ""
                         };
 
