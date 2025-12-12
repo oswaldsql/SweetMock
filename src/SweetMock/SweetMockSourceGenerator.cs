@@ -158,9 +158,8 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
             }
         }
 
-        foreach (var customMock in customMocks)
+        foreach (var customMockType in customMocks.Select(customMock => FirstGenericType(customMock)))
         {
-            var customMockType = FirstGenericType(customMock);
             collectedMocks.RemoveAll(t => SymbolEqualityComparer.Default.Equals(customMockType, t.Type));
         }
 

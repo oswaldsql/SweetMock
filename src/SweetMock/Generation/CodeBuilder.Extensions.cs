@@ -37,6 +37,4 @@ internal partial class CodeBuilder
         this
             .Add("#nullable enable")
             .BR();
-
-    public void End() {}
 }
