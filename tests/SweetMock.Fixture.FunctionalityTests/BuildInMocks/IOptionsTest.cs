@@ -11,7 +11,9 @@ public class IOptionsTest
     public void OptionsWithAEmptyConstructorIsAutomaticallyCreated()
     {
         // Arrange
-        var fixture = Fixture.OptionsTarget();
+        var fixture = Fixture.OptionsTarget(
+//            config => config.options.Value(new TargetOptions())
+        );
         var sut = fixture.CreateOptionsTarget();
 
         // ACT
@@ -25,8 +27,10 @@ public class IOptionsTest
     public void OptionsWithASetValueIsReturned()
     {
         // Arrange
-        var fixture = Fixture.OptionsTarget(config => 
-            config.options.Set(new() { SomeProperty = "Set value" }));
+        var fixture = Fixture.OptionsTarget(config =>
+        {
+            config.options.Value(new() { SomeProperty = "Set value" });
+        });
         var sut = fixture.CreateOptionsTarget();
 
         // ACT
@@ -41,22 +45,26 @@ public class IOptionsTest
     {
         // Arrange
         var fixture = Fixture.OptionsTarget2();
+
+        var sut = fixture.CreateOptionsTarget2();
         
         // ACT
-        var actual = Record.Exception(() => fixture.CreateOptionsTarget2());
+        var actual = Record.Exception(() => sut.ReturnOptionValue());
 
         // Assert
-        var actualException = Assert.IsType<ArgumentNullException>(actual);
-        Assert.StartsWith("'options' must have a value before being used.", actualException.Message);
-        Assert.Equal("options", actualException.ParamName);
+        var actualException = Assert.IsType<NotExplicitlyMockedException>(actual);
+        Assert.StartsWith("'Value' in 'options' is not explicitly mocked.", actualException.Message);
+        Assert.Equal("Value", actualException.MemberName);
     }
         
     [Fact]
     public void OptionsWithACtorShouldWorkIfSet()
     {
         // Arrange
-        var fixture = Fixture.OptionsTarget2(config => 
-            config.options.Set(new("Ctor value")));
+        var fixture = Fixture.OptionsTarget2(config =>
+        {
+            config.options.Value(new("Ctor value"));
+        });
         var sut = fixture.CreateOptionsTarget2();
 
         // ACT

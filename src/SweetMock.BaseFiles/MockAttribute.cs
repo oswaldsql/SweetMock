@@ -18,6 +18,4 @@ public class MockAttribute<T>(string? mockName = null) : Attribute
 /// <typeparam name="T">Type of class to mock.</typeparam>
 /// <typeparam name="TImplementation">Concrete type of use for mocking.</typeparam>
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
-public class MockAttribute<T, TImplementation> : Attribute
-    where TImplementation : MockBase<T>, new()
-;
+public class MockAttribute<T, TImplementation> : Attribute;

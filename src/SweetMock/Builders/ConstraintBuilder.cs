@@ -1,20 +1,9 @@
 ﻿namespace SweetMock.Builders;
 
-using System.Collections.Immutable;
-
 public static class ConstraintBuilder
 {
-    /// <summary>
-    ///     Converts an array of type arguments to a constraints string.
-    /// </summary>
-    /// <param name="typeArguments">The type arguments to convert.</param>
-    /// <returns>A string representing the constraints.</returns>
-    public static string ToConstraints(this ImmutableArray<ITypeSymbol> typeArguments) =>
-        string.Join(" ", typeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
-
     public static string ToConstraints(this INamedTypeSymbol symbol) =>
         string.Join(" ", symbol.TypeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));
-
 
     /// <summary>
     ///     Converts a type parameter symbol to a constraint string.
@@ -23,14 +12,14 @@ public static class ConstraintBuilder
     /// <returns>A string representing the constraints for the type parameter.</returns>
     private static string ToConstraintString(ITypeParameterSymbol symbol)
     {
-        var results = string.Join(", ", symbol.ToConstraintElements());
+        var results = string.Join(", ", ToConstraintElements(symbol));
 
         return results.Length == 0 ? "" : " where " + symbol.Name + " : " + results;
     }
 
-    private static IEnumerable<string> ToConstraintElements(this ITypeParameterSymbol symbol)
+    private static IEnumerable<string> ToConstraintElements(ITypeParameterSymbol symbol)
     {
-        foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToString()))
+        foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToDisplayString()))
         {
             yield return ct;
         }

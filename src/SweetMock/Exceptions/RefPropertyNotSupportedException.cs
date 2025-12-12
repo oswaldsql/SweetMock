@@ -1,3 +1,5 @@
 ﻿namespace SweetMock.Exceptions;
 
-internal class RefPropertyNotSupportedException(IPropertySymbol propertySymbol, ITypeSymbol typeSymbol) : SweetMockException($"Ref property not supported for '{propertySymbol.Name}' in '{typeSymbol.Name}'");
+using Builders.MemberBuilders;
+
+internal class RefPropertyNotSupportedException(PropertyBuilder.PropertyMetadata metadata) : SweetMockException($"Ref property not supported for '{metadata.Name}' in '{metadata.Symbol.ContainingSymbol.Name}'");

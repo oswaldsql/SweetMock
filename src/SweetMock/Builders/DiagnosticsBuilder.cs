@@ -12,9 +12,8 @@ internal static class DiagnosticsBuilder
 
     public static void AddUnsupportedTargetDiagnostic(this SourceProductionContext context, IEnumerable<AttributeData> attributes, string message)
     {
-        foreach (var attribute in attributes)
+        foreach (var location in attributes.Select(t => t.GetAttributeLocation()))
         {
-            var location = attribute.GetAttributeLocation();
             var diagnostic = Diagnostic.Create(Sm0001, location, message);
             context.ReportDiagnostic(diagnostic);
         }
@@ -22,9 +21,8 @@ internal static class DiagnosticsBuilder
 
     public static void AddUnintendedTargetDiagnostic(this SourceProductionContext context, IEnumerable<AttributeData> attributes, string message)
     {
-        foreach (var attribute in attributes)
+        foreach (var location in attributes.Select(t => t.GetAttributeLocation()))
         {
-            var location = attribute.GetAttributeLocation();
             var diagnostic = Diagnostic.Create(Sm0002, location, message);
             context.ReportDiagnostic(diagnostic);
         }
@@ -32,9 +30,8 @@ internal static class DiagnosticsBuilder
 
     public static void AddUnsupportedMethodDiagnostic(this SourceProductionContext context, IEnumerable<AttributeData> attributes, string message)
     {
-        foreach (var attribute in attributes)
+        foreach (var location in attributes.Select(t => t.GetAttributeLocation()))
         {
-            var location = attribute.GetAttributeLocation();
             var diagnostic = Diagnostic.Create(Sm0003, location, message);
             context.ReportDiagnostic(diagnostic);
         }
@@ -42,9 +39,8 @@ internal static class DiagnosticsBuilder
 
     public static void AddUnknownExceptionOccured(this SourceProductionContext context, IEnumerable<AttributeData> attributes, string message)
     {
-        foreach (var attribute in attributes)
+        foreach (var location in attributes.Select(t => t.GetAttributeLocation()))
         {
-            var location = attribute.GetAttributeLocation();
             var diagnostic = Diagnostic.Create(Sm9999, location, message);
             context.ReportDiagnostic(diagnostic);
         }

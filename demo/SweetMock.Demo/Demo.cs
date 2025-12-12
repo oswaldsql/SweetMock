@@ -24,6 +24,7 @@ public class Demo
     ///     Mocks and fixtures can be added multiple times in different files but will only be created once.
     ///     Mocks and fixture attributes can also be added to assemblies, methods, properties and a lot of other targets. But generally adding them to test classes is recommended.
     /// </remarks>
+    /// <seealso cref="IDemoDependency"/>
     [Mock<IDemoDependency>]
     [Fixture<DemoService>]
     public class AttributeUsage
@@ -121,7 +122,7 @@ public class Demo
     public void UnConfiguredDependenciesThrowsException()
     {
         // Arrange
-        var fixture = Fixture.DemoService(config =>
+        var fixture = Fixture.DemoService(_ =>
         {
             //No dependencies configured.
         });
@@ -160,8 +161,8 @@ public class Demo
     }
 
     // Methode
-    // - Generic
     // - Basic usage
+    // - Generic
     // - Return
     // - Task ValueTask
     // - ReturnValues

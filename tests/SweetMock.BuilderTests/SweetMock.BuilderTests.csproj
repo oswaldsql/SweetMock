@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
@@ -12,18 +12,18 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
         <PackageReference Include="xunit" Version="2.9.3" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="xunit.analyzers" Version="1.24.0">
+        <PackageReference Include="xunit.analyzers" Version="1.26.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -32,7 +32,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
 
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
     </ItemGroup>
     
     <ItemGroup>
@@ -40,7 +40,8 @@
     </ItemGroup>
     
     <ItemGroup>
-      <ProjectReference Include="..\..\src\SweetMock\SweetMock.csproj" />
+        <ProjectReference Include="..\..\src\SweetMock\SweetMock.csproj" />
+        <ProjectReference Include="..\..\src\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
     </ItemGroup>
 
 </Project>

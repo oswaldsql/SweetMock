@@ -3,27 +3,33 @@
 using Microsoft.Extensions.Logging;
 
 [Fixture<ILoggerTarget>]
-public class ILoggerTests
+public class ILoggerTests(ITestOutputHelper  outputHelper)
 {
     [Fact]
     public void LogMessagesAreWrittenToTheCallLog()
     {
         // Arrange
-        var fixture = Fixture.ILoggerTarget();
+        var fixture = Fixture.ILoggerTarget(config => config
+            .logger.SetLogLevel(LogLevel.Warning)
+        );
         var sut = fixture.CreateILoggerTarget();
 
         // ACT
         sut.SomeMethod("Some name");
 
-        // Assert 
-        var intoItem = Assert.Single(fixture.Log.Log(args => args.logLevel == LogLevel.Information));
-        Assert.Equal("Some method was called with the name 'Some name'", intoItem.message);
-        Console.WriteLine(intoItem.state.ToString());
+        var logs = fixture.Calls.logger;
+        foreach (var logArguments in logs.Log())
+        {
+            outputHelper.WriteLine(logArguments.ToString());
+        }
         
-        var errorItem = Assert.Single(fixture.Log.Log(args => args.logLevel == LogLevel.Error));
+        // Assert 
+        var intoItem = Assert.Single(logs.Log(args => args.logLevel == LogLevel.Information));
+        Assert.Equal("Some method was called with the name 'Some name'", intoItem.message);
+        
+        var errorItem = Assert.Single(logs.Log(args => args.logLevel == LogLevel.Error));
         Assert.Equal("A Exception of type ArgumentException was thrown in SomeMethod", errorItem.message);
         Assert.IsType<ArgumentException>(errorItem.exception);
-        Console.WriteLine(errorItem.state.ToString());
     }
     
     public class ILoggerTarget(ILogger<ILoggerTarget> logger)

@@ -10,7 +10,8 @@ public class OverloadedMethodTests(ITestOutputHelper output)
     public void OverloadedMethod_WhenNotInitialized_AllOverloadsShouldThrowException()
     {
         // Arrange
-        var sut = Mock.IOverloadedMethods();
+        var logger = new CallLog();
+        var sut = Mock.IOverloadedMethods(_ => {}, new(logger));
 
         // Act
 
@@ -19,8 +20,20 @@ public class OverloadedMethodTests(ITestOutputHelper output)
         Assert.Throws<NotExplicitlyMockedException>(() => sut.OverloadedMethod("name"));
         Assert.Throws<NotExplicitlyMockedException>(() => sut.OverloadedMethod("name", 10));
         Assert.Throws<NotExplicitlyMockedException>(() => sut.OverloadedMethod(10, "name"));
+
+        var logs = new OverloadedMethodTests_Logs(logger);
+        foreach (var overloadedMethodArguments in logs.OverloadedMethod(arguments => arguments.name == "name"))
+        {
+            output.WriteLine(overloadedMethodArguments.ToString());
+        } 
     }
 
+    internal class OverloadedMethodTests_Logs(CallLog log)
+    {
+        public IEnumerable<MockOf_IOverloadedMethods.OverloadedMethod_Arguments> OverloadedMethod(Func<MockOf_IOverloadedMethods.OverloadedMethod_Arguments, bool>? filter = null) => 
+            log.Calls.OfType<MockOf_IOverloadedMethods.OverloadedMethod_Arguments>().Where(filter ?? (_ => true));
+    }
+    
     [Fact]
     public void OverloadedMethod_WhenMockNotInitialized_ShouldThrowException()
     {
@@ -87,6 +100,8 @@ public class OverloadedMethodTests(ITestOutputHelper output)
         int OverloadedMethod();
         string OverloadedMethod(string name);
         string OverloadedMethod(string name, int value);
+        string OverloadedMethod(string name, int? value, DateTime? date);
         string OverloadedMethod(int value, string name);
+        string OverloadedMethod<T>(T generic);
     }
 }

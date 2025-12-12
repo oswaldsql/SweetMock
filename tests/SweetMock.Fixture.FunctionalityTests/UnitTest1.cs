@@ -6,21 +6,20 @@ using Repo;
 [Fixture<GenericFixtureTarget<TestTarget2>>]
 [Mock<GenericMockTarget<TestTarget2>>]
 [Mock<IExplicitMock>]
-[Mock<ICustomMock, MockOf_ICustomMock>]
 public class CreateSutArgumentsTest
 {
     [Fact]
     public void Test1()
     {
-        var fix = Fixture.TestTarget(config =>
+        var fixture = Fixture.TestTarget(config =>
         {
 //            config.directValue = "directValue";
             config.imp.ImplicitValue("ImplicitValue");
             config.explicitMock.ExplicitValue("ExplicitValue");
-            config.customMock.Value = new CustomMockImplementation();
+            //config.customMock.Value = new CustomMockImplementation();
         });
 
-        var sut = fix.CreateTestTarget("directValue");
+        var sut = fixture.CreateTestTarget("directValue");
 
         Assert.Equal("directValue", sut.GetDirectValue());
         var actual = Assert.Throws<NotExplicitlyMockedException>(() => sut.GetImplicitValue());
@@ -29,6 +28,8 @@ public class CreateSutArgumentsTest
         Assert.Equal("imp", actual.InstanceName);
 
         Assert.True(true);
+
+        fixture.Calls.imp.ImplicitValue(arguments => arguments.value == "432");
     }
 
     [Fact]
@@ -110,11 +111,12 @@ public class GenericMockTarget
     }
 }
 
-public class GenericFixtureTarget<T> where T : new()
+public class GenericFixtureTarget<T>(int number) where T : new()
 {
+    public string GetName() => "Name #" + number;
 };
 
-public class TestTarget2
+public class TestTarget2()
 {
 }
 
@@ -162,27 +164,7 @@ public class CustomMockImplementation : ICustomMock
     public string CustomValue { get; set; } = "";
 }
 
-internal class MockOf_ICustomMock() : MockBase<ICustomMock>(new CustomMockImplementation());
-
-//internal class MockOf_ICustomMock(Action<WrapperMock<ICustomMock>.MockConfig>? config, MockOptions? options = null) : WrapperMock<ICustomMock>(config, options)
-//{
-//}
-
-public class Test
-{
-    [Fact]
-    public void METHOD()
-    {
-        var mockOfICustomMock2 = new MockOf_ICustomMock2();
-        // Arrange
-
-        // ACT
-
-        // Assert 
-    }
-}
-
-internal class MockOf_ICustomMock2() : WrapperMock2<ICustomMock>(new CustomMockImplementation());
+//internal class MockOfICustomMock() : MockBase<ICustomMock>(new CustomMockImplementation());
 
 internal class WrapperMock2<TInterface>
 {

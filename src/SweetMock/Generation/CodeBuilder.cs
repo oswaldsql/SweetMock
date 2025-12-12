@@ -2,8 +2,16 @@ namespace SweetMock.Generation;
 
 using System.Text;
 
-internal class CodeBuilder
+internal partial class CodeBuilder
 {
+    public CodeBuilder() { }
+
+    public CodeBuilder(CodeBuilder innerBuilder)
+    {
+        this.result = innerBuilder.result;
+        this.indentation = innerBuilder.indentation;
+    }
+
     private readonly StringBuilder result = new();
 
     private const int MaxIndent = 50;
@@ -27,21 +35,44 @@ internal class CodeBuilder
         return this;
     }
 
+    public CodeBuilder Indent(Action<CodeBuilder> action) =>
+        this.Indent()
+            .Apply(action)
+            .Unindent();
+
+
     public CodeBuilder Unindent()
     {
         this.indentation -= 1;
 
-        if (this.indentation < 0)
-        {
-            throw new("Indentation can not be less than 0");
-        }
-
-        return this;
+        return this.indentation < 0 ? throw new("Indentation can not be less than 0") : this;
     }
 
     public CodeBuilder Add(string line)
     {
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return this;
+        }
         this.result.Append(this.GetIndentation).AppendLine(line);
+        return this;
+    }
+
+    public CodeBuilder AddMultiple<T>(IEnumerable<T> source, Func<T, string> format)
+    {
+        foreach (var s in source)
+        {
+            this.Add(format(s));
+        }
+        return this;
+    }
+
+    public CodeBuilder AddMultiple<T>(IEnumerable<T> source, Action<CodeBuilder, T> format)
+    {
+        foreach (var s in source)
+        {
+            format(this, s);
+        }
         return this;
     }
 
@@ -51,37 +82,14 @@ internal class CodeBuilder
         return this;
     }
 
-    public CodeBuilder AddLines(string text)
-    {
-        var strings = text.Split(["\r\n", "\n"], StringSplitOptions.None);
-        foreach (var s in strings)
-        {
-            switch (s)
-            {
-                case "->":
-                    this.indentation += 1;
-                    continue;
-                case "<-":
-                    this.indentation -= 1;
-                    continue;
-                case "--":
-                    continue;
-                default:
-                    this.Add(s);
-                    break;
-            }
-        }
-
-        return this;
-    }
-
-    public CodeBuilder AddLineBreak()
+    public CodeBuilder BR()
     {
         this.result.AppendLine();
         return this;
     }
 
-    public CodeBuilder AddIf(bool condition, Func<string> add) => condition ? this.Add(add()) : this;
+    public CodeBuilder AddIf(bool condition, Func<string> add) =>
+        condition ? this.Add(add()) : this;
 
     public CodeBuilder AddIf(bool condition, Action<CodeBuilder> builder)
     {

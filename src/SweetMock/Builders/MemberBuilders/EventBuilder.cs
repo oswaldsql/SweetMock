@@ -1,25 +1,25 @@
 namespace SweetMock.Builders.MemberBuilders;
 
 using Generation;
-using Utils;
 
 /// <summary>
 ///     Represents a builder for events, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class EventBuilder(MockContext context)
+internal partial class EventBuilder(MockInfo mock)
 {
-    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IEventSymbol> events)
+    public static void Render(CodeBuilder classScope, MockInfo mock)
     {
-        var builder = new EventBuilder(context);
+        var events = mock.Candidates.OfType<IEventSymbol>();
+        var builder = new EventBuilder(mock);
         builder.Build(classScope, events);
     }
 
-    public void Build(CodeBuilder classScope, IEnumerable<IEventSymbol> events)
+    private void Build(CodeBuilder classScope, IEnumerable<IEventSymbol> rawEvents)
     {
-        var lookup = events.ToLookup(t => t.Name);
-        foreach (var m in lookup)
+        var events = rawEvents.ToLookup(t => t.Name, symbol => new EventMetadata(symbol));
+        foreach (var evnt in events)
         {
-            this.BuildEvents(classScope, m.ToArray());
+            this.BuildEvents(classScope, evnt);
         }
     }
 
@@ -27,100 +27,101 @@ internal class EventBuilder(MockContext context)
     ///     Builds the events based on the given symbols and adds them to the code builder.
     /// </summary>
     /// <param name="classScope"></param>
-    /// <param name="eventSymbols">The event symbols to build.</param>
+    /// <param name="events">The event symbols to build.</param>
     /// <returns>True if any events were built; otherwise, false.</returns>
-    private void BuildEvents(CodeBuilder classScope, IEventSymbol[] eventSymbols)
-    {
-        var name = eventSymbols.First().Name;
-
-        classScope.Region($"Event : {name}", builder =>
+    private void BuildEvents(CodeBuilder classScope, IGrouping<string, EventMetadata> events) =>
+        classScope.Region($"Event : {events.Key}", builder =>
         {
-            var eventCount = 1;
-            foreach (var symbol in eventSymbols)
+            CreateLogArgumentsRecord(classScope, events.Key);
+
+            foreach (var evnt in events)
             {
-                this.BuildEvent(builder, symbol, eventCount);
-                eventCount++;
+                this.BuildEvent(builder, evnt);
+                this.BuildConfigExtensions(builder, evnt);
             }
         });
+
+    private static void CreateLogArgumentsRecord(CodeBuilder classScope, string name) =>
+        classScope
+            .Add($"public record {name}_Arguments(")
+            .Indent(scope => scope
+                .Add("global::System.String? InstanceName,")
+                .Add("global::System.String MethodSignature")
+            )
+            .Add($") : ArgumentBase(_containerName, \"{name}\", MethodSignature, InstanceName);")
+            .BR();
+
+    private void BuildEvent(CodeBuilder regionScope, EventMetadata evnt)
+    {
+        var signature = evnt.Symbol.ContainingType.TypeKind == TypeKind.Interface ?
+            $"event {evnt.ReturnTypeString}? {evnt.ContainingSymbolString}.{evnt.Name}"
+            :$"{evnt.AccessibilityString} override event {evnt.ReturnTypeString}? {evnt.Name}";
+
+        regionScope
+            .Add($"private event {evnt.ReturnTypeString}? _{evnt.Name};")
+            .Scope(signature, eventScope => eventScope
+                .Scope("add", addScope => addScope
+                    .Add($"this._log(new {evnt.Name}_Arguments(this._sweetMockInstanceName, \"add\"));")
+                    .Add($"this._{evnt.Name} += value;"))
+                .Scope("remove", removeScope => removeScope
+                    .Add($"this._log(new {evnt.Name}_Arguments(this._sweetMockInstanceName, \"remove\"));")
+                    .Add($"this._{evnt.Name} -= value;"))
+            )
+            .BR();
     }
 
-    /// <summary>
-    ///     Builds an individual event and adds it to the code builder.
-    /// </summary>
-    /// <param name="builder">The code builder to add the event to.</param>
-    /// <param name="symbol">The event symbol to build.</param>
-    /// <param name="eventCount">The count of the event being built.</param>
-    /// <returns>True if any events were built; otherwise, false.</returns>
-    private void BuildEvent(CodeBuilder builder, IEventSymbol symbol, int eventCount)
+    private void BuildConfigExtensions(CodeBuilder regionScope, EventMetadata evnt) =>
+        regionScope
+            .AddToConfig(mock, configScope =>
+                {
+                    this.GenerateTriggerMethod(configScope, evnt);
+                    this.GenerateEventTriggerConfig(configScope, evnt);
+                }
+            );
+
+    private void GenerateTriggerMethod(CodeBuilder config, EventMetadata evnt)
     {
-        var eventName = symbol.Name;
-        var invokeMethod = symbol.Type.GetMembers().OfType<IMethodSymbol>().First(t => t.Name == "Invoke");
-        var types = string.Join(" , ", invokeMethod.Parameters.Skip(1).Select(t => t.Type));
-        var typeSymbol = symbol.Type.ToString().Trim('?');
-
-        var eventFunction = eventCount == 1 ? eventName : $"{eventName}_{eventCount}";
-
-        var (containingSymbol, accessibilityString, overrideString) = symbol.Overwrites();
-
-        builder.Add($"private event {typeSymbol}? _{eventFunction};");
-
-        var signature = $"{accessibilityString}{overrideString} event {typeSymbol}? {containingSymbol}{eventName}";
-        builder.Scope(signature, eventScope => eventScope
-            .Scope("add", addScope => addScope
-                .BuildLogSegment(context, symbol.AddMethod, true)
-                .Add($"this._{eventFunction} += value;"))
-            .Scope("remove", removeScope => removeScope
-                .BuildLogSegment(context, symbol.RemoveMethod, true)
-                .Add($"this._{eventFunction} -= value;"))
-        );
-
-        builder.AddToConfig(context, config =>
-            {
-                config.Documentation($"Returns a action delegate to invoke when {symbol.ToSeeCRef()} should be triggered.");
-
-                if (types == "System.EventArgs")
-                    config.AddConfigMethod(context, eventName, ["out System.Action trigger"], codeBuilder => codeBuilder
-                        .Add($"trigger = () => target._{eventName}?.Invoke(target, System.EventArgs.Empty);"));
-                else
-                    config.AddConfigMethod(context, eventName, [$"out System.Action<{types}> trigger"], codeBuilder => codeBuilder
-                        .Add($"trigger = args => target._{eventName}?.Invoke(target, args);")
-                    );
-
-                this.GenerateEventTriggerConfig(builder, symbol);
-            }
-        );
+        if (evnt.ArgumentString == "global::System.EventArgs")
+        {
+            config
+                .Documentation($"Returns a action delegate to invoke when {evnt.ToSeeCRef} should be triggered.")
+                .AddConfigMethod(mock, evnt.Name, ["out System.Action trigger"], codeBuilder => codeBuilder
+                    .Add($"trigger = () => target._{evnt.Name}?.Invoke(target, System.EventArgs.Empty);"));
+        }
+        else
+        {
+            config
+                .Documentation($"Returns a action delegate to invoke when {evnt.ToSeeCRef} should be triggered.")
+                .AddConfigMethod(mock, evnt.Name, [$"out System.Action<{evnt.ArgumentString}> trigger"], codeBuilder => codeBuilder
+                    .Add($"trigger = args => target._{evnt.Name}?.Invoke(target, args);")
+                );
+        }
     }
 
-    private void GenerateEventTriggerConfig(CodeBuilder codeBuilder, IEventSymbol eventSymbol)
+    private void GenerateEventTriggerConfig(CodeBuilder codeBuilder, EventMetadata evnt)
     {
-        var types = string.Join(" , ", ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type));
+        codeBuilder.BR();
 
-        codeBuilder.AddLineBreak();
-
-        if (types != "System.EventArgs")
+        if (evnt.ArgumentString != "global::System.EventArgs")
         {
             codeBuilder
                 .Documentation(doc => doc
-                    .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
+                    .Summary($"Triggers the event {evnt.ToSeeCRef} directly.")
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."))
-                .AddConfigExtension(context, eventSymbol, [types + " eventArgs"], config =>
-                {
-                    config.Add($"this.{eventSymbol.Name}(out var trigger);");
-                    config.Add("trigger.Invoke(eventArgs);");
-                });
+                .AddConfigMethod(mock, evnt.Name, [evnt.ArgumentString + " eventArgs"], config => config
+                    .Add($"this.{evnt.Name}(out var trigger);")
+                    .Add("trigger.Invoke(eventArgs);"));
         }
         else
         {
             codeBuilder
                 .Documentation(doc => doc
-                    .Summary($"Triggers the event {eventSymbol.ToSeeCRef()} directly.")
+                    .Summary($"Triggers the event {evnt.ToSeeCRef} directly.")
                     .Returns("The updated configuration object."))
-                .AddConfigExtension(context, eventSymbol, [], config =>
-                {
-                    config.Add($"this.{eventSymbol.Name}(out var trigger);");
-                    config.Add("trigger.Invoke();");
-                });
+                .AddConfigMethod(mock, evnt.Name, [], config => config
+                    .Add($"this.{evnt.Name}(out var trigger);")
+                    .Add("trigger.Invoke();"));
         }
     }
 }

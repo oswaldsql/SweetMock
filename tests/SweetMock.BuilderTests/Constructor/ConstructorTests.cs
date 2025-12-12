@@ -14,7 +14,7 @@ public class ConstructorTests(ITestOutputHelper testOutputHelper)
 
         var code = generate.syntaxTrees.ToArray();
 
-        testOutputHelper.DumpResult(code, generate.diagnostics);
+        testOutputHelper.DumpResult(generate.diagnostics);
 
         Assert.Empty(generate.GetWarnings());
     }
@@ -86,5 +86,32 @@ public class ConstructorTests(ITestOutputHelper testOutputHelper)
 
     public abstract class AbstractClass
     {
+    }
+}
+
+public class PrivateConstructorClassTests(ITestOutputHelper testOutputHelper)
+{
+    [Fact]
+    public void MockingClassWithOnlyPrivateConstructorShouldFail()
+    {
+        var source = Build.TestClass<TestTargetClass>();
+
+        var generate = new SweetMockSourceGenerator().Generate(source);
+
+        var code = generate.syntaxTrees.ToArray();
+
+        testOutputHelper.DumpResult(generate.diagnostics);
+
+        var error = Assert.Single(generate.GetErrors());
+        
+        Assert.Equal("SM0001", error.Id);
+    }
+    
+    public class TestTargetClass
+    {
+        private TestTargetClass()
+        {
+            
+        }
     }
 }

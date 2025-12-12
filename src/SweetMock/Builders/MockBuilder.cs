@@ -1,30 +1,26 @@
 ﻿namespace SweetMock.Builders;
 
 using Generation;
+using MemberBuilders;
 
 public class MockBuilder
 {
-    public string BuildFiles(INamedTypeSymbol target, out MockContext context)
+    public string BuildFiles(INamedTypeSymbol target, out MockInfo mock)
     {
-        var mockContext = new MockContext(target);
+        var mockInfo = MockInfo.Generated(target);
+        mock = mockInfo;
 
         var result = new CodeBuilder();
 
-        result.AddFileHeader();
-
-        result
+        return result
+            .AddFileHeader()
+            .AddResharperDisable()
             .Nullable()
-            .Usings("global::System.Linq","global::System","global::SweetMock")
-            .Scope($"namespace {mockContext.Source.ContainingNamespace}", namespaceScope =>
-            {
-                var builder = new BaseClassBuilder(mockContext);
-                builder.BuildMockClass(namespaceScope)
-                    .AddLineBreak()
-                    .BuildLogExtensionsClass(mockContext);
-            });
-
-        context = mockContext;
-        return result.ToString();
+            .Add($"namespace {mockInfo.Namespace};")
+            .Usings("global::SweetMock", "System.Linq")
+            .BuildBaseClass(mockInfo)
+            .BuildLogExtensionsClass(mockInfo)
+            .ToString();
     }
 
     public static bool CanBeMocked(ISymbol? symbol) =>

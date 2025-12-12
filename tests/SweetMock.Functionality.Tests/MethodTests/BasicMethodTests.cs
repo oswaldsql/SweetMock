@@ -13,7 +13,7 @@ public class BasicMethodTests
         var sut = Mock.IBasicMethods();
 
         // Act
-        var actual = Assert.Throws<SweetMock.NotExplicitlyMockedException>(() => sut.VoidWithoutParameters());
+        var actual = Assert.Throws<NotExplicitlyMockedException>(() => sut.VoidWithoutParameters());
 
         // Assert
         Assert.NotNull(actual);
@@ -105,9 +105,10 @@ public class BasicMethodTests
     public void CallsShouldBeLoggedToTheLogger()
     {
         // Arrange
-        var logger = new CallLog();
-        var options = new MockOptions(logger);
-        var sut = Mock.IBasicMethods(c => c.ReturnWithParameters(_ =>  "test"), options);
+        MockOf_IBasicMethods.IBasicMethods_Logs logger = null!;
+        var sut = Mock.IBasicMethods(c => c
+            .ReturnWithParameters(_ =>  "test")
+            .GetCallLogs(out logger));
 
         // Act
         sut.ReturnWithParameters("dfa1");

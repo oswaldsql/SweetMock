@@ -13,7 +13,7 @@ public static class TestGenerator
     public static (SyntaxTree[] syntaxTrees, Diagnostic[] diagnostics) Generate(this IIncrementalGenerator generator,
         params string[] sourceCode)
     {
-        new MockAttribute<string>();
+        new SweetMock.MockAttribute<string>();
         
         var references = AppDomain.CurrentDomain.GetAssemblies()
             .Where(assembly => !assembly.IsDynamic)

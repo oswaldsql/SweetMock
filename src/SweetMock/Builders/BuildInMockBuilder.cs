@@ -1,15 +1,16 @@
 ﻿namespace SweetMock.Builders;
 
+using Generation;
 using Utils;
 
 public static class BuildInMockBuilder
 {
     private static Dictionary<string, Func<string>> buildInMocks = new()
     {
-        {"Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger},
-        {"System.TimeProvider", TimeProvider},
-        {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions},
-        {"System.Net.Http.HttpClient", HttpClient}
+        { "Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger },
+        { "System.TimeProvider", TimeProvider },
+        { "Microsoft.Extensions.Options.IOptions<TOptions>", IOptions },
+        { "System.Net.Http.HttpClient", HttpClient }
     };
 
     internal static IEnumerable<MockInfo> CreateBuildInMocks(List<MockTypeWithLocation> collectedMocks, SourceProductionContext spc)
@@ -24,9 +25,10 @@ public static class BuildInMockBuilder
                 if (buildInMocks.TryGetValue(displayString, out var func))
                 {
                     var source = func();
+                    source = source.Replace("{{SweetMockVersion}}", SourceGeneratorMetadata.Version.ToString());
                     spc.AddSource(symbol.ToCRef() + ".g.cs", source);
 
-                    yield return new MockInfo(symbol, symbol.ContainingNamespace + ".MockOf_" + symbol.Name, MockKind.BuildIn, "MockConfig");
+                    yield return MockInfo.BuildIn(symbol);
                     collectedMocks.RemoveAll(t => SymbolEqualityComparer.Default.Equals(t.Type, symbol));
                 }
             }

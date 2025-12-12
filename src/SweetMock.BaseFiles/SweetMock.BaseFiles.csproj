@@ -7,7 +7,7 @@
       <IsPackable>true</IsPackable>
       <ImplicitUsings>false</ImplicitUsings>
       <RootNamespace>SweetMock</RootNamespace>
-      <LangVersion>12</LangVersion>
+      <LangVersion>14</LangVersion>
     </PropertyGroup>
 
 </Project>
