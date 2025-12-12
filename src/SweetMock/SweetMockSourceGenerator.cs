@@ -90,7 +90,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
                 if (context != null)
                 {
-                    yield return new(context.Source, context.Source.ContainingNamespace + "." + context.MockName, MockKind.Generated, context.ConfigName);
+                    yield return MockInfo.Generated(context);//context.Source, context.Source.ContainingNamespace + "." + context.MockName, MockKind.Generated, context.ConfigName);
                 }
             }
         }
@@ -102,9 +102,9 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
         foreach (var mock in lookup)
         {
             var mockType = (INamedTypeSymbol)mock.Key!;
-
             var implementation = (INamedTypeSymbol)mock.First().AttributeClass!.TypeArguments[1].OriginalDefinition;
-            yield return new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format.Format2), MockKind.Wrapper, "MockConfig", implementation);
+
+            yield return MockInfo.Wrapped(mockType, implementation);
         }
     }
 
@@ -116,30 +116,28 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
     private static void AddFixtures(ImmutableArray<AttributeData> fixtures, SourceProductionContext spc, List<MockInfo> mockInfos)
     {
-        var fix = fixtures.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default);
+        var groupAttributes = fixtures.ToLookup(FirstGenericType, NamedSymbolEqualityComparer.Default);
 
-        var factoryCode = FixtureFactoryBuilder.BuildFixturesFactory(fix.Select(t => t.Key).OfType<INamedTypeSymbol>());
+        var fixtureMetadata = groupAttributes.Select(t => new FixtureBuilder.FixtureMetadata(t.Key!, t.ToArray())).ToArray();
+
+        var factoryCode = FixtureFactoryBuilder.BuildFixturesFactory(fixtureMetadata);
         spc.AddSource("SweetMock.Fixture.g.cs", factoryCode);
 
-        foreach (var fixture in fix)
+        foreach (var fixture in fixtureMetadata)
         {
             try
             {
-                var fixtureType = fixture.Key!;
-                var prefix = TypeToFileName(fixtureType);
+                var fixtureCode = FixtureBuilder.BuildFixture(fixture, mockInfos);
 
-                var fixtureFilename = prefix + ".Fixture.g.cs";
-                var fixtureCode = FixtureBuilder.BuildFixture(fixtureType, mockInfos);
-
-                spc.AddSource(fixtureFilename, fixtureCode);
+                spc.AddSource(fixture.FileName, fixtureCode);
             }
             catch (SweetMockException e)
             {
-                spc.AddUnsupportedMethodDiagnostic(fixture, e.Message);
+                spc.AddUnsupportedMethodDiagnostic(fixture.Attributes, e.Message);
             }
             catch (Exception e)
             {
-                spc.AddUnknownExceptionOccured(fixture, e.Message);
+                spc.AddUnknownExceptionOccured(fixture.Attributes, e.Message);
             }
         }
     }

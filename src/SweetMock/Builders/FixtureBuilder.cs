@@ -4,7 +4,7 @@ using System.Collections.Frozen;
 using Generation;
 using Utils;
 
-public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInfo> mockInfos)
+public partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, List<MockInfo> mockInfos)
 {
     public static IEnumerable<ITypeSymbol> GetRequiredMocks(INamedTypeSymbol symbol)
     {
@@ -18,11 +18,10 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
         }
     }
 
-    public static string BuildFixture(ISymbol source, List<MockInfo> mockInfos) =>
-        new FixtureBuilder((INamedTypeSymbol)source, mockInfos).BuildFixture();
+    public static string BuildFixture(FixtureMetadata metadata, List<MockInfo> mockInfos) =>
+        new FixtureBuilder(metadata, mockInfos).BuildFixture();
 
     private readonly FrozenDictionary<INamedTypeSymbol, MockInfo> mocks = mockInfos.ToFrozenDictionary(t => t.Source, NamedSymbolEqualityComparer.Default);
-    private readonly FixtureMetadata metadata = new(fixtureSymbol);
 
     private string BuildFixture()
     {
@@ -30,9 +29,9 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
 
         fileScope.AddFileHeader()
             .Nullable()
-            .Add($"namespace {this.metadata.Namespace};")
+            .Add($"namespace {metadata.Namespace};")
             .AddGeneratedCodeAttrib()
-            .Scope($"internal class FixtureFor_{this.metadata.Name}{this.metadata.Generics}{this.metadata.Constraints}", classScope =>
+            .Scope($"internal class FixtureFor_{metadata.Name}{metadata.Generics}{metadata.Constraints}", classScope =>
             {
                 this.AddFixtureConfigObject(classScope);
                 this.AddPrivateMockObjects(classScope);
@@ -44,8 +43,7 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
         return fileScope.ToString();
     }
 
-    private void AddFixtureConfigObject(CodeBuilder builder)
-    {
+    private void AddFixtureConfigObject(CodeBuilder builder) =>
         builder
             .Scope("internal class FixtureConfig", configScope =>
             {
@@ -53,15 +51,15 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
                 configScope.Documentation(doc =>
                     {
                         doc.Summary("Configuration object for the fixture");
-                        doc.Parameters(this.metadata.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {this.metadata.ToSeeCRef}.");
+                        doc.Parameters(metadata.Parameters, p => $"Configuring the {p.Name} ({p.Type.ToSeeCRef()}) mock for the fixture {metadata.ToSeeCRef}.");
                     })
                     .Scope($"internal FixtureConfig({configParameters})", ctorScope =>
                         ctorScope
-                            .AddMultiple(this.metadata.Parameters, parameter => $"this.{parameter.Name} = {parameter.Name};")
+                            .AddMultiple(metadata.Parameters, parameter => $"this.{parameter.Name} = {parameter.Name};")
                             .Add("this.CallLog = callLog;")
                     );
 
-                foreach (var parameter in this.metadata.Parameters)
+                foreach (var parameter in metadata.Parameters)
                 {
                     var type = (INamedTypeSymbol)parameter.Type;
                     var generics = type.GetTypeGenerics();
@@ -87,11 +85,10 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
             .Documentation("Gets or sets the configuration object for the fixture used in the test setup process.", "This property enabled configuration and management of the mocked dependencies.")
             .Add("internal FixtureConfig Config{get; private set;}")
             .BR();
-    }
 
     private void AddPrivateMockObjects(CodeBuilder builder)
     {
-        foreach (var parameter in this.metadata.Parameters)
+        foreach (var parameter in metadata.Parameters)
         {
             var type = parameter.Type as INamedTypeSymbol;
             if (this.mocks.TryGetValue(type!.OriginalDefinition, out var mockInfo))
@@ -112,7 +109,7 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
             .Add("public FixtureLogger Calls {get; private set;}")
             .Scope("internal class FixtureLogger(global::SweetMock.CallLog callLog) : global::SweetMock.FixtureLog_Base(callLog)", classScope =>
             {
-                foreach (var parameter in this.metadata.Parameters)
+                foreach (var parameter in metadata.Parameters)
                 {
                     var type = parameter.Type as INamedTypeSymbol;
                     if (this.mocks.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
@@ -129,10 +126,10 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
     private void AddConstructor(CodeBuilder builder) =>
         builder
             .Documentation(doc => doc
-                .Summary($"Provides a fixture for the {this.metadata.ToSeeCRef} object, setting up mocks and a call log for testing purposes.")
+                .Summary($"Provides a fixture for the {metadata.ToSeeCRef} object, setting up mocks and a call log for testing purposes.")
                 .Parameter("config", "Optional configuration of the mocked dependencies.")
             )
-            .Scope($"public FixtureFor_{this.metadata.Name}(System.Action<FixtureConfig>? config = null)", ctorScope =>
+            .Scope($"public FixtureFor_{metadata.Name}(System.Action<FixtureConfig>? config = null)", ctorScope =>
             {
                 ctorScope
                     .Add("_log = new SweetMock.CallLog();")
@@ -140,7 +137,7 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
                     .Add("Calls = new FixtureLogger(_log);")
                     .BR();
 
-                foreach (var parameter in this.metadata.Parameters)
+                foreach (var parameter in metadata.Parameters)
                 {
                     var type = parameter.Type as INamedTypeSymbol;
                     if (this.mocks.ContainsKey(type!.OriginalDefinition))
@@ -154,7 +151,7 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
                     }
                 }
 
-                var parametersString = this.metadata.Parameters.ToString(t => "temp_" + t.Name);
+                var parametersString = metadata.Parameters.ToString(t => "temp_" + t.Name);
                 parametersString += parametersString == "" ? "_log" : ", _log";
 
                 builder
@@ -165,19 +162,19 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
 
     private void AddCreateSutMethod(CodeBuilder builder)
     {
-        var arguments = this.metadata.Parameters.ToString(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
+        var arguments = metadata.Parameters.ToString(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
 
         builder
             .Documentation(doc => doc
-                .Summary($"Creates an instance of the {this.metadata.ToSeeCRef} object using the initialized mock dependencies.")
-                .Parameters(this.metadata.Parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
-                .Returns($"A {this.metadata.ToSeeCRef} instance configured with mocked dependencies.")
+                .Summary($"Creates an instance of the {metadata.ToSeeCRef} object using the initialized mock dependencies.")
+                .Parameters(metadata.Parameters, symbol => $"Explicitly sets the value for {symbol.Name} bypassing the values created by the fixture.")
+                .Returns($"A {metadata.ToSeeCRef} instance configured with mocked dependencies.")
             )
-            .Scope($"public {this.metadata.TypeString} Create{this.metadata.Name}({arguments})", methodScope =>
+            .Scope($"public {metadata.TypeString} Create{metadata.Name}({arguments})", methodScope =>
             {
                 methodScope
-                    .AddMultiple(this.metadata.Parameters, parameter => $"var argument_{parameter.Name} = {parameter.Name} ?? {this.MockTypeToArgument(parameter)};")
-                    .Add($"return new {this.metadata.TypeString}({this.metadata.Parameters.ToString(symbol => "argument_" + symbol.Name)});");
+                    .AddMultiple(metadata.Parameters, parameter => $"var argument_{parameter.Name} = {parameter.Name} ?? {this.MockTypeToArgument(parameter)};")
+                    .Add($"return new {metadata.TypeString}({metadata.Parameters.ToString(symbol => "argument_" + symbol.Name)});");
             });
     }
 
@@ -203,7 +200,7 @@ public partial class FixtureBuilder(INamedTypeSymbol fixtureSymbol, List<MockInf
 
     private IEnumerable<string> BuildFixtureConfigParameters()
     {
-        foreach (var parameter in this.metadata.Parameters)
+        foreach (var parameter in metadata.Parameters)
         {
             var type = (INamedTypeSymbol)parameter.Type;
             var generics = type.GetTypeGenerics();

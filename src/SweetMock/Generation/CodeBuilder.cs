@@ -67,6 +67,15 @@ internal partial class CodeBuilder
         return this;
     }
 
+    public CodeBuilder AddMultiple<T>(IEnumerable<T> source, Action<CodeBuilder, T> format)
+    {
+        foreach (var s in source)
+        {
+            format(this, s);
+        }
+        return this;
+    }
+
     public CodeBuilder AddUnindented(string line)
     {
         this.result.AppendLine(line);

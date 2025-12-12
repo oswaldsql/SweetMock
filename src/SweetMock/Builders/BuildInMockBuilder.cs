@@ -27,7 +27,7 @@ public static class BuildInMockBuilder
                     source = source.Replace("{{SweetMockVersion}}", SourceGeneratorMetadata.Version.ToString());
                     spc.AddSource(symbol.ToCRef() + ".g.cs", source);
 
-                    yield return new(symbol, symbol.ContainingNamespace + ".MockOf_" + symbol.Name, MockKind.BuildIn, "MockConfig");
+                    yield return MockInfo.BuildIn(symbol);
                     collectedMocks.RemoveAll(t => SymbolEqualityComparer.Default.Equals(t.Type, symbol));
                 }
             }
