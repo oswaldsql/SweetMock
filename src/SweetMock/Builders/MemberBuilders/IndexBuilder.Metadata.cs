@@ -5,7 +5,7 @@ using Utils;
 
 internal partial class IndexBuilder
 {
-    public class IndexMedata(IPropertySymbol symbol, int index)
+    public class IndexMetadata(IPropertySymbol symbol, int index)
     {
         public string ReturnTypeString { get; } = symbol.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal);
 

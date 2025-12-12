@@ -31,10 +31,8 @@ public static class LogBuilder
                         .Add("public System.Collections.Generic.IEnumerable<ArgumentBase> All() =>")
                         .Add("    log.Calls.Where(t => instanceName == null || t.InstanceName == instanceName);");
 
-                    foreach (var group in memberGroups)
+                    foreach (var logKey in memberGroups.Select(t => GenerateLogKey(mock, t)))
                     {
-                        var logKey = GenerateLogKey(mock, group);
-
                         var argsClass = $"{mock.MockName}{mock.Generics}.{logKey}_Arguments";
 
                         classScope
@@ -52,9 +50,8 @@ public static class LogBuilder
                 classScope
                     .Add($"public static {mock.MockName}{mock.Generics}.{mock.Name}_Logs {mock.Name}{mock.Generics}(this CallLog all){mock.Constraints} => new(all);");
 
-                foreach (var group in memberGroups)
+                foreach (var logKey in memberGroups.Select(t => GenerateLogKey(mock, t)))
                 {
-                    var logKey = GenerateLogKey(mock, group);
                     classScope.Add($"public static global::System.Collections.Generic.IEnumerable<{mock.MockName}{mock.Generics}.{logKey}_Arguments> {logKey}{mock.Generics}(this global::SweetMock.CallLog all, global::System.Func<{mock.MockName}{mock.Generics}.{logKey}_Arguments, bool>? filter = null){mock.Constraints} => all.{mock.Name}{mock.Generics}().{logKey}(filter);");
                 }
             });

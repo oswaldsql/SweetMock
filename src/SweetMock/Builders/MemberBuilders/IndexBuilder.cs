@@ -16,7 +16,7 @@ internal partial class IndexBuilder(MockInfo mock)
 
     private void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> rawIndexers)
     {
-        var indexers = rawIndexers.Select((indexer, i) => new IndexMedata(indexer, i + 1)).ToArray();
+        var indexers = rawIndexers.Select((indexer, i) => new IndexMetadata(indexer, i + 1)).ToArray();
 
         if (indexers.Length == 0)
         {
@@ -27,7 +27,7 @@ internal partial class IndexBuilder(MockInfo mock)
         this.BuildIndexes(classScope, indexers);
     }
 
-    private void CreateLogArgumentsRecord(CodeBuilder classScope, IndexMedata[] indexers) =>
+    private void CreateLogArgumentsRecord(CodeBuilder classScope, IndexMetadata[] indexers) =>
         classScope.Region("Indexers", builder =>
         {
             builder
@@ -44,7 +44,7 @@ internal partial class IndexBuilder(MockInfo mock)
             this.AddThrowConfiguration(builder, indexers);
         });
 
-    private void BuildIndexes(CodeBuilder classScope, IEnumerable<IndexMedata> indexers)
+    private void BuildIndexes(CodeBuilder classScope, IEnumerable<IndexMetadata> indexers)
     {
         foreach (var indexer in indexers)
         {
@@ -60,7 +60,7 @@ internal partial class IndexBuilder(MockInfo mock)
         }
     }
 
-    private void BuildIndex(CodeBuilder classScope, IndexMedata indexer)
+    private void BuildIndex(CodeBuilder classScope, IndexMetadata indexer)
     {
         var signature = indexer.IsInInterface ?
             $"{indexer.ReturnTypeString} {indexer.ContainingSymbolString}.this[{indexer.KeyTypeString} {indexer.KeyName}]"
@@ -83,7 +83,7 @@ internal partial class IndexBuilder(MockInfo mock)
             .BR();
     }
 
-    private void AddGetSetConfiguration(CodeBuilder configScope, IndexMedata indexer)
+    private void AddGetSetConfiguration(CodeBuilder configScope, IndexMetadata indexer)
     {
         var arguments = indexer switch
         {
@@ -104,7 +104,7 @@ internal partial class IndexBuilder(MockInfo mock)
             );
     }
 
-    private void AddThrowConfiguration(CodeBuilder configScope, IndexMedata[] indexers) =>
+    private void AddThrowConfiguration(CodeBuilder configScope, IndexMetadata[] indexers) =>
         configScope.AddToConfig(mock, builder => builder.Documentation(doc => doc
                 .Summary("Configures all indexers to throw an exception when accessed.")
                 .Parameter("throws", "Exception to throw when the indexer is accessed.")
@@ -120,7 +120,7 @@ internal partial class IndexBuilder(MockInfo mock)
                 }
             }));
 
-    private void AddValuesConfiguration(CodeBuilder configScope, IndexMedata indexer) =>
+    private void AddValuesConfiguration(CodeBuilder configScope, IndexMetadata indexer) =>
         configScope
             .BR()
             .Documentation(doc => doc
