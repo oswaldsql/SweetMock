@@ -37,7 +37,7 @@ internal partial class MethodBuilder
             .Parameter("throws", "The exception to be thrown when the method is called.")
             .Returns("The updated configuration object."))
         .AddConfigMethod(methods.First().Context, methods.Key, ["System.Exception throws"], builder => builder
-            .AddMultiple(methods, method => $"this.{method.Name}(call: ({method.DelegateName})(({method.BlindParameterString}) => throw throws));")
+            .AddMultiple(methods, method => $"this.{method.Name}(call: ({method.DelegateName})(({method.ParametersString}) => throw throws));")
         )
         .BR();
 
@@ -55,7 +55,7 @@ internal partial class MethodBuilder
                     .Parameter("returns", "The fixed value that should be returned by the mock.")
                     .Returns("The updated configuration object."))
                 .AddConfigMethod(methods.First().Context, methods.Key, [methodGroup.First().ReturnStringWithoutGeneric + " returns"], builder => builder
-                    .AddMultiple(methodGroup, method => $"this.{method.Name}(call: ({method.DelegateName})(({method.BlindParameterString}) => returns));"))
+                    .AddMultiple(methodGroup, method => $"this.{method.Name}(call: ({method.DelegateName})(({method.ParametersString}) => returns));"))
                 .BR();
         }
     }
@@ -92,12 +92,12 @@ internal partial class MethodBuilder
                     {
                         if (m.ReturnsGenericTask)
                         {
-                            builder.Add($"this.{m.Name}(call: ({m.BlindParameterString}) => System.Threading.Tasks.Task.FromResult(returnAsTasks));");
+                            builder.Add($"this.{m.Name}(call: ({m.ParametersString}) => System.Threading.Tasks.Task.FromResult(returnAsTasks));");
                         }
 
                         if (m.ReturnsGenericValueTask)
                         {
-                            builder.Add($"this.{m.Name}(call: ({m.BlindParameterString}) => System.Threading.Tasks.ValueTask.FromResult(returnAsTasks));");
+                            builder.Add($"this.{m.Name}(call: ({m.ParametersString}) => System.Threading.Tasks.ValueTask.FromResult(returnAsTasks));");
                         }
                     }
                 });
@@ -127,7 +127,7 @@ internal partial class MethodBuilder
                     {
                         index++;
                         var index1 = index;
-                        var parameterList = method.BlindParameterString;
+                        var parameterList = method.ParametersString;
 
                         if (index > 1)
                         {
@@ -179,7 +179,7 @@ internal partial class MethodBuilder
                 {
                     foreach (var method in methodSymbols)
                     {
-                        var parameterList = method.BlindParameterString;
+                        var parameterList = method.ParametersString;
 
                         var str = method.ReturnTypeString switch
                         {
@@ -199,9 +199,9 @@ internal partial class MethodBuilder
     {
         foreach (var method in methods.Where(t => t.HasOutParameters))
         {
-            var outParameters = method.Symbol.OutParameters().ToArray();
+            var outParameters = method.Parameters.Where(t => t.RefKind == RefKind.Out).ToArray();
 
-            var arguments = outParameters.ToString(p => $"{p.Type.ToDisplayString()} out_{p.Name}");
+            var arguments = outParameters.ToString(p => $"{p.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal)} out_{p.Name}");
             if (!method.ReturnsVoid)
             {
                 arguments = method.ReturnTypeString + " returns, " + arguments;
@@ -215,7 +215,7 @@ internal partial class MethodBuilder
                     .Parameters(outParameters, parameter => $"out_{parameter.Name}", argument => $"Value to set for the out argument {argument.Name}")
                     .Returns("The updated configuration object."))
                 .AddConfigLambda(methods.First().Context, method.Name, [arguments], configScope => configScope
-                    .Add($"this.{method.Name}(call: ({method.DelegateName})(({method.DelegateParameters}) => {{")
+                    .Add($"this.{method.Name}(call: ({method.DelegateName})(({method.ParametersString}) => {{")
                     .Indent(indentScope => indentScope
                         .AddMultiple(outParameters, symbol => $"{symbol.Name} = out_{symbol.Name};")
                         .AddIf(!method.ReturnsVoid, () => "return returns;"))

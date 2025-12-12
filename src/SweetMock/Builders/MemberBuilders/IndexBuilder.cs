@@ -1,12 +1,11 @@
 namespace SweetMock.Builders.MemberBuilders;
 
 using Generation;
-using Utils;
 
 /// <summary>
 ///     Represents a builder for indexers, implementing the ISymbolBuilder interface.
 /// </summary>
-internal class IndexBuilder(MockContext context)
+internal partial class IndexBuilder(MockContext context)
 {
     public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IPropertySymbol> symbols)
     {
@@ -14,20 +13,20 @@ internal class IndexBuilder(MockContext context)
         builder.Build(classScope, symbols);
     }
 
-    private void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> symbols)
+    private void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> rawIndexers)
     {
-        var lookup = symbols.ToArray();
+        var indexers = rawIndexers.Select((indexer, i) => new IndexMedata(indexer, i + 1)).ToArray();
 
-        if (lookup.Length == 0)
+        if (indexers.Length == 0)
         {
             return;
         }
 
-        this.CreateLogArgumentsRecord(classScope, lookup);
-        this.BuildIndexes(classScope, lookup);
+        this.CreateLogArgumentsRecord(classScope, indexers);
+        this.BuildIndexes(classScope, indexers);
     }
 
-    private void CreateLogArgumentsRecord(CodeBuilder classScope, IPropertySymbol[] lookup) =>
+    private void CreateLogArgumentsRecord(CodeBuilder classScope, IndexMedata[] indexers) =>
         classScope.Region("Indexers", builder =>
         {
             builder
@@ -35,151 +34,100 @@ internal class IndexBuilder(MockContext context)
                 .Indent(scope => scope
                     .Add("global::System.String? InstanceName,")
                     .Add("global::System.String MethodSignature,")
-                    .Add($"{lookup.GenerateKeyType()} key = null,")
-                    .Add($"{lookup.GenerateReturnType()} value = null")
+                    .Add($"{indexers.Select(t => t.Symbol).ToArray().GenerateKeyType()} key = null,")
+                    .Add($"{indexers.Select(t => t.Symbol).ToArray().GenerateReturnType()} value = null")
                 )
                 .Add(") : ArgumentBase(_containerName, \"Indexer\", MethodSignature, InstanceName);")
                 .BR();
 
-            this.AddThrowConfiguration(lookup, builder);
+            this.AddThrowConfiguration(builder, indexers);
         });
 
-    /// <summary>
-    ///     Builds the indexers and adds them to the code builder.
-    /// </summary>
-    /// <param name="classScope"></param>
-    /// <param name="indexerSymbols">The collection of indexer symbols to build.</param>
-    /// <returns>True if any indexers were built; otherwise, false.</returns>
-    private void BuildIndexes(CodeBuilder classScope, IEnumerable<IPropertySymbol> indexerSymbols)
+    private void BuildIndexes(CodeBuilder classScope, IEnumerable<IndexMedata> indexers)
     {
-        var symbols = indexerSymbols as IPropertySymbol[] ?? indexerSymbols.ToArray();
-
-        var indexerCount = 1;
-        foreach (var symbol in symbols)
+        foreach (var indexer in indexers)
         {
-            var indexType = symbol.Parameters[0].Type.ToString();
-            classScope.Region($"Index : this[{indexType}]", builder =>
+            classScope.Region($"Index : this[{indexer.KeyTypeString}]", builder =>
             {
-                this.BuildIndex(builder, symbol, indexerCount);
-                this.BuildConfigExtensions(classScope, symbol, indexerCount);
-
-                indexerCount++;
+                this.BuildIndex(builder, indexer);
+                builder.AddToConfig(context, config =>
+                {
+                    this.AddGetSetConfiguration(config, indexer);
+                    this.AddValuesConfiguration(config, indexer);
+                });
             });
         }
     }
 
-    /// <summary>
-    ///     Builds a single indexer and adds it to the code builder.
-    /// </summary>
-    /// <param name="classScope"></param>
-    /// <param name="symbol">The property symbol representing the indexer.</param>
-    /// <param name="index">The count of indexers built so far.</param>
-    private void BuildIndex(CodeBuilder classScope, IPropertySymbol symbol, int index)
+    private void BuildIndex(CodeBuilder classScope, IndexMedata indexer)
     {
-        var returnType = symbol.Type.ToString();
-        var indexType = symbol.Parameters[0].Type.ToString();
-        var internalName = index == 1 ? "_onIndex" : $"_onIndex_{index}";
+        var signature = indexer.IsInInterface ?
+            $"{indexer.ReturnTypeString} {indexer.ContainingSymbolString}.this[{indexer.KeyTypeString} {indexer.KeyName}]"
+            : $"{indexer.AccessibilityString} override {indexer.ReturnTypeString} this[{indexer.KeyTypeString} {indexer.KeyName}]";
 
-        var overwrites = symbol.Overwrites();
-
-        var hasGet = symbol.GetMethod != null;
-        var hasSet = symbol.SetMethod != null;
-
-        var argName = symbol.Parameters[0].Name;
-
-        var signature = $"{overwrites.AccessibilityString}{overwrites.OverrideString}{returnType} {overwrites.ContainingSymbol}this[{indexType} {argName}]";
         classScope.Scope(signature, indexerScope => indexerScope
-            .AddIf(hasGet, get => get
+            .AddIf(indexer.HasGet, get => get
                 .Scope("get", getScope => getScope
-                    .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"get\", key : {symbol.GetMethod!.Parameters[0].Name}));")
-                    .Add($"return this.{internalName}_get({argName});")
+                    .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"get\", key : {indexer.KeyName}));")
+                    .Add($"return this.{indexer.InternalName}_get({indexer.KeyName});")
                 ))
-            .AddIf(hasSet, set => set
+            .AddIf(indexer.HasSet, set => set
                 .Scope("set", setScope => setScope
-                    .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"set\", key : {symbol.SetMethod!.Parameters[0].Name}, value : {symbol.SetMethod.Parameters[1].Name}));")
-                    .Add($"this.{internalName}_set({argName}, value);")
-                )));
-
-        classScope
+                    .Add($"this._log(new Indexer_Arguments(this._sweetMockInstanceName, \"set\", key : {indexer.KeyName}, value : {indexer.TypeName}));")
+                    .Add($"this.{indexer.InternalName}_set({indexer.KeyName}, value);")
+                )))
             .BR()
-            .AddIf(hasGet, () => $"private System.Func<{indexType}, {returnType}> {internalName}_get {{ get; set; }} = null!;")
-            .AddIf(hasSet, () => $"private System.Action<{indexType}, {returnType}> {internalName}_set {{ get; set; }} = null!;")
+            .AddIf(indexer.HasGet, () => $"private System.Func<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> {indexer.InternalName}_get {{ get; set; }} = null!;")
+            .AddIf(indexer.HasSet, () => $"private System.Action<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> {indexer.InternalName}_set {{ get; set; }} = null!;")
             .BR();
     }
 
-    private void BuildConfigExtensions(CodeBuilder classScope, IPropertySymbol symbol, int index)
+    private void AddGetSetConfiguration(CodeBuilder configScope, IndexMedata indexer)
     {
-        var internalName = index == 1 ? "_onIndex" : $"_onIndex_{index}";
-        classScope.AddToConfig(context, config =>
+        var arguments = indexer switch
         {
-            this.AddGetSetConfiguration(symbol, config, internalName);
-            this.GenerateIndexerConfigExtensions(config, symbol);
-        });
-    }
+            { IsGetSet: true } => $"System.Func<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> get, System.Action<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> set",
+            { IsGetOnly: true } => $"System.Func<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> get",
+            { IsSetOnly: true } => $"System.Action<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> set",
+            _ => ""
+        };
 
-    private void AddGetSetConfiguration(IPropertySymbol symbol, CodeBuilder config, string internalName)
-    {
-        var hasGet = symbol.GetMethod != null;
-        var hasSet = symbol.SetMethod != null;
-
-        var typeSymbol = symbol.Parameters[0].Type;
-        var returnType = symbol.Type.ToString();
-
-        var indexerParameters = (hasGet ? $"System.Func<{typeSymbol}, {returnType}> get" : "") + (hasGet && hasSet ? ", " : "") + (hasSet ? $"System.Action<{typeSymbol}, {returnType}> set" : "");
-
-        config.Documentation(doc => doc
-                .Summary($"Configures the indexer for {typeSymbol.ToSeeCRef()} by specifying methods to call when the property is accessed.")
-                .ParameterIf(hasGet, "get", "Function to call when the property is read.")
-                .ParameterIf(hasSet, "set", "Function to call when the property is set.")
+        configScope.Documentation(doc => doc
+                .Summary($"Configures the indexer for {indexer.ToSeeCRef} by specifying methods to call when the property is accessed.")
+                .ParameterIf(indexer.HasGet, "get", "Function to call when the property is read.")
+                .ParameterIf(indexer.HasSet, "set", "Function to call when the property is set.")
                 .Returns("The configuration object."))
-            .AddConfigMethod(context, "Indexer", [indexerParameters], builder => builder
-                .AddIf(hasGet, () => $"target.{internalName}_get = get;")
-                .AddIf(hasSet, () => $"target.{internalName}_set = set;")
+            .AddConfigMethod(context, "Indexer", [arguments], builder => builder
+                .AddIf(indexer.HasGet, () => $"target.{indexer.InternalName}_get = get;")
+                .AddIf(indexer.HasSet, () => $"target.{indexer.InternalName}_set = set;")
             );
     }
 
-    private void AddThrowConfiguration(IPropertySymbol[] symbols, CodeBuilder config)
-    {
-        config.AddToConfig(context, builder => builder.Documentation(doc => doc
-                .Summary($"Configures all indexers to throw an exception when accessed.")
+    private void AddThrowConfiguration(CodeBuilder configScope, IndexMedata[] indexers) =>
+        configScope.AddToConfig(context, builder => builder.Documentation(doc => doc
+                .Summary("Configures all indexers to throw an exception when accessed.")
                 .Parameter("throw", "Exception to throw when the indexer is accessed.")
                 .Returns("The configuration object."))
-            .AddConfigMethod(context, "Indexer", ["System.Exception throws"], builder =>
+            .AddConfigMethod(context, "Indexer", ["System.Exception throws"], codeBuilder =>
             {
-                foreach (var symbol in symbols)
+                foreach (var indexer in indexers)
                 {
-                    var hasGet = symbol.GetMethod != null;
-                    var hasSet = symbol.SetMethod != null;
-
-                    var typeSymbol = symbol.Parameters[0].Type;
-                    var returnType = symbol.Type.ToString();
-
-                    var name = "Indexer";
-
-                    builder
-                        .AddIf(hasGet && hasSet, () => $"this.{name}(get : ({typeSymbol} _) => throw throws, set : (_,_) => throw throws);")
-                        .AddIf(hasGet && !hasSet, () => $"this.{name}(get : ({typeSymbol} _) => throw throws);")
-                        .AddIf(!hasGet && hasSet, () => $"this.{name}(set : ({typeSymbol} _, {returnType} _) => throw throws);");
+                    codeBuilder
+                        .AddIf(indexer.IsGetSet, () => $"this.Indexer(get : ({indexer.KeyTypeString} _) => throw throws, set : (_,_) => throw throws);")
+                        .AddIf(indexer.IsGetOnly, () => $"this.Indexer(get : ({indexer.KeyTypeString} _) => throw throws);")
+                        .AddIf(indexer.IsSetOnly, () => $"this.Indexer(set : ({indexer.KeyTypeString} _, {indexer.ReturnTypeString} _) => throw throws);");
                 }
             }));
-    }
 
-    private void GenerateIndexerConfigExtensions(CodeBuilder codeBuilder, IPropertySymbol indexer)
-    {
-        var hasGet = indexer.GetMethod != null;
-        var hasSet = indexer.SetMethod != null;
-
-        var typeSymbol = indexer.Parameters[0].Type;
-
-        codeBuilder
+    private void AddValuesConfiguration(CodeBuilder configScope, IndexMedata indexer) =>
+        configScope
             .BR()
             .Documentation(doc => doc
-                .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.Parameters[0].Type.ToSeeCRef()}.")
+                .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.ToSeeCRef}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."))
-            .AddConfigMethod(context, "Indexer", [$"System.Collections.Generic.Dictionary<{typeSymbol}, {indexer.Type}> values"], builder => builder
-                .AddIf(hasGet && hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key], set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);")
-                .AddIf(hasGet && !hasSet, () => $"this.Indexer(get: ({typeSymbol} key) => values[key]);")
-                .AddIf(!hasGet && hasSet, () => $"this.Indexer(set: ({typeSymbol} key, {indexer.Type} value) => values[key] = value);"));
-    }
+            .AddConfigMethod(context, "Indexer", [$"System.Collections.Generic.Dictionary<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> values"], builder => builder
+                .AddIf(indexer.IsGetSet, () => $"this.Indexer(get: ({indexer.KeyTypeString} key) => values[key], set: ({indexer.KeyTypeString} key, {indexer.ReturnTypeString} value) => values[key] = value);")
+                .AddIf(indexer.IsGetOnly, () => $"this.Indexer(get: ({indexer.KeyTypeString} key) => values[key]);")
+                .AddIf(indexer.IsSetOnly, () => $"this.Indexer(set: ({indexer.KeyTypeString} key, {indexer.ReturnTypeString} value) => values[key] = value);"));
 }

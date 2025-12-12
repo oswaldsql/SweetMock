@@ -52,7 +52,7 @@ internal partial class MethodBuilder
 
     private static void CreateLogArgumentsRecord(CodeBuilder classScope, IGrouping<string, MethodMetadata> methodGroup)
     {
-        var arguments = methodGroup.SelectMany(t => t.Symbol.Parameters).ToLookup(t => t.Name);
+        var arguments = methodGroup.SelectMany(t => t.Parameters).ToLookup(t => t.Name);
         var args = string.Join(", ", arguments.Select(t => t.GenerateArgumentDeclaration()));
 
         classScope
@@ -78,17 +78,22 @@ internal partial class MethodBuilder
             throw new RefReturnTypeNotSupportedException(method);
         }
 
-        var valueSetters = string.Join("", method.Symbol.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"));
+        var valueSetters = string.Join("", method.Parameters.Where(t => t.RefKind == RefKind.None).Select(t => $", {t.Name} : {t.Name}"));
+
+        var signature = method.IsInInterface ?
+            $"{method.ReturnTypeString} {method.ContainingSymbol}.{method.Name}{method.GenericString}({method.NamedParameterString})"
+            : $"{method.AccessibilityString} override {method.ReturnTypeString} {method.Name}{method.GenericString}({method.NamedParameterString})";
 
         classScope
             .Documentation($"Delegate for mocking calls to {method.ToSeeCRef}.")
-            .Add($"public delegate {method.DelegateType} {method.DelegateName}({method.DelegateParameters});")
+            .Add($"public delegate {method.DelegateType} {method.DelegateName}({method.ParametersString});")
             .BR()
             .Add($"private {method.DelegateName} {method.FunctionPointer} {{get;set;}} = null!;")
             .BR()
-            .Scope(method.Signature, methodScope => methodScope
+            .Scope(signature, methodScope => methodScope
                 .Add($"this._log(new {method.Name}_Arguments(this._sweetMockInstanceName, \"{method.FullName}\"{valueSetters}));")
-                .Add($"{method.ReturnString}{method.CastString}this.{method.FunctionPointer}.Invoke({method.NameList});"))
+                .AddIf(method.ReturnsVoid, () => $"this.{method.FunctionPointer}.Invoke({method.NameList});")
+                .AddIf(!method.ReturnsVoid, () => $"return ({method.ReturnTypeString})this.{method.FunctionPointer}.Invoke({method.NameList});"))
             .BR();
     }
 }

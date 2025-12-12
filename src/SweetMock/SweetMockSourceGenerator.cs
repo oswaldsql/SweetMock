@@ -118,7 +118,7 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
     {
         var fix = fixtures.ToLookup(FirstGenericType, a => a, SymbolEqualityComparer.Default);
 
-        var factoryCode = FixtureBuilder.BuildFixturesFactory(fix.Select(t => t.Key).OfType<INamedTypeSymbol>());
+        var factoryCode = FixtureFactoryBuilder.BuildFixturesFactory(fix.Select(t => t.Key).OfType<INamedTypeSymbol>());
         spc.AddSource("SweetMock.Fixture.g.cs", factoryCode);
 
         foreach (var fixture in fix)
@@ -181,13 +181,3 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 }
 
 internal record MockTypeWithLocation(ITypeSymbol? Type, AttributeData Attribute, bool Explicit);
-
-public record MockInfo(INamedTypeSymbol Source, string MockClass, MockKind Kind, string ContextConfigName, INamedTypeSymbol? Implementation = null);
-
-public enum MockKind
-{
-    Generated,
-    Wrapper,
-    Direct,
-    BuildIn
-}

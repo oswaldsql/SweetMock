@@ -2,5 +2,5 @@
 
 using Builders.MemberBuilders;
 
-internal class RefReturnTypeNotSupportedException(MethodMetadata metadata) :
+internal class RefReturnTypeNotSupportedException(MethodBuilder.MethodMetadata metadata) :
     SweetMockException($"Ref return type not supported for '{metadata.Name}' in '{metadata.Context.Name}'");

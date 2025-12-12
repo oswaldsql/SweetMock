@@ -88,7 +88,7 @@ public static class LogBuilder
         var hasMultipleTypes = symbols.Select(t => t.Type).Distinct(SymbolEqualityComparer.Default).Count() > 1;
         if (hasMultipleTypes)
         {
-            return $"global::System.Object?";
+            return "global::System.Object?";
         }
 
         var type = symbols.First().Type;
@@ -97,16 +97,15 @@ public static class LogBuilder
 
     public static string DetermineArgumentType(ITypeSymbol type)
     {
+        if (type is INamedTypeSymbol { IsGenericType: true })
+        {
+            return "global::System.Object?";
+        }
+
         if (type is ITypeParameterSymbol)
         {
             return "global::System.Object?";
         }
-
-        if (type is INamedTypeSymbol namedType && namedType.IsGenericType)
-        {
-            return "global::System.Object?";
-        }
-
         if (type.NullableAnnotation != NullableAnnotation.Annotated)
         {
             return type.ToDisplayString(Format.ExtendedTypeFormat) + "?";
