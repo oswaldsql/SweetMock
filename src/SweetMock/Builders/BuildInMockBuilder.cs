@@ -1,15 +1,16 @@
 ﻿namespace SweetMock.Builders;
 
+using Generation;
 using Utils;
 
 public static class BuildInMockBuilder
 {
     private static Dictionary<string, Func<string>> buildInMocks = new()
     {
-        {"Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger},
-        {"System.TimeProvider", TimeProvider},
-       {"Microsoft.Extensions.Options.IOptions<TOptions>", IOptions},
-        {"System.Net.Http.HttpClient", HttpClient}
+        { "Microsoft.Extensions.Logging.ILogger<TCategoryName>", ILogger },
+        { "System.TimeProvider", TimeProvider },
+        { "Microsoft.Extensions.Options.IOptions<TOptions>", IOptions },
+        { "System.Net.Http.HttpClient", HttpClient }
     };
 
     internal static IEnumerable<MockInfo> CreateBuildInMocks(List<MockTypeWithLocation> collectedMocks, SourceProductionContext spc)
@@ -35,15 +36,15 @@ public static class BuildInMockBuilder
     }
 
     private static string ILogger() =>
-        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_ILogger_new.cs");
+        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_ILogger.cs");
 
     private static string TimeProvider() =>
-        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_TimeProvider_new.cs");
+        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_TimeProvider.cs");
 
     private static string IOptions() =>
-        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_IOptions_new.cs");
+        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_IOptions.cs");
 
     private static string HttpClient() =>
-        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_HttpClient_new.cs");
+        ResourceReader.ReadEmbeddedResource("SweetMock.Builders.BuildInMocks.MockOf_HttpClient.cs");
 
 }

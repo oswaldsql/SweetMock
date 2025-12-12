@@ -113,6 +113,7 @@ public class GenericMockTarget
 
 public class GenericFixtureTarget<T>(int number) where T : new()
 {
+    public string GetName() => "Name #" + number;
 };
 
 public class TestTarget2()

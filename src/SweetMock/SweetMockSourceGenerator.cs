@@ -3,6 +3,7 @@
 using System.Collections.Immutable;
 using Builders;
 using Exceptions;
+using Generation;
 using Utils;
 
 [Generator]
@@ -71,12 +72,12 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
 
             if (MockBuilder.CanBeMocked(mockType))
             {
-                MockContext? context = null;
+                MockInfo? mockInfo = null;
                 try
                 {
                     var fileName = TypeToFileName(mockType);
 
-                    var code = mockBuilder.BuildFiles(mockType, out context);
+                    var code = mockBuilder.BuildFiles(mockType, out mockInfo);
                     spc.AddSource($"{fileName}.g.cs", code);
                 }
                 catch (SweetMockException e)
@@ -88,9 +89,9 @@ public class SweetMockSourceGenerator : IIncrementalGenerator
                     spc.AddUnknownExceptionOccured(attributes, e.Message);
                 }
 
-                if (context != null)
+                if (mockInfo != null)
                 {
-                    yield return MockInfo.Generated(context);//context.Source, context.Source.ContainingNamespace + "." + context.MockName, MockKind.Generated, context.ConfigName);
+                    yield return mockInfo;
                 }
             }
         }

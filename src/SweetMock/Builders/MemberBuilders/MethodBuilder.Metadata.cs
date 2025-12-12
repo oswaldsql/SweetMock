@@ -1,14 +1,15 @@
 namespace SweetMock.Builders.MemberBuilders;
 
+using Generation;
 using Utils;
 
 internal partial class MethodBuilder
 {
-    public class MethodMetadata(IMethodSymbol symbol, MockContext context)
+    public class MethodMetadata(IMethodSymbol symbol, MockInfo mock)
     {
         public IMethodSymbol Symbol { get; } = symbol;
 
-        public MockContext Context { get; } = context;
+        public MockInfo Mock { get; } = mock;
 
         public string Name { get; } = symbol.Name;
 
@@ -46,14 +47,15 @@ internal partial class MethodBuilder
 
         public string ReturnStringWithoutGeneric { get; private set; } = "";
 
-        public string ParametersString { get; } = symbol.GetParameterInfos().ToString(p => $"{p.OutString}{p.Type} {p.Name}");
+        public string ParametersString { get; } = symbol.GetParameterInfos().Combine(p => $"{p.OutString}{p.Type} {p.Name}");
+
         public IParameterSymbol[] Parameters { get; } = symbol.Parameters.ToArray();
 
         public string DelegateType { get; } = symbol is { IsGenericMethod: true, ReturnsVoid: false } ? "global::System.Object" : symbol.ReturnsVoid ? "void" : symbol.ReturnType.ToDisplayString(Format.ToFullNameFormatWithGlobal);
 
         public string DelegateName { get; private set; } = $"DelegateFor_{symbol.Name}";
 
-        public string NameList { get; } = symbol.GetParameterInfos().ToString(p => $"{p.OutString}{p.Function}");
+        public string NameList { get; } = symbol.GetParameterInfos().Combine(p => $"{p.OutString}{p.Function}");
 
 
         public string FunctionPointer { get; private set; } = $"_{symbol.Name}";
@@ -65,7 +67,7 @@ internal partial class MethodBuilder
             this.ReturnsGenericValueTask = this.ReturnTypeString.StartsWith("global::System.Threading.Tasks.ValueTask<");
 
             var parameters = this.Symbol.Parameters.Select(t => new ParameterInfo(t.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal), t.Name, t.OutAsString(), t.Name)).ToList();
-            this.NamedParameterString = parameters.ToString(p => $"{p.OutString}{p.Type} {p.Name}");
+            this.NamedParameterString = parameters.Combine(p => $"{p.OutString}{p.Type} {p.Name}");
 
             if (index != 1)
             {

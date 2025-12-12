@@ -1,5 +1,6 @@
 namespace SweetMock.Builders.MemberBuilders;
 
+using Generation;
 using Utils;
 
 internal partial class EventBuilder
@@ -10,7 +11,7 @@ internal partial class EventBuilder
 
         public string ArgumentString { get; } = string.Join(" , ", ((INamedTypeSymbol)symbol.Type).DelegateInvokeMethod!.Parameters.Skip(1).Select(t => t.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal)));
 
-        public string ReturnTypeString { get; } = symbol.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal);
+        public string ReturnTypeString { get; } = symbol.Type.ToDisplayString(Format.ToFullNameFormatWithGlobalWithoutNull);
 
         public IEventSymbol Symbol { get; } = symbol;
 

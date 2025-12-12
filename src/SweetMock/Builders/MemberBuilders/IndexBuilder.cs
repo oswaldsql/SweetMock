@@ -5,12 +5,13 @@ using Generation;
 /// <summary>
 ///     Represents a builder for indexers, implementing the ISymbolBuilder interface.
 /// </summary>
-internal partial class IndexBuilder(MockContext context)
+internal partial class IndexBuilder(MockInfo mock)
 {
-    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IPropertySymbol> symbols)
+    public static void Render(CodeBuilder classScope, MockInfo mock)
     {
-        var builder = new IndexBuilder(context);
-        builder.Build(classScope, symbols);
+        var indexers = mock.Candidates.OfType<IPropertySymbol>().Where(t => t.IsIndexer);
+        var builder = new IndexBuilder(mock);
+        builder.Build(classScope, indexers);
     }
 
     private void Build(CodeBuilder classScope, IEnumerable<IPropertySymbol> rawIndexers)
@@ -50,7 +51,7 @@ internal partial class IndexBuilder(MockContext context)
             classScope.Region($"Index : this[{indexer.KeyTypeString}]", builder =>
             {
                 this.BuildIndex(builder, indexer);
-                builder.AddToConfig(context, config =>
+                builder.AddToConfig(mock, config =>
                 {
                     this.AddGetSetConfiguration(config, indexer);
                     this.AddValuesConfiguration(config, indexer);
@@ -97,18 +98,18 @@ internal partial class IndexBuilder(MockContext context)
                 .ParameterIf(indexer.HasGet, "get", "Function to call when the property is read.")
                 .ParameterIf(indexer.HasSet, "set", "Function to call when the property is set.")
                 .Returns("The configuration object."))
-            .AddConfigMethod(context, "Indexer", [arguments], builder => builder
+            .AddConfigMethod(mock, "Indexer", [arguments], builder => builder
                 .AddIf(indexer.HasGet, () => $"target.{indexer.InternalName}_get = get;")
                 .AddIf(indexer.HasSet, () => $"target.{indexer.InternalName}_set = set;")
             );
     }
 
     private void AddThrowConfiguration(CodeBuilder configScope, IndexMedata[] indexers) =>
-        configScope.AddToConfig(context, builder => builder.Documentation(doc => doc
+        configScope.AddToConfig(mock, builder => builder.Documentation(doc => doc
                 .Summary("Configures all indexers to throw an exception when accessed.")
-                .Parameter("throw", "Exception to throw when the indexer is accessed.")
+                .Parameter("throws", "Exception to throw when the indexer is accessed.")
                 .Returns("The configuration object."))
-            .AddConfigMethod(context, "Indexer", ["System.Exception throws"], codeBuilder =>
+            .AddConfigMethod(mock, "Indexer", ["System.Exception throws"], codeBuilder =>
             {
                 foreach (var indexer in indexers)
                 {
@@ -126,7 +127,7 @@ internal partial class IndexBuilder(MockContext context)
                 .Summary($"Specifies a dictionary to be use as a source of the indexer for {indexer.ToSeeCRef}.")
                 .Parameter("values", "Dictionary containing the values for the indexer.")
                 .Returns("The updated configuration object."))
-            .AddConfigMethod(context, "Indexer", [$"System.Collections.Generic.Dictionary<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> values"], builder => builder
+            .AddConfigMethod(mock, "Indexer", [$"System.Collections.Generic.Dictionary<{indexer.KeyTypeString}, {indexer.ReturnTypeString}> values"], builder => builder
                 .AddIf(indexer.IsGetSet, () => $"this.Indexer(get: ({indexer.KeyTypeString} key) => values[key], set: ({indexer.KeyTypeString} key, {indexer.ReturnTypeString} value) => values[key] = value);")
                 .AddIf(indexer.IsGetOnly, () => $"this.Indexer(get: ({indexer.KeyTypeString} key) => values[key]);")
                 .AddIf(indexer.IsSetOnly, () => $"this.Indexer(set: ({indexer.KeyTypeString} key, {indexer.ReturnTypeString} value) => values[key] = value);"));

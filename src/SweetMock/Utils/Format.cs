@@ -1,3 +1,5 @@
+namespace SweetMock.Utils;
+
 /// <summary>
 /// Provides a collection of preconfigured <see cref="SymbolDisplayFormat"/> instances
 /// used for converting symbols into various string representations.
@@ -36,6 +38,15 @@ public static class Format
     /// <para>Example: <c>global::MyNamespace.MyClass.MyMethod</c></para>
     /// </summary>
     internal static readonly SymbolDisplayFormat ToFullNameFormatWithGlobal = new(
+        SymbolDisplayGlobalNamespaceStyle.Included,
+        SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeType,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+    );
+
+    internal static readonly SymbolDisplayFormat ToFullNameFormatWithGlobalWithoutNull = new(
         SymbolDisplayGlobalNamespaceStyle.Included,
         SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         SymbolDisplayGenericsOptions.IncludeTypeParameters,

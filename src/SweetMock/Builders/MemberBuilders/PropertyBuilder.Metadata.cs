@@ -1,10 +1,11 @@
 namespace SweetMock.Builders.MemberBuilders;
 
+using Generation;
 using Utils;
 
 internal partial class PropertyBuilder
 {
-    public class PropertyMedata(IPropertySymbol symbol)
+    public class PropertyMetadata(IPropertySymbol symbol)
     {
         public string Name { get; } = symbol.Name;
 

@@ -20,7 +20,7 @@ internal static class MethodBuilderHelpers
             yield return parameter.Type switch
             {
                 { TypeKind: TypeKind.TypeParameter, ContainingSymbol: IMethodSymbol } => new("global::System.Object", parameter.Name, parameter.OutAsString(), parameter.Name),
-                INamedTypeSymbol { IsGenericType: true } => new("global::System.Object", parameter.Name, parameter.OutAsString(), parameter.Name),
+                INamedTypeSymbol typeSymbol when (typeSymbol.IsGenericType && typeSymbol.Name != "Nullable") => new("global::System.Object", parameter.Name, parameter.OutAsString(), parameter.Name),
                 _ => new(parameter.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal), parameter.Name, parameter.OutAsString(), parameter.Name)
             };
         }

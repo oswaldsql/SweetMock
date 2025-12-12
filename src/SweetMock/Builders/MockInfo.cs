@@ -1,47 +1,56 @@
-namespace SweetMock;
+namespace SweetMock.Builders;
 
-using Builders;
+using Generation;
 using Utils;
 
-public class MockInfo
+public class MockInfo(INamedTypeSymbol source, string mockClass, MockKind kind, string contextConfigName, INamedTypeSymbol? implementation = null)
 {
-    private MockInfo(INamedTypeSymbol source, string mockClass, MockKind kind, string contextConfigName, INamedTypeSymbol? implementation = null)
-    {
-        this.MockType = $"MockOf_{source.Name}{source.GetTypeGenerics()}";
-        this.MockName = "MockOf_" + source.Name;
-        this.Constraints = source.ToConstraints();
-        this.Source = source;
-        this.MockClass = mockClass;
-        this.Kind = kind;
-        this.ContextConfigName = contextConfigName;
-        this.Implementation = implementation;
+    public INamedTypeSymbol Source { get; } = source;
 
-        this.Candidates = this.GetCandidates();
+    public ISymbol[] Candidates { get; } = GetCandidates(source);
 
-        this.Name = source.Name;
-    }
+    public string MockType { get; } = $"MockOf_{source.Name}{source.GetTypeGenerics()}";
 
-    public ISymbol[] Candidates { get; set; }
+    public string MockName { get; } = "MockOf_" + source.Name;
 
-    public string MockType { get; }
-    public string MockName { get; }
-    public string Constraints { get; }
+    public string Constraints { get; } = source.ToConstraints();
+
     public string ConfigName { get; } = "MockConfig";
 
-    public string Name { get; init; }
+    public string Name { get; } = source.Name;
 
-    public INamedTypeSymbol Source { get; init; }
-    public string MockClass { get; init; }
-    public MockKind Kind { get; init; }
-    public string ContextConfigName { get; init; }
-    public INamedTypeSymbol? Implementation { get; init; }
+    public string FullName { get;  } = source.ToDisplayString(Format.ToFullNameFormatWithGlobal);
 
-    private ISymbol[] GetCandidates()
+    public string Namespace { get; } = source.ContainingNamespace.ToDisplayString();
+
+    public string MockClass { get; } = mockClass;
+
+    public MockKind Kind { get;  } = kind;
+
+    public string ContextConfigName { get;  } = contextConfigName;
+
+    public INamedTypeSymbol? Implementation { get;  } = implementation;
+
+    public string ToSeeCRef { get; } = source.ToSeeCRef();
+
+    public string NameAndGenerics { get; } = source.ToDisplayString(Format.NameAndGenerics);
+
+    public string ExtendedTypeFormat { get; } = source.ToDisplayString(Format.ExtendedTypeFormat);
+
+    public string Generics { get; } = source.GetTypeGenerics();
+
+    public string FullNameFormatWithoutGeneric { get; } = source.ToDisplayString(Format.ToFullNameFormatWithoutGeneric);
+
+    private static ISymbol[] GetCandidates(INamedTypeSymbol source)
     {
-        var allMembers = this.Source.GetMembers().ToList();
-        AddInheritedInterfaces(allMembers, this.Source);
-        var m = allMembers.Where(IsCandidate).ToArray();
-        return m;
+        var allMembers = source.GetMembers().ToList();
+
+        AddInheritedInterfaces(allMembers, source);
+
+        return allMembers
+            .Where(IsCandidate)
+            .Distinct(SymbolEqualityComparer.Default)
+            .ToArray();
     }
 
     private static void AddInheritedInterfaces(List<ISymbol> memberCandidates, INamedTypeSymbol namedTypeSymbol)
@@ -94,8 +103,11 @@ public class MockInfo
         return false;
     }
 
-    public static MockInfo Generated(MockContext context) =>
-        new(context.Source, context.Source.ContainingNamespace + "." + context.MockName, MockKind.Generated, context.ConfigName);
+    public static MockInfo Generated(INamedTypeSymbol source) =>
+        new(source, source.ContainingNamespace + ".MockOf_" + source.Name, MockKind.Generated, "MockConfig");
+
+//    public static MockInfo Generated(MockContext context) =>
+//        Generated(context.Source);
 
     public static MockInfo Wrapped(INamedTypeSymbol mockType, INamedTypeSymbol implementation) =>
         new(mockType, implementation.ContainingNamespace + "." + implementation.ToDisplayString(Format.Format2), MockKind.Wrapper, "MockConfig", implementation);

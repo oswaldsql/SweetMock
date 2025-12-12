@@ -94,7 +94,7 @@ public partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, Lis
             if (this.mocks.TryGetValue(type!.OriginalDefinition, out var mockInfo))
             {
                 var generics = type.GetTypeGenerics();
-                builder.Add($"private readonly {mockInfo.Source.ToDisplayString(Format.ToFullNameFormatWithoutGeneric)}{generics} _{parameter.Name};");
+                builder.Add($"private readonly {mockInfo.FullNameFormatWithoutGeneric}{generics} _{parameter.Name};");
             }
         }
 
@@ -112,11 +112,11 @@ public partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, Lis
                 foreach (var parameter in metadata.Parameters)
                 {
                     var type = parameter.Type as INamedTypeSymbol;
-                    if (this.mocks.TryGetValue(type!.OriginalDefinition, out var parameterInfo))
+                    if (this.mocks.TryGetValue(type!.OriginalDefinition, out var mockInfo))
                     {
                         var generics = type.GetTypeGenerics();
                         classScope
-                            .Add($"public global::{parameterInfo.MockClass}{generics}.{parameterInfo.Source.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
+                            .Add($"public global::{mockInfo.MockClass}{generics}.{mockInfo.Name}_Logs {parameter.Name} = new(callLog, \"{parameter.Name}\");")
                             .BR();
                     }
                 }
@@ -151,7 +151,7 @@ public partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, Lis
                     }
                 }
 
-                var parametersString = metadata.Parameters.ToString(t => "temp_" + t.Name);
+                var parametersString = metadata.Parameters.Combine(t => "temp_" + t.Name);
                 parametersString += parametersString == "" ? "_log" : ", _log";
 
                 builder
@@ -162,7 +162,7 @@ public partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, Lis
 
     private void AddCreateSutMethod(CodeBuilder builder)
     {
-        var arguments = metadata.Parameters.ToString(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
+        var arguments = metadata.Parameters.Combine(parameter => $"{parameter.Type.AsNullable()} {parameter.Name} = null");
 
         builder
             .Documentation(doc => doc
@@ -174,7 +174,7 @@ public partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, Lis
             {
                 methodScope
                     .AddMultiple(metadata.Parameters, parameter => $"var argument_{parameter.Name} = {parameter.Name} ?? {this.MockTypeToArgument(parameter)};")
-                    .Add($"return new {metadata.TypeString}({metadata.Parameters.ToString(symbol => "argument_" + symbol.Name)});");
+                    .Add($"return new {metadata.TypeString}({metadata.Parameters.Combine(symbol => "argument_" + symbol.Name)});");
             });
     }
 

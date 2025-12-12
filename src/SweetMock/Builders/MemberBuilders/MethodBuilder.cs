@@ -6,11 +6,19 @@ using Generation;
 /// <summary>
 ///     Represents a builder for methods, implementing the ISymbolBuilder interface.
 /// </summary>
-internal partial class MethodBuilder
+internal partial class MethodBuilder(IEnumerable<IMethodSymbol> methods, MockInfo mock)
 {
-    private ILookup<string, MethodMetadata> AllMethods { get; set; }
+    public static void Render(CodeBuilder classScope, MockInfo context)
+    {
+        var methods = context.Candidates.OfType<IMethodSymbol>().Where(t => t.MethodKind == MethodKind.Ordinary);
 
-    private MethodBuilder(IEnumerable<IMethodSymbol> methods, MockContext context)
+        var methodBuilder = new MethodBuilder(methods, context);
+        methodBuilder.Render(classScope);
+    }
+
+    private ILookup<string, MethodMetadata> AllMethods { get; } = MethodGroups(methods, mock);
+
+    private static ILookup<string, MethodMetadata> MethodGroups(IEnumerable<IMethodSymbol> methods, MockInfo context)
     {
         var methodGroups = methods.ToLookup(t => t.Name, symbol => new MethodMetadata(symbol, context));
         foreach (var grouping in methodGroups)
@@ -23,13 +31,7 @@ internal partial class MethodBuilder
             }
         }
 
-        this.AllMethods = methodGroups;
-    }
-
-    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IMethodSymbol> methods)
-    {
-        var methodBuilder = new MethodBuilder(methods, context);
-        methodBuilder.Render(classScope);
+        return methodGroups;
     }
 
     private void Render(CodeBuilder classScope)
@@ -45,7 +47,7 @@ internal partial class MethodBuilder
                     this.Build(builder, method);
                 }
 
-                classScope.AddToConfig(methodGroup.First().Context, config => this.BuildConfigExtensions(config, methodGroup));
+                classScope.AddToConfig(methodGroup.First().Mock, config => this.BuildConfigExtensions(config, methodGroup));
             });
         }
     }

@@ -25,7 +25,7 @@ internal partial class MethodBuilder
                     .Summary($"Configures the mock to execute the specified action when calling {method.ToSeeCRef}.")
                     .Parameter("call", "The action or function to execute when the method is called.")
                     .Returns("The updated configuration object."))
-                .AddConfigMethod(method.Context, method.Name, [$"{method.DelegateName} call"], methodScope => methodScope
+                .AddConfigMethod(method.Mock, method.Name, [$"{method.DelegateName} call"], methodScope => methodScope
                     .Add($"target.{method.FunctionPointer} = call;"))
                 .BR();
         }
@@ -36,7 +36,7 @@ internal partial class MethodBuilder
             .Summary("Configures the mock to throw the specified exception when the method is called.", $"Configures {methods.ToSeeCRef()}")
             .Parameter("throws", "The exception to be thrown when the method is called.")
             .Returns("The updated configuration object."))
-        .AddConfigMethod(methods.First().Context, methods.Key, ["System.Exception throws"], builder => builder
+        .AddConfigMethod(methods.First().Mock, methods.Key, ["System.Exception throws"], builder => builder
             .AddMultiple(methods, method => $"this.{method.Name}(call: ({method.DelegateName})(({method.ParametersString}) => throw throws));")
         )
         .BR();
@@ -54,7 +54,7 @@ internal partial class MethodBuilder
                     .Summary("Configures the mock to return a specific value, regardless of the provided arguments.", $"Use this to quickly define a fixed return result for {methodGroup.ToSeeCRef()}.")
                     .Parameter("returns", "The fixed value that should be returned by the mock.")
                     .Returns("The updated configuration object."))
-                .AddConfigMethod(methods.First().Context, methods.Key, [methodGroup.First().ReturnStringWithoutGeneric + " returns"], builder => builder
+                .AddConfigMethod(methods.First().Mock, methods.Key, [methodGroup.First().ReturnStringWithoutGeneric + " returns"], builder => builder
                     .AddMultiple(methodGroup, method => $"this.{method.Name}(call: ({method.DelegateName})(({method.ParametersString}) => returns));"))
                 .BR();
         }
@@ -78,7 +78,7 @@ internal partial class MethodBuilder
                 continue;
             }
 
-            var genericType = returnType.TypeArguments.First();
+            var genericType = returnType!.TypeArguments.First();
 
             result
                 .BR()
@@ -86,18 +86,18 @@ internal partial class MethodBuilder
                     .Summary("Configures the mock to return a specific value as a <see cref=\"System.Threading.Tasks.Task{T}\"/>, regardless of the provided arguments.", $"Use this to quickly define a fixed return result for {methodGroup.ToSeeCRef()}.")
                     .Parameter("returnAsTasks", $"The fixed {genericType.ToSeeCRef()} that should be returned by the mock wrapped in a <see cref=\"System.Threading.Tasks.Task{{T}}\"/>")
                     .Returns("The updated configuration object."))
-                .AddConfigMethod(first.Context, methods.Key, [genericType + " returnAsTasks"], builder =>
+                .AddConfigMethod(first.Mock, methods.Key, [genericType + " returnAsTasks"], builder =>
                 {
-                    foreach (var m in methodGroup)
+                    foreach (var method in methodGroup)
                     {
-                        if (m.ReturnsGenericTask)
+                        if (method.ReturnsGenericTask)
                         {
-                            builder.Add($"this.{m.Name}(call: ({m.ParametersString}) => System.Threading.Tasks.Task.FromResult(returnAsTasks));");
+                            builder.Add($"this.{method.Name}(call: ({method.ParametersString}) => System.Threading.Tasks.Task.FromResult(returnAsTasks));");
                         }
 
-                        if (m.ReturnsGenericValueTask)
+                        if (method.ReturnsGenericValueTask)
                         {
-                            builder.Add($"this.{m.Name}(call: ({m.ParametersString}) => System.Threading.Tasks.ValueTask.FromResult(returnAsTasks));");
+                            builder.Add($"this.{method.Name}(call: ({method.ParametersString}) => System.Threading.Tasks.ValueTask.FromResult(returnAsTasks));");
                         }
                     }
                 });
@@ -120,7 +120,7 @@ internal partial class MethodBuilder
                     .Summary("Configures the mock to return one of the specific values disregarding the arguments.", $"Configures {grouping.ToSeeCRef()}")
                     .Parameter("returnValues", "The values that should be returned in order. If the values are depleted <see cref=\"global::SweetMock.NotExplicitlyMockedException\"/>  is thrown.")
                     .Returns("The updated configuration object."))
-                .AddConfigMethod(first.Context, first.Name, [returnType + " returnValues"], builder =>
+                .AddConfigMethod(first.Mock, first.Name, [returnType + " returnValues"], builder =>
                 {
                     var index = 0;
                     foreach (var method in grouping)
@@ -175,7 +175,7 @@ internal partial class MethodBuilder
                     .Summary("Configures the mock to accept any call to methods not returning values.",
                         $"Configures {methodSymbols.ToSeeCRef()}")
                     .Returns("The updated configuration object."))
-                .AddConfigMethod(methods.First().Context, methods.Key, [], builder =>
+                .AddConfigMethod(methods.First().Mock, methods.Key, [], builder =>
                 {
                     foreach (var method in methodSymbols)
                     {
@@ -201,7 +201,7 @@ internal partial class MethodBuilder
         {
             var outParameters = method.Parameters.Where(t => t.RefKind == RefKind.Out).ToArray();
 
-            var arguments = outParameters.ToString(p => $"{p.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal)} out_{p.Name}");
+            var arguments = outParameters.Combine(p => $"{p.Type.ToDisplayString(Format.ToFullNameFormatWithGlobal)} out_{p.Name}");
             if (!method.ReturnsVoid)
             {
                 arguments = method.ReturnTypeString + " returns, " + arguments;
@@ -214,7 +214,7 @@ internal partial class MethodBuilder
                     .ParameterIf(!method.ReturnsVoid, "returns", "The return value of the method.")
                     .Parameters(outParameters, parameter => $"out_{parameter.Name}", argument => $"Value to set for the out argument {argument.Name}")
                     .Returns("The updated configuration object."))
-                .AddConfigLambda(methods.First().Context, method.Name, [arguments], configScope => configScope
+                .AddConfigLambda(methods.First().Mock, method.Name, [arguments], configScope => configScope
                     .Add($"this.{method.Name}(call: ({method.DelegateName})(({method.ParametersString}) => {{")
                     .Indent(indentScope => indentScope
                         .AddMultiple(outParameters, symbol => $"{symbol.Name} = out_{symbol.Name};")

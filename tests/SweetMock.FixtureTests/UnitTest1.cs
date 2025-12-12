@@ -18,7 +18,7 @@ public class Tests(ITestOutputHelper testOutputHelper)
         {
             config.name = "Tester32";
             config.user.GetUserName("fds");
-            config.time.Value = TimeProvider.System;
+            config.time.Initialize(TimeProvider.System);
         });
         var sut = fixture.CreateShoppingBasket();
         

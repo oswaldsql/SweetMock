@@ -1,5 +1,6 @@
 namespace SweetMock.Builders.MemberBuilders;
 
+using Generation;
 using Utils;
 
 internal partial class IndexBuilder
@@ -24,7 +25,7 @@ internal partial class IndexBuilder
 
         public string ContainingSymbolString { get; } = symbol.ContainingType.ToDisplayString(Format.ToFullNameFormatWithGlobal);
 
-        public string ToSeeCRef { get; } = symbol.ToSeeCRef();
+        public string ToSeeCRef { get; } = symbol.ToSeeCRef().Replace(".Item[", ".this[");
 
         public string AccessibilityString { get; } = symbol.AccessibilityString();
 

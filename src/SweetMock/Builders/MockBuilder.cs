@@ -5,10 +5,10 @@ using MemberBuilders;
 
 public class MockBuilder
 {
-    public string BuildFiles(INamedTypeSymbol target, out MockContext context)
+    public string BuildFiles(INamedTypeSymbol target, out MockInfo mock)
     {
-        var mockContext = new MockContext(target);
-        context = mockContext;
+        var mockInfo = MockInfo.Generated(target);
+        mock = mockInfo;
 
         var result = new CodeBuilder();
 
@@ -16,10 +16,10 @@ public class MockBuilder
             .AddFileHeader()
             .AddResharperDisable()
             .Nullable()
-            .Add($"namespace {mockContext.Source.ContainingNamespace};")
+            .Add($"namespace {mockInfo.Namespace};")
             .Usings("global::SweetMock", "System.Linq")
-            .BuildBaseClass(mockContext)
-            .BuildLogExtensionsClass(mockContext)
+            .BuildBaseClass(mockInfo)
+            .BuildLogExtensionsClass(mockInfo)
             .ToString();
     }
 

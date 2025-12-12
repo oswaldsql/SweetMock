@@ -19,7 +19,7 @@ public static class ConstraintBuilder
 
     private static IEnumerable<string> ToConstraintElements(ITypeParameterSymbol symbol)
     {
-        foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToString()))
+        foreach (var ct in symbol.ConstraintTypes.Select(t => t.ToDisplayString()))
         {
             yield return ct;
         }

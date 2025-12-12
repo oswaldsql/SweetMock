@@ -9,3 +9,13 @@ public sealed class NamedSymbolEqualityComparer : IEqualityComparer<INamedTypeSy
 
     public int GetHashCode(INamedTypeSymbol? obj) => SymbolEqualityComparer.GetHashCode(obj);
 }
+
+public sealed class TypeSymbolEqualityComparer : IEqualityComparer<ITypeSymbol?>
+{
+    private static readonly SymbolEqualityComparer SymbolEqualityComparer = SymbolEqualityComparer.Default;
+    public static TypeSymbolEqualityComparer Default { get; } = new();
+
+    public bool Equals(ITypeSymbol? x, ITypeSymbol? y) => SymbolEqualityComparer.Equals(x, y);
+
+    public int GetHashCode(ITypeSymbol? obj) => SymbolEqualityComparer.GetHashCode(obj);
+}

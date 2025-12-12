@@ -1,5 +1,6 @@
 namespace SweetMock.Builders;
 
+using Generation;
 using Utils;
 
 public partial class FixtureBuilder

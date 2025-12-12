@@ -5,28 +5,27 @@ using Utils;
 
 public static class LogBuilder
 {
-    internal static void InitializeLogging(this CodeBuilder builder, MockContext context) =>
-        builder.Region("Logging", builder => builder
+    internal static void InitializeLogging(this CodeBuilder builder, MockInfo mock) =>
+        builder.Region("Logging", regionScope => regionScope
             .Add("private global::SweetMock.CallLog _sweetMockCallLog = new global::SweetMock.CallLog();").BR()
             .Add("private void _log(global::SweetMock.ArgumentBase argument) => this._sweetMockCallLog.Add(argument);").BR()
-            .AddToConfig(context, codeBuilder => codeBuilder
-                .Scope($"internal MockConfig GetCallLogs(out {context.Name}_Logs callLog)", builder1 => builder1
-                    .Add($"callLog = new {context.Name}_Logs(this.target._sweetMockCallLog, this.target._sweetMockInstanceName);")
+            .AddToConfig(mock, configScope => configScope
+                .Scope($"internal MockConfig GetCallLogs(out {mock.Name}_Logs callLog)", builder1 => builder1
+                    .Add($"callLog = new {mock.Name}_Logs(this.target._sweetMockCallLog, this.target._sweetMockInstanceName);")
                     .Add("return this;"))
             )
         );
 
-    internal static CodeBuilder BuildLogExtensionsClass(this CodeBuilder builder, MockContext context)
+    internal static CodeBuilder BuildLogExtensionsClass(this CodeBuilder builder, MockInfo mock)
     {
-        var memberGroups = context
-            .GetCandidates()
+        var memberGroups = mock
+            .Candidates
             .Distinct(SymbolEqualityComparer.IncludeNullability)
             .ToLookup(t => t.Name);
 
-        var generics = context.Source.GetTypeGenerics();
         builder
-            .Scope($"internal partial class MockOf_{context.Name}{generics}", c => c
-                .Scope($"internal class {context.Name}_Logs(CallLog log, string? instanceName = null)", classScope =>
+            .Scope($"internal partial class MockOf_{mock.Name}{mock.Generics}", c => c
+                .Scope($"internal class {mock.Name}_Logs(CallLog log, string? instanceName = null)", classScope =>
                 {
                     classScope
                         .Add("public System.Collections.Generic.IEnumerable<ArgumentBase> All() =>")
@@ -34,9 +33,9 @@ public static class LogBuilder
 
                     foreach (var group in memberGroups)
                     {
-                        var logKey = GenerateLogKey(context, group);
+                        var logKey = GenerateLogKey(mock, group);
 
-                        var argsClass = $"{context.MockName}{generics}.{logKey}_Arguments";
+                        var argsClass = $"{mock.MockName}{mock.Generics}.{logKey}_Arguments";
 
                         classScope
                             .BR()
@@ -48,26 +47,26 @@ public static class LogBuilder
             .BR();
 
         builder
-            .Scope($"internal static class {context.MockName}_LogExtensions", classScope =>
+            .Scope($"internal static class {mock.MockName}_LogExtensions", classScope =>
             {
                 classScope
-                    .Add($"public static {context.MockName}{generics}.{context.Name}_Logs {context.Name}{generics}(this CallLog all){context.Source.ToConstraints()} => new(all);");
+                    .Add($"public static {mock.MockName}{mock.Generics}.{mock.Name}_Logs {mock.Name}{mock.Generics}(this CallLog all){mock.Constraints} => new(all);");
 
                 foreach (var group in memberGroups)
                 {
-                    var logKey = GenerateLogKey(context, group);
-                    classScope.Add($"public static global::System.Collections.Generic.IEnumerable<{context.MockName}{generics}.{logKey}_Arguments> {logKey}{generics}(this global::SweetMock.CallLog all, global::System.Func<{context.MockName}{generics}.{logKey}_Arguments, bool>? filter = null){context.Source.ToConstraints()} => all.{context.Name}{generics}().{logKey}(filter);");
+                    var logKey = GenerateLogKey(mock, group);
+                    classScope.Add($"public static global::System.Collections.Generic.IEnumerable<{mock.MockName}{mock.Generics}.{logKey}_Arguments> {logKey}{mock.Generics}(this global::SweetMock.CallLog all, global::System.Func<{mock.MockName}{mock.Generics}.{logKey}_Arguments, bool>? filter = null){mock.Constraints} => all.{mock.Name}{mock.Generics}().{logKey}(filter);");
                 }
             });
 
         return builder;
     }
 
-    private static string GenerateLogKey(MockContext context, IGrouping<string, ISymbol> g) =>
+    private static string GenerateLogKey(MockInfo mock, IGrouping<string, ISymbol> g) =>
         g.Key switch
         {
             "this[]" => "Indexer",
-            ".ctor" => context.Name,
+            ".ctor" => mock.Name,
             _ => g.Key
         };
 
@@ -92,6 +91,20 @@ public static class LogBuilder
         }
 
         var type = symbols.First().Type;
+        return DetermineArgumentType(type);
+    }
+
+    internal static string GenerateReturnType(this IEnumerable<PropertyBuilder.PropertyMetadata> symbols)
+    {
+        var distinct = symbols.Select(t => t.Symbol.Type).Distinct(TypeSymbolEqualityComparer.Default).ToArray();
+
+        var hasMultipleTypes = distinct.Length > 1;
+        if (hasMultipleTypes)
+        {
+            return "global::System.Object?";
+        }
+
+        var type = distinct.First();
         return DetermineArgumentType(type);
     }
 
@@ -126,7 +139,7 @@ public static class LogBuilder
         return firstType switch
         {
             INamedTypeSymbol { DelegateInvokeMethod: not null } => $"global::System.Object? {argument.Key} = null",
-            INamedTypeSymbol namedType when namedType.TypeArguments.Length > 0 || namedType.IsGenericType => $"{namedType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(Format.ExtendedTypeFormat)} {argument.Key} = null",
+            INamedTypeSymbol namedType when namedType.TypeArguments.Length > 0 || namedType.IsGenericType => $"{namedType.AsNullable()} {argument.Key} = null",
             INamedTypeSymbol => $"{firstType.ToDisplayString(Format.ExtendedTypeFormat)}? {argument.Key} = null",
             ITypeParameterSymbol => $"global::System.Object? {argument.Key} = null",
             _ => $"{firstType.WithNullableAnnotation(NullableAnnotation.Annotated).ToDisplayString(Format.ExtendedTypeFormat)}? {argument.Key} = null"

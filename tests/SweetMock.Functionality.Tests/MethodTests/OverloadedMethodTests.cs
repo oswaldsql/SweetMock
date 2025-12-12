@@ -21,11 +21,6 @@ public class OverloadedMethodTests(ITestOutputHelper output)
         Assert.Throws<NotExplicitlyMockedException>(() => sut.OverloadedMethod("name", 10));
         Assert.Throws<NotExplicitlyMockedException>(() => sut.OverloadedMethod(10, "name"));
 
-        foreach (var call in logger.Calls.Where(t => t.Container != ""))
-        {
-            //output.WriteLine(call.ToString());
-        }
-
         var logs = new OverloadedMethodTests_Logs(logger);
         foreach (var overloadedMethodArguments in logs.OverloadedMethod(arguments => arguments.name == "name"))
         {
@@ -105,7 +100,7 @@ public class OverloadedMethodTests(ITestOutputHelper output)
         int OverloadedMethod();
         string OverloadedMethod(string name);
         string OverloadedMethod(string name, int value);
-        string OverloadedMethod(string name, int value, DateTime? date);
+        string OverloadedMethod(string name, int? value, DateTime? date);
         string OverloadedMethod(int value, string name);
         string OverloadedMethod<T>(T generic);
     }

@@ -5,16 +5,9 @@ using Exceptions;
 
 public static class Mappers
 {
-    internal static string ToString<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
+    internal static string Combine<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
         values == null ? "" : string.Join(separator, values.Select(mapper));
 
-    internal static string ToCRef(this ISymbol symbol) =>
-        symbol.ToDisplayString(Format.ToCRefFormat).Replace(".this[", ".Item[").Replace('<', '{').Replace('>', '}');
-
-    public static string ToSeeCRef(this ISymbol symbol) =>
-        $"""<see cref="global::{symbol.ToCRef()}">{symbol.ToDisplayString(Format.ToFullNameFormat).Replace("<", "&lt;").Replace(">", "&gt;")}</see>""";
-
-    internal static string ToSeeCRef(this IEnumerable<MethodBuilder.MethodMetadata> methods) => string.Join(", ", methods.Select(t => t.ToSeeCRef));
 
     internal static string AccessibilityString(this ISymbol symbol) =>
         symbol.DeclaredAccessibility switch
@@ -29,8 +22,8 @@ public static class Mappers
             _ => throw new UnsupportedAccessibilityException(symbol.DeclaredAccessibility)
         };
 
-    public static string AsNullable(this ISymbol symbol) =>
-        $"{symbol}?";
+    public static string AsNullable(this ITypeSymbol symbol) =>
+        $"{symbol.ToDisplayString(Format.ToFullNameFormatWithGlobal)}" + (symbol.NullableAnnotation == NullableAnnotation.Annotated ? "" : "?");
 
     internal static string OutAsString(this IParameterSymbol parameterSymbol) =>
         parameterSymbol.RefKind switch

@@ -1,16 +1,16 @@
 namespace SweetMock.Builders.MemberBuilders;
 
 using Generation;
-using Utils;
 
 /// <summary>
 ///     Represents a builder for events, implementing the ISymbolBuilder interface.
 /// </summary>
-internal partial class EventBuilder(MockContext context)
+internal partial class EventBuilder(MockInfo mock)
 {
-    public static void Render(CodeBuilder classScope, MockContext context, IEnumerable<IEventSymbol> events)
+    public static void Render(CodeBuilder classScope, MockInfo mock)
     {
-        var builder = new EventBuilder(context);
+        var events = mock.Candidates.OfType<IEventSymbol>();
+        var builder = new EventBuilder(mock);
         builder.Build(classScope, events);
     }
 
@@ -72,7 +72,7 @@ internal partial class EventBuilder(MockContext context)
 
     private void BuildConfigExtensions(CodeBuilder regionScope, EventMetadata evnt) =>
         regionScope
-            .AddToConfig(context, configScope =>
+            .AddToConfig(mock, configScope =>
                 {
                     this.GenerateTriggerMethod(configScope, evnt);
                     this.GenerateEventTriggerConfig(configScope, evnt);
@@ -85,14 +85,14 @@ internal partial class EventBuilder(MockContext context)
         {
             config
                 .Documentation($"Returns a action delegate to invoke when {evnt.ToSeeCRef} should be triggered.")
-                .AddConfigMethod(context, evnt.Name, ["out System.Action trigger"], codeBuilder => codeBuilder
+                .AddConfigMethod(mock, evnt.Name, ["out System.Action trigger"], codeBuilder => codeBuilder
                     .Add($"trigger = () => target._{evnt.Name}?.Invoke(target, System.EventArgs.Empty);"));
         }
         else
         {
             config
                 .Documentation($"Returns a action delegate to invoke when {evnt.ToSeeCRef} should be triggered.")
-                .AddConfigMethod(context, evnt.Name, [$"out System.Action<{evnt.ArgumentString}> trigger"], codeBuilder => codeBuilder
+                .AddConfigMethod(mock, evnt.Name, [$"out System.Action<{evnt.ArgumentString}> trigger"], codeBuilder => codeBuilder
                     .Add($"trigger = args => target._{evnt.Name}?.Invoke(target, args);")
                 );
         }
@@ -109,7 +109,7 @@ internal partial class EventBuilder(MockContext context)
                     .Summary($"Triggers the event {evnt.ToSeeCRef} directly.")
                     .Parameter("eventArgs", "The arguments used in the event.")
                     .Returns("The updated configuration object."))
-                .AddConfigMethod(context, evnt.Name, [evnt.ArgumentString + " eventArgs"], config => config
+                .AddConfigMethod(mock, evnt.Name, [evnt.ArgumentString + " eventArgs"], config => config
                     .Add($"this.{evnt.Name}(out var trigger);")
                     .Add("trigger.Invoke(eventArgs);"));
         }
@@ -119,7 +119,7 @@ internal partial class EventBuilder(MockContext context)
                 .Documentation(doc => doc
                     .Summary($"Triggers the event {evnt.ToSeeCRef} directly.")
                     .Returns("The updated configuration object."))
-                .AddConfigMethod(context, evnt.Name, [], config => config
+                .AddConfigMethod(mock, evnt.Name, [], config => config
                     .Add($"this.{evnt.Name}(out var trigger);")
                     .Add("trigger.Invoke();"));
         }

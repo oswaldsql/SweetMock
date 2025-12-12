@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 public class CallLog
 {
-    private List<ArgumentBase> _calls = [];
+    private readonly List<ArgumentBase> calls = [];
 
-    public void Add(ArgumentBase argument) => this._calls.Add(argument);
+    public void Add(ArgumentBase argument) => this.calls.Add(argument);
 
-    public IEnumerable<ArgumentBase> Calls => this._calls.AsReadOnly();
+    public IEnumerable<ArgumentBase> Calls => this.calls.AsReadOnly();
 }
