@@ -8,19 +8,29 @@ A source generator for creating mocks and fixtures for testing. SweetMock automa
 public async Task TheGuideShouldAlwaysBeAvailable()
 {
     // Arrange
+    var userGuid = Guid.NewGuid();
+
     var fixture = Fixture.ShoppingBasket(config =>
     {
-        config.bookRepo.GetByISBN(new Book("isbn 0-434-00348-4", "The Hitch Hiker's Guide to the Galaxy", "Douglas Adams"));
+        config.user.Id(userGuid);
+        var basket1 = Mock.IBasket(c => c.Add());
+        config.basketRepo
+            .TryGetUserBasket(Task.FromResult(true), basket1)
+            .Save();
+        config.bookRepo
+            .IsAvailable(true)
+            .InStock(42)
+            .GetByISBN(new Book("isbn 0-434-00348-4", "The Hitch Hiker's Guide to the Galaxy", "Douglas Adams"));
         config.messageBroker.SendMessage();
     });
-    
+
     var sut = fixture.CreateShoppingBasket();
-    
+
     // Act
     await sut.AddBookToBasket("isbn 0-434-00348-4", CancellationToken.None);
-    
+
     // Assert
-    var sendMessage = Assert.Single(fixture.Log.IMessageBroker().SendMessage());
+    var sendMessage = Assert.Single(fixture.Calls.messageBroker.SendMessage(arguments => arguments.userId == userGuid));
     Assert.Equal("The book The Hitch Hiker's Guide to the Galaxy by Douglas Adams was added to your basket", sendMessage.message);
 }
 ```

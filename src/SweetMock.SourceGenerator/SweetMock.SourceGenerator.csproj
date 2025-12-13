@@ -6,9 +6,12 @@
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
+
+    <PackageType>Analyzer</PackageType>
+
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>SweetMock</RootNamespace>
-    <PackageId>SweetMock</PackageId>
+    <PackageId>SweetMock.SourceGenerator</PackageId>
     <Title>Sweet mock</Title>
     <Authors>Lasse Sjørup</Authors>
     <Description>Source generator for creating mocks and fixtures for testing. SweetMock is a tool that automatically generates test fixtures and mock implementations of interfaces or classes helping in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
@@ -19,7 +22,6 @@
     <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
     <PackageTags>mocking, unit-testing, source-generator, TDD, mocks, testing-util</PackageTags>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageReleaseNotes>Renaming and cleanup of the MiniMock project.</PackageReleaseNotes>
 
     <AnalyzerRoslynVersion>4.14.0</AnalyzerRoslynVersion>
     <DevelopmentDependency>true</DevelopmentDependency>
@@ -30,7 +32,6 @@
     <AnalyzerLanguage>cs</AnalyzerLanguage>
     <IsPackable>true</IsPackable>
 
-    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
@@ -48,16 +49,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"/>
-    <None Include="$(OutputPath)\SweetMock.BaseFiles.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="..\SweetMock.BuildInMocks\*.cs" Link="Builders\BuildInMocks\%(Filename)%(Extension)"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
+    <None Include="$(TargetPath)" Pack="true" Visible="false" PackagePath="analyzers/dotnet/cs" />
+    <None Include="$(TargetDir)$(AssemblyName).pdb" Pack="true" Visible="false" PackagePath="analyzers/dotnet/cs"
+          Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
   </ItemGroup>
 
 </Project>

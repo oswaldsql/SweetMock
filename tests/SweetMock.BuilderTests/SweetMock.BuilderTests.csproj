@@ -40,7 +40,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <ProjectReference Include="..\..\src\SweetMock\SweetMock.csproj" />
+        <ProjectReference Include="..\..\src\SweetMock.SourceGenerator\SweetMock.SourceGenerator.csproj" />
         <ProjectReference Include="..\..\src\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
     </ItemGroup>
 
