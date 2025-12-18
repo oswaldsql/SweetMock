@@ -7,13 +7,14 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/SweetMock.SourceGenerator/SweetMock.SourceGenerator.csproj" />
-    <Project Path="src\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" Type="C#" />
-    <Project Path="src\SweetMock.BuildInMocks\SweetMock.BuildInMocks.csproj" Type="C#" />
+    <Project Path="src/SweetMock/SweetMock.csproj" />
+    <Project Path="src\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
+    <Project Path="src\SweetMock.BuildInMocks\SweetMock.BuildInMocks.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests\SweetMock.BuilderTests\SweetMock.BuilderTests.csproj" />
-    <Project Path="tests\SweetMock.Fixture.FunctionalityTests\SweetMock.Fixture.FunctionalityTests.csproj" Type="C#" />
-    <Project Path="tests\SweetMock.FixtureTests\SweetMock.FixtureTests.csproj" Type="C#" />
+    <Project Path="tests\SweetMock.Fixture.FunctionalityTests\SweetMock.Fixture.FunctionalityTests.csproj" />
+    <Project Path="tests\SweetMock.FixtureTests\SweetMock.FixtureTests.csproj" />
     <Project Path="tests\SweetMock.Functionality.Tests\SweetMock.Functionality.Tests.csproj" />
     <Project Path="tests\TestSandbox\TestSandbox.csproj" />
   </Folder>

@@ -58,4 +58,25 @@
           Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Builders\MemberBuilders\MethodBuilderHelpers.cs">
+      <DependentUpon>MethodBuilder.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Builders\MemberBuilders\MethodBuilder.Extensions.cs">
+      <DependentUpon>MethodBuilder.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Builders\MemberBuilders\MethodBuilder.Metadata.cs">
+      <DependentUpon>MethodBuilder.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Builders\MemberBuilders\PropertyBuilder.Metadata.cs">
+      <DependentUpon>PropertyBuilder.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Builders\MemberBuilders\IndexBuilder.Metadata.cs">
+      <DependentUpon>IndexBuilder.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Builders\MemberBuilders\EventBuilder.Metadata.cs">
+      <DependentUpon>EventBuilder.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

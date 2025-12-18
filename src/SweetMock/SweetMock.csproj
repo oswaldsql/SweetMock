@@ -9,9 +9,8 @@
     <RootNamespace>SweetMock</RootNamespace>
     <LangVersion>14</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>SweetMock.BaseFiles</PackageId>
-    <AssemblyName>SweetMock.BaseFiles</AssemblyName>
-    <IncludeBuiltOutput>true</IncludeBuiltOutput>
+    <PackageId>SweetMock</PackageId>
+    <IncludeBuiltOutput>false</IncludeBuiltOutput>
     <Title>Sweet mock</Title>
     <Authors>Lasse Sjørup</Authors>
     <Description>Source generator for creating mocks and fixtures for testing. SweetMock is a tool that automatically generates test fixtures and mock implementations of interfaces or classes helping in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
@@ -31,6 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
     <ProjectReference Include="..\SweetMock.SourceGenerator\SweetMock.SourceGenerator.csproj" />
   </ItemGroup>
+
 </Project>
