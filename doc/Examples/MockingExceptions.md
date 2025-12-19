@@ -5,7 +5,7 @@
 
 Mocking an exception thrown regardless of which arguments was parsed can be done using the `throws` argument.
 
-__config__: The `MockConfig` object for the [Demo class](Sample.md#method-demo-class).<br/>
+__config__: The `MockConfig` object for the [Demo class](!:MethodDemoClass).<br/>
 
 ```csharp
 config.Greeting(new InvalidTimeZoneException("Timezone is not known."));
