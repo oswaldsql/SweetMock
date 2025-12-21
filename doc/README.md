@@ -50,5 +50,3 @@ Try it out or continue with [Getting started](guide/getting-started.md) to learn
 
 For more details on specific aspects you can read about [Construction](guide/construction.md), [Methods](guide/methods.md), [Properties](guide/properties.md), [Events](guide/events.md) or 
 [Indexers](guide/indexers.md).
-
-If you are more into the ins and outs of SweetMock you can read the [ADR](ADR/README.md).
