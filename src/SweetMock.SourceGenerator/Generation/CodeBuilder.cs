@@ -6,7 +6,7 @@ internal partial class CodeBuilder
 {
     public CodeBuilder() { }
 
-    public CodeBuilder(CodeBuilder innerBuilder)
+    protected CodeBuilder(CodeBuilder innerBuilder)
     {
         this.result = innerBuilder.result;
         this.indentation = innerBuilder.indentation;

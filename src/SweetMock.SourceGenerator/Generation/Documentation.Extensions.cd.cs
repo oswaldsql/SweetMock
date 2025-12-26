@@ -3,7 +3,7 @@ namespace SweetMock.Generation;
 using Builders.MemberBuilders;
 using Utils;
 
-public static class DocumentationExtensions
+internal static class DocumentationExtensions
 {
     internal static string ToCRef(this ISymbol symbol) =>
         symbol.ToDisplayString(Format.ToCRefFormat).Replace(".this[", ".Item[").Replace('<', '{').Replace('>', '}');

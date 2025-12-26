@@ -2,7 +2,7 @@ namespace SweetMock.Utils;
 
 using System.IO;
 
-public static class ResourceReader
+internal static class ResourceReader
 {
     public static IEnumerable<string> GetResourceNames(Func<string, bool> predicate)
     {

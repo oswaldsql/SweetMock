@@ -3,7 +3,7 @@
 using Generation;
 using Utils;
 
-public static class LogBuilder
+internal static class LogBuilder
 {
     internal static void InitializeLogging(this CodeBuilder builder, MockInfo mock) =>
         builder.Region("Logging", regionScope => regionScope

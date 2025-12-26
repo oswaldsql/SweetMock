@@ -2,7 +2,7 @@ namespace SweetMock.Generation;
 
 internal partial class CodeBuilder
 {
-    public CodeBuilder Apply(Action<CodeBuilder> action)
+    private CodeBuilder Apply(Action<CodeBuilder> action)
     {
         action(this);
         return this;

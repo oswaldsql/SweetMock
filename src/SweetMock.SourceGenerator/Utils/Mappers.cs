@@ -2,7 +2,7 @@
 
 using Exceptions;
 
-public static class Mappers
+internal static class Mappers
 {
     internal static string Combine<T>(this IEnumerable<T>? values, Func<T, string> mapper, string separator = ", ") =>
         values == null ? "" : string.Join(separator, values.Select(mapper));

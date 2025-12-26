@@ -3,7 +3,7 @@
 using Generation;
 using Utils;
 
-public static class BuildInMockBuilder
+internal static class BuildInMockBuilder
 {
     private static Dictionary<string, Func<string>> buildInMocks = new()
     {

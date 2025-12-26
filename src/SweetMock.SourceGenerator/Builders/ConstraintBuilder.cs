@@ -1,6 +1,6 @@
 ﻿namespace SweetMock.Builders;
 
-public static class ConstraintBuilder
+internal static class ConstraintBuilder
 {
     public static string ToConstraints(this INamedTypeSymbol symbol) =>
         string.Join(" ", symbol.TypeArguments.OfType<ITypeParameterSymbol>().Select(ToConstraintString));

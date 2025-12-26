@@ -3,7 +3,7 @@ namespace SweetMock.Builders;
 using Generation;
 using Utils;
 
-public partial class FixtureBuilder
+internal partial class FixtureBuilder
 {
     public class FixtureMetadata(INamedTypeSymbol fixtureSymbol, AttributeData[] attributes)
     {

@@ -2,7 +2,7 @@ namespace SweetMock.Builders;
 
 using Generation;
 
-public static class FixtureFactoryBuilder
+internal static class FixtureFactoryBuilder
 {
     public static string BuildFixturesFactory(FixtureBuilder.FixtureMetadata[] source)
     {

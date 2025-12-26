@@ -3,7 +3,7 @@
 using Generation;
 using MemberBuilders;
 
-public class MockBuilder
+internal class MockBuilder
 {
     public string BuildFiles(INamedTypeSymbol target, out MockInfo mock)
     {

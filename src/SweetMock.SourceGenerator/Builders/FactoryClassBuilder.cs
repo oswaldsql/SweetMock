@@ -6,7 +6,7 @@ using Utils;
 /// <summary>
 ///     Provides methods to build mock classes.
 /// </summary>
-public static class FactoryClassBuilder
+internal static class FactoryClassBuilder
 {
     internal static string Build(List<MockInfo> collectedMocks)
     {

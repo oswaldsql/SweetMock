@@ -4,7 +4,7 @@ namespace SweetMock.Utils;
 /// Provides a collection of preconfigured <see cref="SymbolDisplayFormat"/> instances
 /// used for converting symbols into various string representations.
 /// </summary>
-public static class Format
+internal static class Format
 {
     /// <summary>
     /// A format that generates strings suitable for XML cref documentation tags,

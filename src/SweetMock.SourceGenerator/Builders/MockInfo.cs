@@ -3,7 +3,7 @@ namespace SweetMock.Builders;
 using Generation;
 using Utils;
 
-public class MockInfo(INamedTypeSymbol source, string mockClass, MockKind kind, string contextConfigName, INamedTypeSymbol? implementation = null)
+internal class MockInfo(INamedTypeSymbol source, string mockClass, MockKind kind, string contextConfigName, INamedTypeSymbol? implementation = null)
 {
     public INamedTypeSymbol Source { get; } = source;
 
@@ -116,7 +116,7 @@ public class MockInfo(INamedTypeSymbol source, string mockClass, MockKind kind, 
         new(symbol, symbol.ContainingNamespace + ".MockOf_" + symbol.Name, MockKind.BuildIn, "MockConfig");
 }
 
-public enum MockKind
+internal enum MockKind
 {
     Generated,
     Wrapper,

@@ -4,7 +4,7 @@ using System.Collections.Frozen;
 using Generation;
 using Utils;
 
-public partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, List<MockInfo> mockInfos)
+internal partial class FixtureBuilder(FixtureBuilder.FixtureMetadata metadata, List<MockInfo> mockInfos)
 {
     public static IEnumerable<ITypeSymbol> GetRequiredMocks(INamedTypeSymbol symbol)
     {

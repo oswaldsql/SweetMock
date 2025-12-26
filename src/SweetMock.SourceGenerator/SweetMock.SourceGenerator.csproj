@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
-
-    <PackageType>Analyzer</PackageType>
-
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RootNamespace>SweetMock</RootNamespace>
     <PackageId>SweetMock.SourceGenerator</PackageId>
@@ -22,6 +19,7 @@
     <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
     <PackageTags>mocking, unit-testing, source-generator, TDD, mocks, testing-util</PackageTags>
     <PackageIcon>Icon.png</PackageIcon>
+    <PackageReleaseNotes>Renaming and cleanup of the MiniMock project.</PackageReleaseNotes>
 
     <AnalyzerRoslynVersion>4.14.0</AnalyzerRoslynVersion>
     <DevelopmentDependency>true</DevelopmentDependency>
@@ -32,6 +30,7 @@
     <AnalyzerLanguage>cs</AnalyzerLanguage>
     <IsPackable>true</IsPackable>
 
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
@@ -49,13 +48,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\SweetMock.BuildInMocks\*.cs" Link="Builders\BuildInMocks\%(Filename)%(Extension)"/>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"/>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(TargetPath)" Pack="true" Visible="false" PackagePath="analyzers/dotnet/cs" />
-    <None Include="$(TargetDir)$(AssemblyName).pdb" Pack="true" Visible="false" PackagePath="analyzers/dotnet/cs"
-          Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
+    <EmbeddedResource Include="..\SweetMock.BuildInMocks\*.cs" Link="Builders\BuildInMocks\%(Filename)%(Extension)"/>
   </ItemGroup>
 
   <ItemGroup>

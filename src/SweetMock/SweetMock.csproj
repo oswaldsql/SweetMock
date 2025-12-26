@@ -10,7 +10,7 @@
     <LangVersion>14</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>SweetMock</PackageId>
-    <IncludeBuiltOutput>false</IncludeBuiltOutput>
+    <IncludeBuiltOutput>true</IncludeBuiltOutput>
     <Title>Sweet mock</Title>
     <Authors>Lasse Sjørup</Authors>
     <Description>Source generator for creating mocks and fixtures for testing. SweetMock is a tool that automatically generates test fixtures and mock implementations of interfaces or classes helping in unit testing by providing a way to simulate the behavior of complex dependencies.</Description>
@@ -21,6 +21,13 @@
     <RepositoryUrl>https://github.com/oswaldsql/SweetMock</RepositoryUrl>
     <PackageTags>mocking, unit-testing, source-generator, TDD, mocks, testing-util</PackageTags>
     <PackageIcon>Icon.png</PackageIcon>
+
+    <EnableDefaultItems>true</EnableDefaultItems>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Optimize>false</Optimize>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,7 +38,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SweetMock.BaseFiles\SweetMock.BaseFiles.csproj" />
-    <ProjectReference Include="..\SweetMock.SourceGenerator\SweetMock.SourceGenerator.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SweetMock.SourceGenerator\SweetMock.SourceGenerator.csproj"/>
+  </ItemGroup>
+
+  <Target Name="AddGenerationDllToPackage" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <None Include="@(Analyzer)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
+  </Target>
 
 </Project>
