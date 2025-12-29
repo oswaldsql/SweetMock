@@ -45,6 +45,16 @@ public interface DemoInterface
 internal interface IDemoDependency
 {
     public string StringProperty { get; set; }
+    
+    string Greeting(string name, int age);
+
+    Task<int> GetAgeAsync(string name, CancellationToken token);
+
+    bool TryGetAge(string name, out int age);
+
+    Task SetAge(string name, int age, CancellationToken token);
+
+    T AsType<T>(string name) where T : INumber<int>;
 }
 ```
 
@@ -54,6 +64,31 @@ internal interface IDemoDependency
 internal class DependencyImplementation : IDemoDependency
 {
     public string StringProperty { get; set; } = "Demo";
+    
+    public string Greeting(string name, int age)
+    {
+        return  $"{name} is {age} years old.";
+    }
+
+    public Task<int> GetAgeAsync(string name, CancellationToken token)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool TryGetAge(string name, out int age)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SetAge(string name, int age, CancellationToken token)
+    {
+        throw new NotImplementedException();
+    }
+
+    public T AsType<T>(string name) where T : INumber<int>
+    {
+        throw new NotImplementedException();
+    }
 }
 ```
 

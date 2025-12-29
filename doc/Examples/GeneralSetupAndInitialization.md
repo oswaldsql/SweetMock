@@ -50,7 +50,7 @@ The fixture approach has added benefits when it comes to asserting calls across 
 // Arrange using fixture
 var fixture = Fixture.DemoService(config =>
 {
-    config.demoDependency.StringProperty("Initial value"); // Will be ignored
+    config.demoDependency.StringProperty("Initial value");
 });
 var sutUsingFixture = fixture.CreateDemoService();
 
@@ -73,14 +73,19 @@ for each dependency. While this approach allows for changing dependencies upfron
  > [!TIP]
  > In the example some of the build in mocks are using. For more details on them see [Buildin mock for i logger](BuildinMocks.md#buildin-mock-for-i-logger).
 
-## Creating fixture 
+## Creating and configuring a fixture 
 
 Fixtures simplify creating all the mocks required for a service.
 For each dependency a configuration object is created allowing configuration of the mock.
+The mocks can be configured by calling the configuration object with the dependencies name.
 
 ```csharp
 // Arrange
-var fixture = Fixture.DemoService(config => { config.demoDependency.StringProperty("Initial value"); });
+var fixture = Fixture.DemoService(config =>
+{
+    config.demoDependency
+        .StringProperty("Initial value");
+});
 var sut = fixture.CreateDemoService();
 
 // ACT
@@ -109,6 +114,9 @@ Assert.Equal("Greeting", actualException.MemberName);
 Assert.Equal("MethodDemoClass", actualException.InstanceName);
 ```
 
+ > [!NOTE]
+ > Please note that the `NotExplicitlyMockedException` exception should not be caught as shown in the example.
+
 ## Mocking multiple values using fluent notation 
 
 When configuring a mock, multiple methods and parameters can be configured using fluent notation.
@@ -121,10 +129,13 @@ config
     .TryGetAge(true, 53);
 ```
 
+ > [!IMPORTANT]
+ > Setting the same method or property multiple times will overwrite the previous values. See 
+
 ## Mocking the same method multiple times 
 
 When configuring a mock, setting the same method multiple times will overwrite the previous values.
-To return a sequence of values use the [return values](ReturnSimpleValues.md#mocking-using-return-values) argument.
+To return a sequence of values, use the [return values](ReturnSimpleValues.md#mocking-using-return-values) argument.
 
 ```csharp
 config
@@ -133,13 +144,16 @@ config
     .Greeting(new Exception("This will be the end result"));
 ```
 
+ > [!NOTE]
+ > For more advanced scenarios, please see [Mocking complex behavior using call](AdvancedMocking.md#mocking-complex-behavior-using-call).
+
 ## Extension methods properties and indexers 
 
 It is not possible to mock extension members directly.
 Instead, mock the actual members called by the extensions.
 
 While it can be hard to figure out exactly which methods is called by an extension method, it does make for a simpler mock.
-As an example see the ILogger interface
+As an example, see the ILogger interface
 
 ```csharp
 var mock = Mock.MethodDemoClass(config => config
@@ -149,5 +163,6 @@ var mock = Mock.MethodDemoClass(config => config
 mock.GetMultipleAges(["Oswald", "Bingo"]);
 ```
 
-Please be aware that the actual extension method is called and any unintended side effect will come into effect.
+ > [!IMPORTANT]
+ > Please be aware that the actual extension method is called and any unintended side effect will come into effect.
 
