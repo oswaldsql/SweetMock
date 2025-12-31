@@ -8,6 +8,7 @@ __config__: Unless otherwise specified the `config` parameter is the configurati
 This class includes methods to mock asynchronous behavior using delegates and tasks.
 It demonstrates how to handle common asynchronous scenarios such as dynamic return values or task cancellation.
 
+<a name="MockingAsyncUsingCall"></a>
 ## Mocking async using call 
 
 Mocks asynchronous methods by providing a delegate that returns a `Task`.
@@ -19,6 +20,7 @@ config.GetAgeAsync(call: (name, _) => name == "Oswald" ? Task.FromResult(53) : t
 
 Using `Task.FromResult` within the delegate is the standard way to return a successful result immediately.
 
+<a name="MockingAsyncCancellationUsingCall"></a>
 ## Mocking async cancellation using call 
 
 Simulates task cancellation by returning a canceled task using `Task.FromCanceled`.
@@ -30,6 +32,7 @@ config.GetAgeAsync(call: (_, token) => Task.FromCanceled<int>(token));
 
 By passing the `token` from the delegate to `Task.FromCanceled`, the returned task correctly reflects the cancellation state.
 
+<a name="MockingAsyncUsingReturn"></a>
 ## Mocking async using return 
 
 Provides a simpler way to mock asynchronous results when the return value is static and does not depend on the input arguments.
@@ -40,6 +43,7 @@ config.GetAgeAsync(returns: Task.FromResult(53));
 
 This version of the mock configuration accepts a `Task` directly, which is more concise than using a lambda if no logic is required.
 
+<a name="MockingAsyncUsingSimpleReturn"></a>
 ## Mocking async using simple return 
 
 Simplifies the mocking of asynchronous methods by allowing a direct value to be returned as a `Task` or `ValueTask`.

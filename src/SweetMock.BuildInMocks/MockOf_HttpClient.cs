@@ -471,6 +471,9 @@ public static class HttpClient_TestExtensions
     public static HttpResponseMessage WithJsonContent(this HttpResponseMessage response, string json)
         => response.WithContent(new StringContent(json), "application/json");
 
+    public static HttpResponseMessage WithStringContent(this HttpResponseMessage response, string text)
+        => response.WithContent(new StringContent(text), "application/text");
+
     public static HttpResponseMessage WithJsonContent(this HttpResponseMessage response, object jsonSource)
     {
         var json = JsonSerializer.Serialize(jsonSource, JsonSerializerOptions.Web);

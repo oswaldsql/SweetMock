@@ -6,6 +6,7 @@ and simulating complex behaviors in unit tests.
 
 __config__: Unless otherwise specified the `config` parameter is the configuration object for [Demo class](References.md#method-demo-class).<br/>
 
+<a name="MockingUsingCall"></a>
 ## Mocking using call 
 
 Mocking for all abstract or virtual methods can be done using the `call` argument.
@@ -15,12 +16,17 @@ When one or more arguments are not important for the returned result, the value 
 
 ```csharp
 config.Greeting(call: (name, age) => $"{name} is {age} years old.");
+
+// If one or more arguments are not important for the returned result, the value can be replaced with <c>_</c>
+
+config.Greeting(call: (name,_) => $"Age of {name} is unknown.");
 ```
 
 The example specifies that the mock should return a generated text string for each call to the `Greeting` method.
 
 The `call` argument can also be used to mimic more complex behavior like in [Mocking complex behavior using call](AdvancedMocking.md#mocking-complex-behavior-using-call)
 
+<a name="MockingOutUsingCall"></a>
 ## Mocking out using call 
 
 Mocks methods containing `out` parameters by using a delegate that explicitly defines the output variable.
@@ -37,6 +43,7 @@ config.TryGetAge((_, out age) =>
 When mocking `out` parameters, the argument in the lambda is prefixed with `out`.
 The provided value is assigned within the delegate body, mimicking how a real implementation would behave.
 
+<a name="MockingNoReturnValueUsingCall"></a>
 ## Mocking no return value using call 
 
 Mocks methods that do not return a value (or return a `Task` without a result) by providing an action or a task-returning delegate.
@@ -48,6 +55,7 @@ config.SetAge((_, _, _) => Task.CompletedTask);
 
 In this example, the mock for `SetAge` returns `Task.CompletedTask`, which is the standard way to mock a non-generic `Task` return type.
 
+<a name="MockingComplexBehaviorUsingCall"></a>
 ## Mocking complex behavior using call 
 
 Handles complex logic or conditional branching within a mock by using a local function or a method group.
@@ -73,41 +81,7 @@ Task<int> Complex(string name, CancellationToken token)
 This approach is preferred over inline lambdas when the logic spans multiple lines or requires pattern matching.
 It also demonstrates how to handle `CancellationToken` and throw custom exceptions like `UnknownPersonException` within a mock.
 
-## Mock vs fixture 
-
-Compares the use of a fixture with manually created mocks when setting up a System Under Test (SUT).
-This method demonstrates two approaches for arranging dependencies for a class under test:
-using the generated fixture for dependency resolution, or individually mocking each required dependency.
-
-Both methods initialize the DemoService class with a collection of mocked components, and the resulting SUT is functionally identical.
-
-The fixture approach has benefits when it comes to asserting calls across dependencies. See 
-
-```csharp
-// Arrange using fixture
-var fixture = Fixture.DemoService(config =>
-{
-    config.demoDependency.StringProperty("Initial value"); // Will be ignored
-});
-var sutUsingFixture = fixture.CreateDemoService();
-
-// Arrange using mock
-var mockTimeProvider = Mock.TimeProvider();
-var mockHttpClient = Mock.HttpClient();
-var mockOptions = Mock.IOptions<DemoServiceConfig>();
-var mockDemoDependency = Mock.IDemoDependency(config => config.StringProperty("Initial value"));
-var mockLogger = Mock.ILogger<DemoService>();
-var sutUsingMock = new DemoService(mockTimeProvider, mockHttpClient, mockOptions, mockDemoDependency, mockLogger);
-```
-
-The fixture-based approach provides a streamlined configuration for creating the SUT with required
-dependencies pre-initialized. This approach greatly reduces boilerplate code.
-
-The mock-based approach offers fine-grained control by manually creating and configuring individual mocks
-for each dependency. While this approach allows for changing dependencies upfront, the same effect can be done using .
-
-In the example some of the build in mocks are using. For more details on them see .
-
+<a name="SpecifyingSpecificDependencies"></a>
 ## Specifying specific dependencies 
 
 Demonstrates the process of specifying specific dependencies when mocking in unit tests.
@@ -136,5 +110,37 @@ This method illustrates how to configure mock dependencies during test setup, al
 to replace a mocked dependency. It highlights the flexibility to ensure that tests align with specific requirements
 by directly providing non-default implementations.
 
-This is useful for doing component testing and subsystem testing, but please note that calls to a specified implementation are not logged.
+ > [!WARNING]
+ > This is useful for doing component testing and subsystem testing, but please note that calls to a specified implementation are not logged.
+
+<a name="SharingPartsOfTheFixtureConfiguration"></a>
+## Sharing parts of the fixture configuration 
+
+When a larger part of the configuration is identical in several tests, it can be moved to a shared location.
+
+Sharing the configuration is preferred over sharing the fixture itself since it allows for more granular control while still reducing duplication.
+
+```csharp
+// Arrange
+var fixture = Fixture.DemoService(config => 
+    ConfigGetAgeAsync(config.demoDependency)
+    );
+var sut = fixture.CreateDemoService();
+
+// ACT
+var actual = sut.GetStringProperty();
+
+// Assert
+Assert.Equal("Configured value", actual);
+
+return;
+
+// This configures the demo dependency.
+void ConfigGetAgeAsync(MockOf_IDemoDependency.MockConfig demoDependency) =>
+    demoDependency
+        .StringProperty("Configured value")
+        .GetAgeAsync(53);
+```
+
+ > [!TIP]Targeting the specific dependency allows for the configuration to be shared between different fixtures with the same dependency
 
